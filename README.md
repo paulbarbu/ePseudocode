@@ -6,10 +6,27 @@ This is an interpreter for a language designed to be similar to the pseudocode t
 
 A word of warning though: All the keywords in the language itself are in Romanian, not in English, since ePseudocode
 was specifically designed for romanian students, but you're always welcome to fork the project and contribute.
+(Only the keywords are in Romanian, comments, docs and other stuff is in English)
 
-Features
+Features (or characteristics)
+=============================
+
+TODO: lambdas, floating point, strings, vectors, lists, functions, comments (nested), io, stdlib (math, string, list & vector operations)
+TODO: ?modules?
+TODO: []
+
+* Highly influenced by C (a feature because one of the reasons it exists is to provide a lower learning curve, next step being C)
+* If no `main` function is defined then all code in a file is executed as if it was in a `main` function
+* Variables are declard on the spot
+* Operators: `=`, `+`, `+=`, `-`, `-=`, `*`, `*=`, `/`, `/=`, `%`, `%=`, `==`, `!=`, `<` , `>`, `<=`, `>=`, TODO
+* Keywords (English translation in parens): `cat timp` (while), `sf cat timp` (end while), `pentru` (for), `sf pentru` (end for), TODO
+
+Examples
 ========
-TODO
+
+TODO: ...
+
+For more see the `examples` directory.
 
 License (BSD3)
 ==============
