@@ -1,0 +1,44 @@
+daca x at
+    ...
+altfel
+    daca y at
+        ...
+    sf daca
+sf daca
+
+-------------
+
+daca x at
+    ...
+altfel
+    daca y at
+        ...
+    altfel
+        ...
+    sf daca
+sf daca
+
+------------
+
+EXPR = MIF | UIF
+
+MIF =
+daca EXPR at
+    MIF
+altfel
+    MIF
+sf daca
+
+UIF =
+daca EXPR at
+    EXPR
+sf daca
+
+|
+
+daca EXPR at
+    MIF
+altfel
+    UIF
+sf daca
+

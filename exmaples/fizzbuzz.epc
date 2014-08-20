@@ -7,10 +7,14 @@ i = 1
 cat timp i <= n executa
     daca i % 3 == 0 si i % 5 == 0 atunci
         scrie "fizzbuzz"
-    altfel daca i % 3 == 0 atunci
-        scrie "fizz"
-    altfel daca i % 5 == 0 atunci
-        scrie "buzz"
+    altfel
+        daca i % 3 == 0 atunci
+            scrie "fizz"
+        sf daca
+    altfel
+        daca i % 5 == 0 atunci
+            scrie "buzz"
+        sf daca
     altfel
         scrie i
     sf daca

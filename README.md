@@ -14,6 +14,9 @@ Features (or characteristics)
 TODO: lambdas, floating point, strings, vectors, lists, functions, comments (nested), io, stdlib (math, string, list & vector operations)
 TODO: ?modules?
 TODO: []
+TODO: turing complete
+TODO: codeblocks extension
+TODO: debugger
 
 * Highly influenced by C (a feature because one of the reasons it exists is to provide a lower learning curve, next step being C)
 * If no `main` function is defined then all code in a file is executed as if it was in a `main` function
@@ -27,6 +30,14 @@ Examples
 TODO: ...
 
 For more see the `examples` directory.
+
+
+Motivations
+===========
+
+* the use of an end statement (`sf daca`, `sf cat timp`, `sf pentru`) is enforced in order to avoid confusion as to where a statement ends
+This is because I've seen beginners struggle with the fact that C/C++ permits the programmer to omit the curly braces
+when a block contains a single statement.
 
 License (BSD3)
 ==============
