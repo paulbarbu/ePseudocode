@@ -1,22 +1,22 @@
 //Fizz Buzz game in ePseudocode
 
-citeste n
+n = citeste()
 
 i = 1
 
 cat timp i <= n executa
     daca i % 3 == 0 si i % 5 == 0 atunci
-        scrie "fizzbuzz"
+        scrie("fizzbuzz")
     altfel
         daca i % 3 == 0 atunci
-            scrie "fizz"
+            scrie("fizz")
         sf daca
     altfel
         daca i % 5 == 0 atunci
-            scrie "buzz"
+            scrie("buzz")
         sf daca
     altfel
-        scrie i
+        scrie(i)
     sf daca
 
     i = i + 1

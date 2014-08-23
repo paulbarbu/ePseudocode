@@ -1,0 +1,11 @@
+func fib(n)
+    daca n <= 2 atunci
+        ret 1
+    sf daca
+
+    ret fib(n-1) + fib(n-2)
+sf func
+
+func main()
+    scrie(fib(10)) //55
+sf func

@@ -1,0 +1,9 @@
+func applyToRange(a, b, step, f)
+    pentru i=a, i<=b, i=step(i) executa
+        f(i)
+    sf pentru
+sf func
+
+func main()
+    applyToRange(1, 5, func(x) ret x+1 sf func, func(x) scrie(x*2) sf func)
+sf func
