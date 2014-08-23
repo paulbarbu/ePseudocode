@@ -11,7 +11,7 @@ was specifically designed for romanian students, but you're always welcome to fo
 Features (or characteristics)
 =============================
 
-TODO: lambdas, floating point, strings, vectors, lists, functions, comments (nested), io, stdlib (math, string, list & vector operations)
+TODO: lambdas (done), floating point, strings, vectors, lists, functions (done), comments (nested), io, stdlib (math, string, list & vector operations)
 TODO: ?modules?
 TODO: []
 TODO: turing complete
@@ -22,7 +22,7 @@ TODO: debugger
 * If no `main` function is defined then all code in a file is executed as if it was in a `main` function
 * Variables are declard on the spot
 * Operators: `=`, `+`, `+=`, `-`, `-=`, `*`, `*=`, `/`, `/=`, `%`, `%=`, `==`, `!=`, `<` , `>`, `<=`, `>=`, TODO
-* Keywords (English translation in parens): `cat timp` (while), `sf cat timp` (end while), `pentru` (for), `sf pentru` (end for), TODO
+* Keywords (English translation in parens): `cat timp` (while), `sf cat timp` (end while), `pentru` (for), `sf pentru` (end for), `func` (start function), `sf func` (end function), `daca` (if), TODO
 
 Examples
 ========
@@ -36,7 +36,7 @@ Motivations
 ===========
 
 * the use of an end statement (`sf daca`, `sf cat timp`, `sf pentru`) is enforced in order to avoid confusion as to where a statement ends
-This is because I've seen beginners struggle with the fact that C/C++ permits the programmer to omit the curly braces
+This is because I've seen beginners struggle with the fact that sometimes C/C++ permits the programmer to omit the curly braces
 when a block contains a single statement.
 
 License (BSD3)
