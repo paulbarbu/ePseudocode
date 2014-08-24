@@ -4,4 +4,4 @@ pentru i=1, i<=100, i+=1 executa
     sum += i //there's no need for an EOL marker
 sf pentru
 
-scrie("Sum=", sum)
+scrie("Sum = ", sum) // outputs: Sum = 5050

@@ -11,18 +11,20 @@ was specifically designed for romanian students, but you're always welcome to fo
 Features (or characteristics)
 =============================
 
-TODO: lambdas (done), floating point, strings, vectors, lists, functions (done), comments (nested), io, stdlib (math, string, list & vector operations)
+TODO: lambdas (done), floating point, strings (done), vectors, lists (done), functions (done), variadic functions, comments (nested), io, stdlib (math, string, list & vector operations), dictionaries
 TODO: ?modules?
-TODO: []
 TODO: turing complete
 TODO: codeblocks extension
 TODO: debugger
+TODO: scientific notation
+TODO: unicode support
 
 * Highly influenced by C (a feature because one of the reasons it exists is to provide a lower learning curve, next step being C)
 * If no `main` function is defined then all code in a file is executed as if it was in a `main` function
 * Variables are declard on the spot
 * Operators: `=`, `+`, `+=`, `-`, `-=`, `*`, `*=`, `/`, `/=`, `%`, `%=`, `==`, `!=`, `<` , `>`, `<=`, `>=`, TODO
 * Keywords (English translation in parens): `cat timp` (while), `sf cat timp` (end while), `pentru` (for), `sf pentru` (end for), `func` (start function), `sf func` (end function), `daca` (if), TODO
+* Builtins: `lung` (length), `TODO` (to_upper), `TODO` (to_lower), `TODO`, (to_int('c'))
 
 Examples
 ========
@@ -31,6 +33,48 @@ TODO: ...
 
 For more see the `examples` directory.
 
+TODO: compile in itself
+
+* List operations:
+```
+l = {1, "abc", 3, 2+6}
+scrie(lung(l)) //outputs 4
+
+//indexing (0-based indexing):
+l = {1, 42, 3, 4}
+scrie(l[1]) // outputs 42
+
+//join two lists to get a new one:
+l = l + {11} //append 11 to l
+l += {12, 13} //apend 12 and 13 to l (`{1, 42, 3, 4, 11}`)
+scrie(lung(l)) //outputs 7 (4 elements in the initial list + the appended 11 + the appended 12 and 13)
+
+l += 1 //runtime error, cannot use '+' on list and string
+```
+
+* String operations:
+```
+//strings behave just like lists of characters
+a = "foo\n\tbar"
+scrie(lung(a)) // outputs 8
+scrie(a[3]) //outputs a new line
+
+a[3] = 'o' //assign the character o //TODO: maybe I can somehow sugar it to: a[3] = "o"
+a[4] = 'b'
+scrie(a) //outputs fooobbar
+
+//concatenation (joining two list of characters to get a new one back)
+scrie(a + "baz") // outputs foobaz
+
+scrie(2 + "baz") // runtime error
+scrie(2 + a) // runtime error
+
+//string comparisons
+"abc" == "ABC" //false
+"abc" == "abc" //true
+"a" <= "b" //true
+"a" != "b" //true
+```
 
 Motivations
 ===========
