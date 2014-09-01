@@ -29,8 +29,10 @@ Not supported: variadic functions
 * Highly influenced by C (a feature because one of the reasons it exists is to provide a lower learning curve, next step being C)
 * If no `main` function is defined then all code in a file is executed as if it was in a `main` function
 * Variables are declared on the spot, calid names start with "_" or with letters and continue with leters and numbers
-* Operators: `=`, `+`, `-`, `*`, `/`, `%`, `==`, `!=`, `<` , `>`, `<=`, `>=`, `!`, TODO
-* Keywords (English translation in parens): `cat timp` (while), `sf cat timp` (end while), `pt` (for), `sf pt` (end for), `func` (start function), `sf func` (end function), `ret` (return), `daca` (if), `atunci` (then), `altfel` (else), `sf daca` (end if), `adevarat` (true), `fals` (false), TODO
+* Operators: `=`, `+`, `-`, `*`, `/`, `%`, `==`, `!=`, `<` , `>`, `<=`, `>=`, `!`, `sau` (or), `si` (and), TODO
+* Keywords (English translation in parens): `cat timp` (while), `sf cat timp` (end while), `pt` (for), `sf pt` (end for),
+    `func` (start function), `sf func` (end function), `ret` (return), `daca` (if), `atunci` (then), `altfel` (else), `sf daca` (end if),
+    `adevarat` (true), `fals` (false), TODO
 * Builtins: `lung` (length), `TODO` (to_upper), `TODO` (to_lower), `TODO`, (to_int('c'))
 * Hexadecimal and octal notation: "0xABC", "0o17"
 

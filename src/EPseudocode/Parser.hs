@@ -17,7 +17,7 @@ epcTokens  = emptyDef {
   , commentLine = "//"
   , identStart = letter <|> char '_'
   , identLetter = alphaNum <|> char '_'
-  , reservedOpNames = ["!", "<", "=", ">", ">=", "<=", "==", "!=", "+", "-", "/", "%", "*"]
+  , reservedOpNames = ["!", "<", "=", ">", ">=", "<=", "==", "!=", "+", "-", "/", "%", "*", "sau", "si"]
   , reservedNames = ["adevarat", "fals", "ret", "daca", "atunci", "altfel", "sf daca", "cat timp", "sf cat timp", "pt", "sf pt",
     "func", "sf func"] --FIXME: translate
 }
