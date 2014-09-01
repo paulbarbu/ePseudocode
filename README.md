@@ -1,15 +1,16 @@
 ePseudocode
 ===========
-ePseudocde stands for "electronic [pseudocode](https://en.wikipedia.org/wiki/Pseudocode)".
+ePseudocode stands for "electronic [pseudocode](https://en.wikipedia.org/wiki/Pseudocode)".
 
 This is an interpreter for a language designed to be similar to the pseudocode that students write on paper.
 
 A word of warning though: All the keywords in the language itself are in Romanian, not in English, since ePseudocode
 was specifically designed for romanian students, but you're always welcome to fork the project and contribute.
-(Only the keywords are in Romanian, comments, docs and other stuff is in English)
+(Only the keywords are in Romanian, comments, docs and other stuff is in English, inlcuding errors issued by the
+compiler/parser since I didn't focus on translating strings from parsec)
 
-Features (or characteristics)
-=============================
+Description
+===========
 
 TODO: lambdas (done), floating point, strings (done), vectors, lists (done), functions (done), variadic functions, comments (nested), io, stdlib (math, string, list & vector operations), dictionaries
 TODO: ?modules?
@@ -18,13 +19,25 @@ TODO: codeblocks extension
 TODO: debugger
 TODO: scientific notation
 TODO: unicode support
+TODO: list slicing
+TODO: Bitwise operators
+TODO: booleans, boolean operators
 
+Not supported: variadic functions
+
+* Case sensitive
 * Highly influenced by C (a feature because one of the reasons it exists is to provide a lower learning curve, next step being C)
 * If no `main` function is defined then all code in a file is executed as if it was in a `main` function
-* Variables are declard on the spot
-* Operators: `=`, `+`, `+=`, `-`, `-=`, `*`, `*=`, `/`, `/=`, `%`, `%=`, `==`, `!=`, `<` , `>`, `<=`, `>=`, TODO
-* Keywords (English translation in parens): `cat timp` (while), `sf cat timp` (end while), `pentru` (for), `sf pentru` (end for), `func` (start function), `sf func` (end function), `daca` (if), TODO
+* Variables are declared on the spot, calid names start with "_" or with letters and continue with leters and numbers
+* Operators: `=`, `+`, `-`, `*`, `/`, `%`, `==`, `!=`, `<` , `>`, `<=`, `>=`, `!`, TODO
+* Keywords (English translation in parens): `cat timp` (while), `sf cat timp` (end while), `pt` (for), `sf pt` (end for), `func` (start function), `sf func` (end function), `ret` (return), `daca` (if), `atunci` (then), `altfel` (else), `sf daca` (end if), `adevarat` (true), `fals` (false), TODO
 * Builtins: `lung` (length), `TODO` (to_upper), `TODO` (to_lower), `TODO`, (to_int('c'))
+* Hexadecimal and octal notation: "0xABC", "0o17"
+
+
+Demo:
+* " 0xF +  1 + /*com/*inside comment*/ment*/   4 - 5 //comment" => 15
+
 
 Examples
 ========
@@ -79,7 +92,7 @@ scrie(2 + a) // runtime error
 Motivations
 ===========
 
-* the use of an end statement (`sf daca`, `sf cat timp`, `sf pentru`) is enforced in order to avoid confusion as to where a statement ends
+* the use of an end statement (`sf daca`, `sf cat timp`, `sf pt`) is enforced in order to avoid confusion as to where a statement ends
 This is because I've seen beginners struggle with the fact that sometimes C/C++ permits the programmer to omit the curly braces
 when a block contains a single statement.
 

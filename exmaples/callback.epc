@@ -1,7 +1,7 @@
 func applyToRange(a, b, step, f)
-    pentru i=a, i<=b, i=step(i) executa
+    pt i=a, i<=b, i=step(i) executa
         f(i)
-    sf pentru
+    sf pt
 sf func
 
 func main()
