@@ -27,13 +27,13 @@ data Stmt = Assign String Expr -- assignments
 instance Num Val where
     (Int x) + (Int y) = Int $ x + y
     (Float x) + (Float y) = Float $ x + y
-    (Int x) + (Float y) = Float $ (fromInteger x) + y
-    (Float x) + (Int y) = Float $ x + (fromInteger y)
+    (Int x) + (Float y) = Float $ fromInteger x + y
+    (Float x) + (Int y) = Float $ x + fromInteger y
 
     (Int x) * (Int y) = Int $ x * y
     (Float x) * (Float y) = Float $ x * y
-    (Int x) * (Float y) = Float $ (fromInteger x) * y
-    (Float x) * (Int y) = Float $ x * (fromInteger y)
+    (Int x) * (Float y) = Float $ fromInteger x * y
+    (Float x) * (Int y) = Float $ x * fromInteger y
 
     abs (Int x) = Int $ abs x
     abs (Float x) = Float $ abs x
@@ -54,7 +54,7 @@ instance Enum Val where
     fromEnum (Bool _) = 3
     fromEnum (List _) = 4
 
-    toEnum _ = Int 0 -- TODO: ?
+    toEnum _ = Int 0
 
 
 instance Real Val where
@@ -70,7 +70,7 @@ instance Integral Val where
 instance Fractional Val where
     fromRational x = Float $ fromRational x
 
-    recip (Int x) = Float $ 1/(fromInteger x)
+    recip (Int x) = Float $ 1/fromInteger x
     recip (Float x) = Float $ 1/x
 
 
