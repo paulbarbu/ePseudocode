@@ -1,4 +1,5 @@
 import EPseudocode.Data as EPD
+import EPseudocode.Parser as EPP
 
 main :: IO ()
-main = putStrLn $ show EPD.answer
+main = EPP.runLex EPP.expr "asd"
