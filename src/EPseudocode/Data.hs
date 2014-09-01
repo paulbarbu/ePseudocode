@@ -2,17 +2,19 @@ module EPseudocode.Data
 where
 
 data Val = Int Integer
-    | Float Float
+    | Float Double
     | String String
     | Bool Bool
     | List [Val]
-    deriving Show
+    deriving (Show, Eq, Ord)
+
 
 data Expr = Val -- literal values
     | Var String -- variables
     | UnaryOp String Expr -- unary operations -- TODO: here instead of String I could use a type if needed
     | BinaryOp String Expr Expr -- binary operations
     deriving Show
+
 
 data Stmt = Assign String Expr -- assignments
     | CompleteIf Expr Stmt Stmt -- if condition then statements else statements
@@ -21,4 +23,57 @@ data Stmt = Assign String Expr -- assignments
     | For Stmt Expr Expr Stmt -- for initial, condition, iteration then statements
     deriving Show
 
-answer = 42
+
+instance Num Val where
+    (Int x) + (Int y) = Int $ x + y
+    (Float x) + (Float y) = Float $ x + y
+    (Int x) + (Float y) = Float $ (fromInteger x) + y
+    (Float x) + (Int y) = Float $ x + (fromInteger y)
+
+    (Int x) * (Int y) = Int $ x * y
+    (Float x) * (Float y) = Float $ x * y
+    (Int x) * (Float y) = Float $ (fromInteger x) * y
+    (Float x) * (Int y) = Float $ x * (fromInteger y)
+
+    abs (Int x) = Int $ abs x
+    abs (Float x) = Float $ abs x
+
+    signum (Int x) = Int $ signum x
+    signum (Float x) = Float $ signum x
+
+    fromInteger x = Int x
+
+    negate (Int x) = Int $ negate x
+    negate (Float x) = Float $ negate x
+
+
+instance Enum Val where
+    fromEnum (Int _) = 0
+    fromEnum (Float _) = 1
+    fromEnum (String _) = 2
+    fromEnum (Bool _) = 3
+    fromEnum (List _) = 4
+
+    toEnum _ = Int 0 -- TODO: ?
+
+
+instance Real Val where
+    toRational (Int x) = toRational x
+    toRational (Float x) = toRational x
+
+
+instance Integral Val where
+    toInteger (Int x) = x
+    (Int x) `quotRem` (Int y) = (Int $ x `quot` y, Int $ x `rem` y)
+    -- (Float x) `quotRem` (Float y) = (Float $ x `quot` y, Float $ x `rem` y) -- TODO: 1.0/4.0 1/4.0 4.0/1 -> I have to change the div function
+    --erros in rest
+
+    {- --TODO: think where these belong
+    String + String
+    List + Int
+    List + Float
+    List + String
+    String + List
+    Float + List
+    String + List
+    -}
