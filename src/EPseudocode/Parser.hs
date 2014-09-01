@@ -44,7 +44,7 @@ expr = buildExpressionParser exprTable term
 --exprTable :: [[Operator Char () ThrowsError Val]]
 exprTable = [
       [pop "-" negate]
-    , [iop "*" (*) AssocLeft, iop "/" div AssocLeft, iop "%" rem AssocLeft]
+    , [iop "*" (*) AssocLeft, iop "/" (/) AssocLeft, iop "%" rem AssocLeft]
     , [iop "+" (+) AssocLeft, iop "-" (-) AssocLeft] --TODO: liftM2
     ]
     where iop id f assoc = Infix (op id f) assoc

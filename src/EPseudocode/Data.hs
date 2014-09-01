@@ -65,8 +65,14 @@ instance Real Val where
 instance Integral Val where
     toInteger (Int x) = x
     (Int x) `quotRem` (Int y) = (Int $ x `quot` y, Int $ x `rem` y)
-    -- (Float x) `quotRem` (Float y) = (Float $ x `quot` y, Float $ x `rem` y) -- TODO: 1.0/4.0 1/4.0 4.0/1 -> I have to change the div function
-    --erros in rest
+    -- TODO: erros in rest
+
+instance Fractional Val where
+    fromRational x = Float $ fromRational x
+
+    recip (Int x) = Float $ 1/(fromInteger x)
+    recip (Float x) = Float $ 1/x
+
 
     {- --TODO: think where these belong
     String + String
