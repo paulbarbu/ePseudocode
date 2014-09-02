@@ -37,28 +37,28 @@ float = P.float lexer
 stringLiteral = P.stringLiteral lexer
 
 
-expr :: Parser Val
+expr :: Parser Expr
 expr = buildExpressionParser exprTable term
     <?> "expression" -- FIXME: translate
 
---exprTable :: [[Operator Char () ThrowsError Val]]
+--exprTable :: [[Operator Char () ThrowsError Expr]]
 exprTable = [
-      [pop "-" negate]
-    , [iop "*" (*) AssocLeft, iop "/" (/) AssocLeft, iop "%" rem AssocLeft]
-    , [iop "+" (+) AssocLeft, iop "-" (-) AssocLeft] --TODO: liftM2
+      [pop "-" (UnaryOp "-")]
+    , [iop "*" (BinaryOp "*") AssocLeft, iop "/" (BinaryOp "/") AssocLeft, iop "%" (BinaryOp "%") AssocLeft]
+    , [iop "+" (BinaryOp "+") AssocLeft, iop "-" (BinaryOp "-") AssocLeft]
     ]
     where iop id f assoc = Infix (op id f) assoc
           pop id f = Prefix $ op id f
           op id f = reservedOp id >> return f <?> "operator"
 
 
-term :: Parser Val
+term :: Parser Expr
 term = parens expr
-  <|> liftM Float (try float)
-  <|> liftM Int integer
-  <|> liftM String stringLiteral
-  <|> (reserved "adevarat" >> return (Bool True))
-  <|> (reserved "false" >> return (Bool False))
+  <|> liftM (Ct . Float) (try float)
+  <|> liftM (Ct . Int) integer
+  <|> liftM (Ct . String) stringLiteral
+  <|> (reserved "adevarat" >> return (Ct $ Bool True))
+  <|> (reserved "false" >> return (Ct $ Bool False))
   -- TODO: list
   <?> "simple expression"
 

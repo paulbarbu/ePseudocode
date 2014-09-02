@@ -1,6 +1,7 @@
 module EPseudocode.Data
 where
 
+
 data Val = Int Integer
     | Float Double
     | String String
@@ -9,7 +10,7 @@ data Val = Int Integer
     deriving (Show, Eq, Ord)
 
 
-data Expr = Val -- literal values
+data Expr = Ct Val -- literal values
     | Var String -- variables
     | UnaryOp String Expr -- unary operations -- TODO: here instead of String I could use a type if needed
     | BinaryOp String Expr Expr -- binary operations
