@@ -22,6 +22,7 @@ data Stmt = Assign String Expr -- assignments
     | SimpleIf Expr Stmt -- if condition then statements
     | While Expr Stmt -- while condition then statements
     | For Stmt Expr Expr Stmt -- for initial, condition, iteration then statements
+    -- TODO: sequence of statements, terminated by \n, return is used only inside functions
     deriving Show
 
 
@@ -67,6 +68,7 @@ instance Integral Val where
     toInteger (Int x) = x
     (Int x) `quotRem` (Int y) = (Int $ x `quot` y, Int $ x `rem` y)
     -- TODO: erros in rest
+
 
 instance Fractional Val where
     fromRational x = Float $ fromRational x

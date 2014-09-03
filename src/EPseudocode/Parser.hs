@@ -41,11 +41,16 @@ expr :: Parser Expr
 expr = buildExpressionParser exprTable term
     <?> "expression" -- FIXME: translate
 
+
 --exprTable :: [[Operator Char () ThrowsError Expr]]
 exprTable = [
-      [pop "-" (UnaryOp "-")]
+      [pop "-" (UnaryOp "-"), pop "!" (UnaryOp "!")]
     , [iop "*" (BinaryOp "*") AssocLeft, iop "/" (BinaryOp "/") AssocLeft, iop "%" (BinaryOp "%") AssocLeft]
     , [iop "+" (BinaryOp "+") AssocLeft, iop "-" (BinaryOp "-") AssocLeft]
+    , [iop "<" (BinaryOp "<") AssocLeft, iop "<=" (BinaryOp "<=") AssocLeft, iop ">" (BinaryOp ">") AssocLeft, iop ">=" (BinaryOp ">=") AssocLeft]
+    , [iop "==" (BinaryOp "==") AssocLeft, iop "!=" (BinaryOp "!=") AssocLeft]
+    , [iop "si" (BinaryOp "si") AssocLeft]
+    , [iop "sau" (BinaryOp "sau") AssocLeft]
     ]
     where iop id f assoc = Infix (op id f) assoc
           pop id f = Prefix $ op id f

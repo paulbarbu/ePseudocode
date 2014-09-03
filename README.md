@@ -12,6 +12,8 @@ compiler/parser since I didn't focus on translating strings from parsec)
 Description
 ===========
 
+TODO: AST from repl, AST from file
+
 TODO: lambdas (done), floating point, strings (done), vectors, lists (done), functions (done), variadic functions, comments (nested), io, stdlib (math, string, list & vector operations), dictionaries
 TODO: ?modules?
 TODO: turing complete
@@ -22,6 +24,16 @@ TODO: unicode support
 TODO: list slicing
 TODO: Bitwise operators
 TODO: booleans, boolean operators
+TODO: LC3 backend
+TODO: x86 backend
+TODO: multiple files parameters -> combined in a single one
+
+TODO: bound, uniplate library
+TODO: ivory language
+
+TODO: coursera
+
+TODO: short-circuit the sau and si operators
 
 Not supported: variadic functions
 
