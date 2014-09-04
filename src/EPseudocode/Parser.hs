@@ -36,7 +36,7 @@ whiteSpace = P.whiteSpace lexer
 integer = P.integer lexer
 float = P.float lexer
 stringLiteral = P.stringLiteral lexer
-commaSep1 = P.commaSep1 lexer
+commaSep = P.commaSep lexer
 
 
 expr :: Parser Expr
@@ -66,7 +66,7 @@ term = parens expr
   <|> liftM String stringLiteral
   <|> (reserved "adevarat" >> return (Bool True))
   <|> (reserved "false" >> return (Bool False))
-  <|> liftM List (braces (commaSep1 expr))
+  <|> liftM List (braces (commaSep expr))
   <|> liftM Var identifier
   <?> "simple expression"
 
