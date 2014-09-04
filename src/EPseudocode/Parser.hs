@@ -28,6 +28,7 @@ epcTokens  = emptyDef {
 
 lexer = P.makeTokenParser epcTokens
 parens = P.parens lexer
+braces = P.braces lexer
 identifier = P.identifier lexer
 reservedOp = P.reservedOp lexer
 reserved = P.reserved lexer
@@ -35,6 +36,7 @@ whiteSpace = P.whiteSpace lexer
 integer = P.integer lexer
 float = P.float lexer
 stringLiteral = P.stringLiteral lexer
+commaSep1 = P.commaSep1 lexer
 
 
 expr :: Parser Expr
@@ -44,27 +46,28 @@ expr = buildExpressionParser exprTable term
 
 --exprTable :: [[Operator Char () ThrowsError Expr]]
 exprTable = [
-      [pop "-" (UnaryOp "-"), pop "!" (UnaryOp "!")]
-    , [iop "*" (BinaryOp "*") AssocLeft, iop "/" (BinaryOp "/") AssocLeft, iop "%" (BinaryOp "%") AssocLeft]
-    , [iop "+" (BinaryOp "+") AssocLeft, iop "-" (BinaryOp "-") AssocLeft]
-    , [iop "<" (BinaryOp "<") AssocLeft, iop "<=" (BinaryOp "<=") AssocLeft, iop ">" (BinaryOp ">") AssocLeft, iop ">=" (BinaryOp ">=") AssocLeft]
-    , [iop "==" (BinaryOp "==") AssocLeft, iop "!=" (BinaryOp "!=") AssocLeft]
-    , [iop "si" (BinaryOp "si") AssocLeft]
-    , [iop "sau" (BinaryOp "sau") AssocLeft]
+      [pop "-" UnMinus, pop "!" Not]
+    , [iop "*" Mul, iop "/" Div, iop "%" Mod]
+    , [iop "+" Plus, iop "-" Minus]
+    , [iop "<" Lt, iop "<=" Le, iop ">" Gt, iop ">=" Ge]
+    , [iop "==" Eq, iop "!=" Neq]
+    , [iop "si" And]
+    , [iop "sau" Or]
     ]
-    where iop id f assoc = Infix (op id f) assoc
-          pop id f = Prefix $ op id f
+    where iop id f= Infix (op id (BinExpr f)) AssocLeft
+          pop id f = Prefix $ op id (UnExpr f)
           op id f = reservedOp id >> return f <?> "operator"
 
 
 term :: Parser Expr
 term = parens expr
-  <|> liftM (Ct . Float) (try float)
-  <|> liftM (Ct . Int) integer
-  <|> liftM (Ct . String) stringLiteral
-  <|> (reserved "adevarat" >> return (Ct $ Bool True))
-  <|> (reserved "false" >> return (Ct $ Bool False))
-  -- TODO: list
+  <|> liftM Float (try float)
+  <|> liftM Int integer
+  <|> liftM String stringLiteral
+  <|> (reserved "adevarat" >> return (Bool True))
+  <|> (reserved "false" >> return (Bool False))
+  <|> liftM List (braces (commaSep1 expr))
+  <|> liftM Var identifier
   <?> "simple expression"
 
 
