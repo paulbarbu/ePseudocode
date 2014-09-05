@@ -31,4 +31,6 @@ data Stmt = Assign String Expr -- assignments
     | For Stmt Expr Expr Stmt -- for initial, condition, iteration then statements
     -- TODO: sequence of statements, terminated by \n, return is used only inside functions
     -- TODO: functions
+    -- TODO: function definition vs function call
+    | E Expr
     deriving Show

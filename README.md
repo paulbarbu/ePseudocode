@@ -26,7 +26,9 @@ TODO: Bitwise operators
 TODO: booleans, boolean operators
 TODO: LC3 backend
 TODO: x86 backend
+TODO: FFI and C libraries (interop?)
 TODO: multiple files parameters -> combined in a single one
+TODO: vim, kdevelop, visualstudio, eclipse? syntax highlighting
 
 TODO: bound, uniplate library
 TODO: ivory language

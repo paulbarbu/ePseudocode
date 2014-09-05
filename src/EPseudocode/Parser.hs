@@ -1,81 +1,51 @@
-module EPseudocode.Parser (runLex, expr)
+module EPseudocode.Parser (runLex, mainParser)
 where
 
 import Control.Applicative hiding ((<|>))
-import Control.Monad
 
 import Text.ParserCombinators.Parsec
-import Text.ParserCombinators.Parsec.Language
-import Text.ParserCombinators.Parsec.Expr
-import qualified Text.ParserCombinators.Parsec.Token as P
 
 import EPseudocode.Data
+import EPseudocode.ExprParser
+import EPseudocode.Lexer
 
 
-epcTokens  = emptyDef {
-    caseSensitive = True
-  , nestedComments = True
-  , commentStart = "/*"
-  , commentEnd = "*/"
-  , commentLine = "//"
-  , identStart = letter <|> char '_'
-  , identLetter = alphaNum <|> char '_'
-  , reservedOpNames = ["!", "<", "=", ">", ">=", "<=", "==", "!=", "+", "-", "/", "%", "*", "sau", "si"]
-  , reservedNames = ["adevarat", "fals", "ret", "daca", "atunci", "altfel", "sf daca", "cat timp", "sf cat timp", "pt", "sf pt",
-    "func", "sf func"] --FIXME: translate
-}
-
-
-lexer = P.makeTokenParser epcTokens
-parens = P.parens lexer
-braces = P.braces lexer
-identifier = P.identifier lexer
-reservedOp = P.reservedOp lexer
-reserved = P.reserved lexer
-whiteSpace = P.whiteSpace lexer
-integer = P.integer lexer
-float = P.float lexer
-stringLiteral = P.stringLiteral lexer
-commaSep = P.commaSep lexer
-
-
-expr :: Parser Expr
-expr = buildExpressionParser exprTable term
-    <?> "expression" -- FIXME: translate
-
-
---exprTable :: [[Operator Char () ThrowsError Expr]]
-exprTable = [
-      [pop "-" UnMinus, pop "!" Not]
-    , [iop "*" Mul, iop "/" Div, iop "%" Mod]
-    , [iop "+" Plus, iop "-" Minus]
-    , [iop "<" Lt, iop "<=" Le, iop ">" Gt, iop ">=" Ge]
-    , [iop "==" Eq, iop "!=" Neq]
-    , [iop "si" And]
-    , [iop "sau" Or]
-    ]
-    where iop id f= Infix (op id (BinExpr f)) AssocLeft
-          pop id f = Prefix $ op id (UnExpr f)
-          op id f = reservedOp id >> return f <?> "operator"
-
-
-term :: Parser Expr
-term = parens expr
-  <|> liftM Float (try float)
-  <|> liftM Int integer
-  <|> liftM String stringLiteral
-  <|> (reserved "adevarat" >> return (Bool True))
-  <|> (reserved "false" >> return (Bool False))
-  <|> liftM List (braces (commaSep expr))
-  <|> liftM Var identifier
-  <?> "simple expression"
+run :: Show a => Parser a -> String -> IO ()
+run p input = case parse p "" input of
+    Left err -> putStr "parse error at " >> print err -- FIXME: translate
+    Right x -> print x
 
 
 runLex :: Show a => Parser a -> String -> IO ()
 runLex p input = run (whiteSpace *> p <* eof) input
 
 
-run :: Show a => Parser a -> String -> IO ()
-run p input = case parse p "" input of
-    Left err -> putStr "parse error at " >> print err
-    Right x -> print x
+mainParser :: Parser Stmt
+mainParser =
+  do reserved tIf
+     cond <- expr
+     reserved tThen
+     thenStmts <- mainParser
+     reserved tElse
+     elseStmts <- mainParser
+     reserved tEndIf
+     return $ CompleteIf cond thenStmts elseStmts
+  <|>
+  do reserved tWhile
+     cond <- expr
+     reserved tDo
+     stmts <- mainParser
+     reserved tEndWhile
+     return $ While cond stmts
+  <|>
+  do reserved tFor
+     initial <- mainParser
+     comma
+     cond <- expr
+     comma
+     iteration <- expr
+     reserved tDo
+     stmts <- mainParser
+     reserved tEndFor
+     return $ For initial cond iteration stmts
+  <|> (expr >>= return . E) -- TODO: is this the right thing?
