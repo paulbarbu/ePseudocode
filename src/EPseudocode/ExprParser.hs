@@ -33,11 +33,11 @@ exprTable = [
 
 term :: Parser Expr
 term = parens expr
+  <|> liftM Var identifier
   <|> liftM Float (try float)
   <|> liftM Int integer
   <|> liftM String stringLiteral
   <|> (reserved tTrue >> return (Bool True))
   <|> (reserved tFalse >> return (Bool False))
   <|> liftM List (braces (commaSep expr))
-  <|> liftM Var identifier
   <?> "simple expression" -- FIXME: translate
