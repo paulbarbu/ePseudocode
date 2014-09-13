@@ -22,7 +22,8 @@ runLex p input = run (whiteSpace *> p <* eof) input
 
 
 mainParser :: Parser Stmt
-mainParser =
+mainParser = liftM Seq (semiSep1 mainParser')
+mainParser' =
   -- complete if
   try (
      do reserved tIf

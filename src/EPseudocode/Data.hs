@@ -33,5 +33,6 @@ data Stmt = Assign String Stmt -- assignments (stmt is limited here to expressio
     | Ret Stmt -- return statement (only expression or function)
     | FuncDef String [String] Stmt -- func name args body
     | E Expr
+    | Seq [Stmt]
     --TODO: multiple statements one after the other: runLex mainParser "func x() ret 5 sf func daca 3 atunci 5 sf daca"
     deriving Show
