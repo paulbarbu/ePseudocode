@@ -54,9 +54,9 @@ mainParser =
   -- for
   do reserved tFor
      initial <- mainParser
-     comma -- TODO maybe here it would be better to use ";" in order to be C-like
+     semi
      cond <- expr
-     comma -- TODO maybe here it would be better to use ";" in order to be C-like
+     semi
      iteration <- assignment
      reserved tDo
      stmts <- many mainParser

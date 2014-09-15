@@ -1,5 +1,5 @@
 module EPseudocode.Lexer (parens, braces, identifier, reservedOp, reserved, whiteSpace, integer, float, stringLiteral, commaSep, comma,
-  semiSep1,
+  semi,
   tAnd, tOr, tTrue, tFalse, tReturn, tIf, tThen, tElse, tEndIf, tWhile, tEndWhile, tFor, tEndFor, tDo, tFunc, tEndFunc)
 where
 
@@ -52,4 +52,4 @@ float = P.float lexer
 stringLiteral = P.stringLiteral lexer
 commaSep = P.commaSep lexer
 comma = P.comma lexer
-semiSep1 = P.semiSep1 lexer
+semi = P.semi lexer
