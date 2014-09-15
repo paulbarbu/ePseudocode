@@ -1,7 +1,7 @@
 module EPseudocode.Parser (runLex, mainParser)
 where
 
-import Control.Applicative hiding ((<|>))
+import Control.Applicative hiding ((<|>), many)
 import Control.Monad
 
 import Text.ParserCombinators.Parsec
@@ -18,29 +18,28 @@ run p input = case parse p "" input of
 
 
 runLex :: Show a => Parser a -> String -> IO ()
-runLex p input = run (whiteSpace *> p <* eof) input
+runLex p input = run (whiteSpace *> many p <* eof) input
 
 
 mainParser :: Parser Stmt
-mainParser = liftM Seq (semiSep1 mainParser')
-mainParser' =
+mainParser =
   -- complete if
   try (
-     do reserved tIf
+     do reserved tIf <?> tIf
         cond <- expr
         reserved tThen
-        thenStmts <- mainParser
+        thenStmts <- many mainParser
         reserved tElse
-        elseStmts <- mainParser
+        elseStmts <- many mainParser
         reserved tEndIf
         return $ CompleteIf cond thenStmts elseStmts
      )
   <|>
   -- simple if
-  do reserved tIf
+  do reserved tIf <?> tIf
      cond <- expr
      reserved tThen
-     thenStmts <- mainParser
+     thenStmts <- many mainParser
      reserved tEndIf
      return $ SimpleIf cond thenStmts
   <|>
@@ -48,19 +47,19 @@ mainParser' =
   do reserved tWhile
      cond <- expr
      reserved tDo
-     stmts <- mainParser
+     stmts <- many mainParser
      reserved tEndWhile
      return $ While cond stmts
   <|>
   -- for
   do reserved tFor
      initial <- mainParser
-     comma
+     comma -- TODO maybe here it would be better to use ";" in order to be C-like
      cond <- expr
-     comma
+     comma -- TODO maybe here it would be better to use ";" in order to be C-like
      iteration <- assignment
      reserved tDo
-     stmts <- mainParser
+     stmts <- many mainParser
      reserved tEndFor
      return $ For initial cond iteration stmts
   <|>
@@ -74,14 +73,13 @@ mainParser' =
   try assignment
   <|>
   -- function call
-  liftM E funcCall
+  (liftM E funcCall <?> "function call") -- FIXME: translate
   <|>
-  (expr >>= return . E) -- TODO: is this the right thing?
+  liftM E expr -- TODO: is this the right thing?
 
 
 funcExpr :: Parser Stmt
-funcExpr = do val <- funcDef
-              return $ val
+funcExpr = funcDef
            <|>
            do val <- try funcCall <|> expr
               return $ E val
@@ -90,16 +88,15 @@ funcExpr = do val <- funcDef
 funcDef :: Parser Stmt
 funcDef = do reserved tFunc
              name <- identifier
-             args <- parens $ commaSep identifier
-             body <- mainParser
-             -- TODO: allow return here -- via multiple statements: "func x() daca 5 atunci 3 sf daca ret 5 sf func"
+             args <- parens (commaSep identifier) <?> "parameters list" -- FIXME: translate
+             body <- many mainParser
              reserved tEndFunc
              return $ FuncDef name args body
 
 
 funcCall :: Parser Expr
 funcCall = do name <- identifier
-              liftM (FuncCall name) (parens $ commaSep expr)
+              liftM (FuncCall name) (parens $ commaSep expr) <?> "arguments list" -- FIXME: translate
 
 
 assignment :: Parser Stmt
