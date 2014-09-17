@@ -14,7 +14,7 @@ Description
 
 TODO: AST from repl, AST from file
 
-TODO: lambdas (done), floating point, strings (done), vectors, lists (done), functions (done), variadic functions, comments (nested), io, stdlib (math, string, list & vector operations), dictionaries, files
+TODO: lambdas (done), floating point, strings (done), vectors, lists (done), functions - capture environment(done), comments (nested), io, stdlib (math, string, list & vector operations), dictionaries, files
 TODO: ?modules?
 TODO: turing complete
 TODO: codeblocks extension
@@ -34,6 +34,7 @@ TODO: no structs?
 
 TODO: bound, uniplate library
 TODO: ivory language
+TODO: apply, curry
 
 TODO: coursera
 

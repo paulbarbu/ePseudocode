@@ -1,4 +1,4 @@
-module EPseudocode.ExprParser (expr)
+module EPseudocode.ExprParser (expr, funcCall)
 where
 
 import Control.Monad
@@ -40,5 +40,11 @@ term = parens expr
   <|> (reserved tFalse >> return (Bool False))
   <|> liftM List (braces (commaSep expr))
   <|> try (liftM2 Index identifier (brackets expr))
+  <|> try (funcCall <?> "functionc call") -- FIXME: translate -- this occurs twice
   <|> liftM Var identifier
   <?> "simple expression" -- FIXME: translate
+
+
+funcCall :: Parser Expr
+funcCall = do name <- identifier
+              liftM (FuncCall name) (parens $ commaSep expr) <?> "arguments list" -- FIXME: translate

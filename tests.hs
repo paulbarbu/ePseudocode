@@ -26,9 +26,9 @@ runLex mainParser "func x() daca 5 atunci 3 sfdaca ret 5 sffunc"
 
 runLex mainParser "func x() ret func y() 1 sffunc sffunc"
 
-runLex mainParser "a=func x() ret x() sf func"
-runLex mainParser "func x() ret 3 sf func"
-runLex mainParser "a= func x() ret x() sf func"
+runLex mainParser "a=func x() ret x() sffunc"
+runLex mainParser "func x() ret 3 sffunc"
+runLex mainParser "a= func x() ret x() sffunc"
 
 
 runLex mainParser "a={2}"
@@ -39,3 +39,5 @@ runLex mainParser "a()"
 runLex mainParser "scrie a[2]"
 runLex mainParser "daca a[1] atunci 2 sfdaca"
 runLex mainParser "daca a atunci 2 sfdaca"
+runLex mainParser "a(b(), c())"
+runLex mainParser "daca a(b(), c()) atunci a(b(), c()) altfel a(1, 2) sfdaca"

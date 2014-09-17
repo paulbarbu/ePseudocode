@@ -72,17 +72,11 @@ mainParser =
   -- assignment
   try assignment
   <|>
-  -- function call
-  (liftM E funcCall <?> "function call") -- FIXME: translate
-  <|>
   liftM E expr -- TODO: is this the right thing?
 
 
 funcExpr :: Parser Stmt
-funcExpr = funcDef
-           <|>
-           do val <- try funcCall <|> expr
-              return $ E val
+funcExpr = funcDef <|> liftM E expr
 
 
 funcDef :: Parser Stmt
@@ -92,11 +86,6 @@ funcDef = do reserved tFunc
              body <- many mainParser
              reserved tEndFunc
              return $ FuncDef name args body
-
-
-funcCall :: Parser Expr
-funcCall = do name <- identifier
-              liftM (FuncCall name) (parens $ commaSep expr) <?> "arguments list" -- FIXME: translate
 
 
 assignment :: Parser Stmt
