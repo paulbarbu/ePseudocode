@@ -29,3 +29,11 @@ runLex mainParser "func x() ret func y() 1 sffunc sffunc"
 runLex mainParser "a=func x() ret x() sf func"
 runLex mainParser "func x() ret 3 sf func"
 runLex mainParser "a= func x() ret x() sf func"
+
+
+runLex mainParser "a=[2]"
+runLex mainParser "a=1"
+runLex mainParser "a()"
+
+-- ??
+runLex mainParser "scrie a[2]"

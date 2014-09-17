@@ -14,7 +14,7 @@ Description
 
 TODO: AST from repl, AST from file
 
-TODO: lambdas (done), floating point, strings (done), vectors, lists (done), functions (done), variadic functions, comments (nested), io, stdlib (math, string, list & vector operations), dictionaries
+TODO: lambdas (done), floating point, strings (done), vectors, lists (done), functions (done), variadic functions, comments (nested), io, stdlib (math, string, list & vector operations), dictionaries, files
 TODO: ?modules?
 TODO: turing complete
 TODO: codeblocks extension
@@ -29,6 +29,8 @@ TODO: x86 backend
 TODO: FFI and C libraries (interop?)
 TODO: multiple files parameters -> combined in a single one
 TODO: vim, kdevelop, visualstudio, eclipse? syntax highlighting
+TODO: tail call optimization?
+TODO: no structs?
 
 TODO: bound, uniplate library
 TODO: ivory language

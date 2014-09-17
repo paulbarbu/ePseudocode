@@ -11,13 +11,13 @@ import EPseudocode.ExprParser
 import EPseudocode.Lexer
 
 
-run :: Show a => Parser a -> String -> IO ()
+run :: Show a => Parser a -> String -> String
 run p input = case parse p "" input of
-    Left err -> putStr "parse error at " >> print err -- FIXME: translate
-    Right x -> print x
+    Left err -> "parse error at " ++ (show err) -- FIXME: translate
+    Right x -> show x
 
 
-runLex :: Show a => Parser a -> String -> IO ()
+runLex :: Show a => Parser a -> String -> String
 runLex p input = run (whiteSpace *> many p <* eof) input
 
 
@@ -44,7 +44,7 @@ mainParser =
      return $ SimpleIf cond thenStmts
   <|>
   -- while
-  do reserved tWhile
+  do reserved tWhile <?> tWhile
      cond <- expr
      reserved tDo
      stmts <- many mainParser
@@ -52,7 +52,7 @@ mainParser =
      return $ While cond stmts
   <|>
   -- for
-  do reserved tFor
+  do reserved tFor <?> tFor
      initial <- mainParser
      semi
      cond <- expr
@@ -64,10 +64,10 @@ mainParser =
      return $ For initial cond iteration stmts
   <|>
   -- return
-  do reserved tReturn
+  do reserved tReturn <?> tReturn
      liftM Ret funcExpr
   <|>
-  funcDef
+  (funcDef <?> "function definition")  -- FIXME: translate
   <|>
   -- assignment
   try assignment
