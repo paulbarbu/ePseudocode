@@ -31,9 +31,11 @@ runLex mainParser "func x() ret 3 sf func"
 runLex mainParser "a= func x() ret x() sf func"
 
 
-runLex mainParser "a=[2]"
+runLex mainParser "a={2}"
 runLex mainParser "a=1"
 runLex mainParser "a()"
 
 -- ??
 runLex mainParser "scrie a[2]"
+runLex mainParser "daca a[1] atunci 2 sfdaca"
+runLex mainParser "daca a atunci 2 sfdaca"

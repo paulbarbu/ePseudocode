@@ -39,5 +39,6 @@ term = parens expr
   <|> (reserved tTrue >> return (Bool True))
   <|> (reserved tFalse >> return (Bool False))
   <|> liftM List (braces (commaSep expr))
+  <|> try (liftM2 Index identifier (brackets expr))
   <|> liftM Var identifier
   <?> "simple expression" -- FIXME: translate

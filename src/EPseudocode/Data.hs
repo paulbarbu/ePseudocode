@@ -11,6 +11,8 @@ data Expr =
     | List [Expr]
     -- variables
     | Var String
+    -- list indexing
+    | Index String Expr -- a[1+2]
     -- unary/binary expressions
     | UnExpr UnOp Expr
     | BinExpr BinOp Expr Expr

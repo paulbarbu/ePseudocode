@@ -13,7 +13,7 @@ import EPseudocode.Lexer
 
 run :: Show a => Parser a -> String -> String
 run p input = case parse p "" input of
-    Left err -> "parse error at " ++ (show err) -- FIXME: translate
+    Left err -> "parse error at " ++ show err -- FIXME: translate
     Right x -> show x
 
 
@@ -27,28 +27,28 @@ mainParser =
   try (
      do reserved tIf <?> tIf
         cond <- expr
-        reserved tThen
+        reserved tThen <?> tThen
         thenStmts <- many mainParser
-        reserved tElse
+        reserved tElse <?> tElse
         elseStmts <- many mainParser
-        reserved tEndIf
+        reserved tEndIf <?> tEndIf
         return $ CompleteIf cond thenStmts elseStmts
      )
   <|>
   -- simple if
   do reserved tIf <?> tIf
      cond <- expr
-     reserved tThen
+     reserved tThen <?> tThen
      thenStmts <- many mainParser
-     reserved tEndIf
+     reserved tEndIf <?> tEndIf
      return $ SimpleIf cond thenStmts
   <|>
   -- while
   do reserved tWhile <?> tWhile
      cond <- expr
-     reserved tDo
+     reserved tDo <?> tDo
      stmts <- many mainParser
-     reserved tEndWhile
+     reserved tEndWhile <?> tEndWhile
      return $ While cond stmts
   <|>
   -- for
@@ -58,9 +58,9 @@ mainParser =
      cond <- expr
      semi
      iteration <- assignment
-     reserved tDo
+     reserved tDo <?> tDo
      stmts <- many mainParser
-     reserved tEndFor
+     reserved tEndFor <?> tEndFor
      return $ For initial cond iteration stmts
   <|>
   -- return

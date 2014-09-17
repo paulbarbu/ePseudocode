@@ -1,5 +1,5 @@
 module EPseudocode.Lexer (parens, braces, identifier, reservedOp, reserved, whiteSpace, integer, float, stringLiteral, commaSep, comma,
-  semi,
+  semi, brackets,
   tAnd, tOr, tTrue, tFalse, tReturn, tIf, tThen, tElse, tEndIf, tWhile, tEndWhile, tFor, tEndFor, tDo, tFunc, tEndFunc)
 where
 
@@ -43,6 +43,7 @@ lexer = P.makeTokenParser epcTokens
 
 parens = P.parens lexer
 braces = P.braces lexer
+brackets = P.brackets lexer
 identifier = P.identifier lexer
 reservedOp = P.reservedOp lexer
 reserved = P.reserved lexer
