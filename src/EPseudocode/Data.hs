@@ -8,15 +8,16 @@ data Expr =
     | Float Double
     | String String
     | Bool Bool
-    | List [Expr]
+    | List [Stmt] --list of experssions, fucntion definitions or function calls
     -- variables
     | Var String
     -- list indexing
-    | Index String Expr -- a[1+2]
+    | Index String [Expr] -- a[1+2], a[2][3]
     -- unary/binary expressions
     | UnExpr UnOp Expr
     | BinExpr BinOp Expr Expr
-    | FuncCall String [Expr]
+    -- function calls
+    | FuncCall Expr [[Expr]] -- foo() = [[]], func_in_func()(2) = [[],[2]], func_in_list[1]() = [[]], a(1)() = [[1],[]]
     deriving Show
 
 data BinOp = And | Or | Plus | Minus | Mul | Div | Mod | Lt | Le | Gt | Ge | Neq | Eq

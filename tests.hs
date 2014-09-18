@@ -32,12 +32,20 @@ runLex mainParser "a= func x() ret x() sffunc"
 
 
 runLex mainParser "a={2}"
+runLex mainParser "a[1][2][3][4]"
 runLex mainParser "a=1"
 runLex mainParser "a()"
 
--- ??
 runLex mainParser "scrie a[2]"
 runLex mainParser "daca a[1] atunci 2 sfdaca"
 runLex mainParser "daca a atunci 2 sfdaca"
 runLex mainParser "a(b(), c())"
 runLex mainParser "daca a(b(), c()) atunci a(b(), c()) altfel a(1, 2) sfdaca"
+
+
+runLex mainParser "{1, 2, a({1,2,a()}, 1)}"
+runLex mainParser "{func a() ret 42 sffunc, func a() ret 24 sffunc}"
+runLex mainParser "a[1]()" -- a[1] is a function
+runLex mainParser "a[foo()]()" -- same as above, only foo() gives the index
+runLex mainParser "a()()" -- a() returned a function
+runLex mainParser "a()()()()()()()()" -- a() returned a function

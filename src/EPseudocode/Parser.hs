@@ -5,20 +5,44 @@ import Control.Applicative hiding ((<|>), many)
 import Control.Monad
 
 import Text.ParserCombinators.Parsec
+import Text.ParserCombinators.Parsec.Language
+import Text.ParserCombinators.Parsec.Expr
 
 import EPseudocode.Data
-import EPseudocode.ExprParser
 import EPseudocode.Lexer
 
-
-run :: Show a => Parser a -> String -> String
-run p input = case parse p "" input of
-    Left err -> "parse error at " ++ show err -- FIXME: translate
-    Right x -> show x
+expr :: Parser Expr
+expr = buildExpressionParser exprTable term
+    <?> "expression" -- FIXME: translate
 
 
-runLex :: Show a => Parser a -> String -> String
-runLex p input = run (whiteSpace *> many p <* eof) input
+--exprTable :: [[Operator Char () ThrowsError Expr]]
+exprTable = [
+      [pop "-" UnMinus, pop "!" Not]
+    , [iop "*" Mul, iop "/" Div, iop "%" Mod]
+    , [iop "+" Plus, iop "-" Minus]
+    , [iop "<" Lt, iop "<=" Le, iop ">" Gt, iop ">=" Ge]
+    , [iop "==" Eq, iop "!=" Neq]
+    , [iop tAnd And]
+    , [iop tOr Or]
+    ]
+    where iop id f= Infix (op id (BinExpr f)) AssocLeft
+          pop id f = Prefix $ op id (UnExpr f)
+          op id f = reservedOp id >> return f <?> "operator" -- FIXME: translate
+
+
+term :: Parser Expr
+term = parens expr
+  <|> liftM Float (try float)
+  <|> liftM Int integer
+  <|> liftM String stringLiteral
+  <|> (reserved tTrue >> return (Bool True))
+  <|> (reserved tFalse >> return (Bool False))
+  <|> liftM List (braces (commaSep (liftM E expr <|> funcDef)))
+  <|> try (funcCall <?> "functionc call") -- FIXME: translate -- this occurs twice
+  <|> try indexAccess
+  <|> liftM Var identifier
+  <?> "simple expression" -- FIXME: translate
 
 
 mainParser :: Parser Stmt
@@ -88,7 +112,26 @@ funcDef = do reserved tFunc
              return $ FuncDef name args body
 
 
+funcCall :: Parser Expr
+funcCall = do name <- try indexAccess <|> try (liftM Var identifier)
+              liftM (FuncCall name) (many1 . parens $ commaSep expr) <?> "arguments list" -- FIXME: translate
+
+
 assignment :: Parser Stmt
 assignment = do name <- identifier
                 reservedOp "="
                 liftM (Assign name) funcExpr
+
+
+indexAccess :: Parser Expr
+indexAccess = liftM2 Index identifier (many1 $ brackets expr)
+
+
+run :: Show a => Parser a -> String -> String
+run p input = case parse p "" input of
+    Left err -> "parse error at " ++ show err -- FIXME: translate
+    Right x -> show x
+
+
+runLex :: Show a => Parser a -> String -> String
+runLex p input = run (whiteSpace *> many p <* eof) input
