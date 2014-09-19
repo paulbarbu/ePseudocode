@@ -1,23 +1,24 @@
 func greatestCommonDivisor(a, b)
-    cat timp a != b executa
+    cattimp a != b executa
         daca a > b atunci
-            a -= b
+            a = a - b
         altfel
-            b -= a
-        sf daca
-    sf cat timp
+            b = b - a
+        sfdaca
+    sfcattimp
     ret a
-sf func
+sffunc
 
+// euclid
 func gcd(a, b)
     daca b == 0 atunci
         ret a
-    sf daca
+    sfdaca
 
     gcd(b, a % b)
-sf func
+sffunc
 
 func main()
     scrie(gcd(5, 25))
     scrie(greatestCommonDivisor(3, 5))
-sf func
+sffunc

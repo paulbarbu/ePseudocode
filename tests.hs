@@ -44,6 +44,10 @@ runLex mainParser "daca a(b(), c()) atunci a(b(), c()) altfel a(1, 2) sfdaca"
 
 
 runLex mainParser "{1, 2, a({1,2,a()}, 1)}"
+runLex mainParser "{1, 5, func () 4 sffunc}"
+runLex mainParser "func a() ret func() ret 1 sffunc sffunc"
+runLex mainParser "a(func() 2 sffunc)"
+runLex mainParser "a(1, func() 2 sffunc)"
 runLex mainParser "{func a() ret 42 sffunc, func a() ret 24 sffunc}"
 runLex mainParser "a[1]()" -- a[1] is a function
 runLex mainParser "a[foo()]()" -- same as above, only foo() gives the index

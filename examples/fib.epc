@@ -1,11 +1,11 @@
 func fib(n)
     daca n <= 2 atunci
         ret 1
-    sf daca
+    sfdaca
 
     ret fib(n-1) + fib(n-2)
-sf func
+sffunc
 
 func main()
     scrie(fib(10)) //55
-sf func
+sffunc

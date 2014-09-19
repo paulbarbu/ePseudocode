@@ -105,7 +105,7 @@ funcExpr = funcDef <|> liftM E expr
 
 funcDef :: Parser Stmt
 funcDef = do reserved tFunc
-             name <- identifier
+             name <- identifier <|> return ""
              args <- parens (commaSep identifier) <?> "parameters list" -- FIXME: translate
              body <- many mainParser
              reserved tEndFunc
@@ -114,7 +114,7 @@ funcDef = do reserved tFunc
 
 funcCall :: Parser Expr
 funcCall = do name <- try indexAccess <|> try (liftM Var identifier)
-              liftM (FuncCall name) (many1 . parens $ commaSep expr) <?> "arguments list" -- FIXME: translate
+              liftM (FuncCall name) (many1 . parens $ commaSep (liftM E expr <|> funcDef)) <?> "arguments list" -- FIXME: translate
 
 
 assignment :: Parser Stmt

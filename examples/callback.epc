@@ -1,9 +1,9 @@
 func applyToRange(a, b, step, f)
-    pt i=a, i<=b, i=step(i) executa
+    pt i=a; i<=b; i=step(i) executa
         f(i)
-    sf pt
-sf func
+    sfpt
+sffunc
 
 func main()
-    applyToRange(1, 5, func(x) ret x+1 sf func, func(x) scrie(x*2) sf func)
-sf func
+    applyToRange(1, 5, func(x) ret x+1 sffunc, func(x) scrie(x*2) sffunc)
+sffunc

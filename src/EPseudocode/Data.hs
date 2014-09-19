@@ -16,8 +16,8 @@ data Expr =
     -- unary/binary expressions
     | UnExpr UnOp Expr
     | BinExpr BinOp Expr Expr
-    -- function calls
-    | FuncCall Expr [[Expr]] -- foo() = [[]], func_in_func()(2) = [[],[2]], func_in_list[1]() = [[]], a(1)() = [[1],[]]
+    -- function calls, the Stmt is limited to expr or function definitions
+    | FuncCall Expr [[Stmt]] -- foo() = [[]], func_in_func()(2) = [[],[2]], func_in_list[1]() = [[]], a(1)() = [[1],[]]
     deriving Show
 
 data BinOp = And | Or | Plus | Minus | Mul | Div | Mod | Lt | Le | Gt | Ge | Neq | Eq

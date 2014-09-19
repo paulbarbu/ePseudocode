@@ -1,11 +1,11 @@
 func plusN(n)
     ret func(x)
             ret n + x
-        sf func
-sf func
+        sffunc
+sffunc
 
 func main()
     plus3 = plusN(3)
 
     scrie(plus3(5)) // 8
-sf func
+sffunc
