@@ -42,6 +42,8 @@ runLex mainParser "daca a atunci 2 sfdaca"
 runLex mainParser "a(b(), c())"
 runLex mainParser "daca a(b(), c()) atunci a(b(), c()) altfel a(1, 2) sfdaca"
 
+runLex mainParser "a(b(), c()(1))"
+
 
 runLex mainParser "{1, 2, a({1,2,a()}, 1)}"
 runLex mainParser "{1, 5, func () 4 sffunc}"

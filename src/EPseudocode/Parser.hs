@@ -1,11 +1,10 @@
-module EPseudocode.Parser (runLex, mainParser)
+module EPseudocode.Parser (eParse, runParser)
 where
-
+import Prelude hiding (id)
 import Control.Applicative hiding ((<|>), many)
 import Control.Monad
 
-import Text.ParserCombinators.Parsec
-import Text.ParserCombinators.Parsec.Language
+import Text.ParserCombinators.Parsec hiding (runParser)
 import Text.ParserCombinators.Parsec.Expr
 
 import EPseudocode.Data
@@ -16,7 +15,7 @@ expr = buildExpressionParser exprTable term
     <?> "expression" -- FIXME: translate
 
 
---exprTable :: [[Operator Char () ThrowsError Expr]]
+exprTable :: [[Operator Char () Expr]]
 exprTable = [
       [pop "-" UnMinus, pop "!" Not]
     , [iop "*" Mul, iop "/" Div, iop "%" Mod]
@@ -127,11 +126,13 @@ indexAccess :: Parser Expr
 indexAccess = liftM2 Index identifier (many1 $ brackets expr)
 
 
-run :: Show a => Parser a -> String -> String
-run p input = case parse p "" input of
-    Left err -> "parse error at " ++ show err -- FIXME: translate
-    Right x -> show x
+runParser :: String -> String
+runParser input = case eParse input of
+  Left err -> "parse error at " ++ err -- FIXME: translate
+  Right x -> show x
 
 
-runLex :: Show a => Parser a -> String -> String
-runLex p input = run (whiteSpace *> many p <* eof) input
+eParse :: String -> Either String [Stmt]
+eParse input = case parse (whiteSpace *> many mainParser <* eof) "" input of
+  Left err -> Left $ show err
+  Right program -> Right program

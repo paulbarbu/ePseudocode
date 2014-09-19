@@ -1,6 +1,7 @@
 module EPseudocode.Data
 where
 
+-- TODO: this could be simplified I merge Expr with Stmt and make the difference in the parser
 
 data Expr =
     -- literal values
@@ -18,14 +19,14 @@ data Expr =
     | BinExpr BinOp Expr Expr
     -- function calls, the Stmt is limited to expr or function definitions
     | FuncCall Expr [[Stmt]] -- foo() = [[]], func_in_func()(2) = [[],[2]], func_in_list[1]() = [[]], a(1)() = [[1],[]]
-    deriving Show
+    deriving (Show, Eq)
 
 data BinOp = And | Or | Plus | Minus | Mul | Div | Mod | Lt | Le | Gt | Ge | Neq | Eq
-    deriving Show
+    deriving (Show, Eq)
 
 
 data UnOp = Not | UnMinus
-    deriving Show
+    deriving (Show, Eq)
 
 
 data Stmt = Assign String Stmt -- assignments (stmt is limited here to expression or function similarly to Ret)
@@ -36,4 +37,4 @@ data Stmt = Assign String Stmt -- assignments (stmt is limited here to expressio
     | Ret Stmt -- return statement (only expression or function)
     | FuncDef String [String] [Stmt] -- func name args body
     | E Expr
-    deriving Show
+    deriving (Show, Eq)
