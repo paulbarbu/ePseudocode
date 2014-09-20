@@ -43,8 +43,8 @@ parserTests = TestList [
  , "assign function (returns function call) to variable" ~:
     [Assign "a" (FuncDef "x" [] [Ret (E (FuncCall (Var "y") [[]]))])] ~=? parse "a=func x() ret y() sffunc"
 
- , "list containing lambda" ~:
-    [E (List [E (Int 1),E (Int 5),FuncDef "" [] [Ret (E (Int 42))]])] ~=? parse "{1, 5, func() ret 42 sffunc}"
+ , "list containing lambdas" ~:
+    [E (List [E (Int 1),E (Int 5),FuncDef "" [] [Ret (E (Int 42))],FuncDef "" [] [Ret (E (Int 43))]])] ~=? parse "{1, 5, func() ret 42 sffunc, func() ret 43 sffunc}"
 
  , "simple 'for' program" ~:
     do c <- readFile "examples/for.epc"
@@ -161,4 +161,86 @@ parserTests = TestList [
  , "function call with anon function as arg" ~:
     [E (FuncCall (Var "a") [[FuncDef "" []
                                      [Ret (E (Int 42))]]])] ~=? parse "a(func() ret 42 sffunc)"
+
+ , "function with sequential if and return" ~:
+    [FuncDef "x" []
+             [Assign "a" (E (Bool False)),
+              SimpleIf (Var "a")
+                       [Assign "a" (E (Bool True))],
+              Ret (E (Int 42))]] ~=? parse "func x() a=fals daca a atunci a=adevarat sfdaca ret 42 sffunc"
+
+ , "multiple function call - first function returned a function" ~:
+    [E (FuncCall (Var "a") [[],[]])] ~=? parse "a()()"
+
+ , "multiple function call - more general" ~:
+    [E (FuncCall (Var "a") [[],[],[],[],[],[],[],[]])] ~=? parse "a()()()()()()()()"
+
+ , "list index operation returns a function which is in turn called" ~:
+    [E (FuncCall (Index "a" [Int 1]) [[]])] ~=? parse "a[1]()"
+
+ , "list indexed by function call returns function that is in turn called" ~:
+    [E (FuncCall (Index "a" [FuncCall (Var "foo") [[]]]) [[]])] ~=? parse "a[foo()]()"
+
+ , "function call, one of the args being a lambda" ~:
+    [E (FuncCall (Var "a") [[E (Int 1),FuncDef "" [] [Ret (E (Int 2))]]])] ~=? parse "a(1, func() ret 2 sffunc)"
+
+ , "function call with other function calls as args" ~:
+    [E (FuncCall (Var "a") [[E (FuncCall (Var "b") [[]]),E (FuncCall (Var "c") [[],[E (Int 1)]])]])] ~=? parse "a(b(), c()(1))"
+
+ , "complete if with function calls" ~:
+    [CompleteIf (FuncCall (Var "a") [[E (FuncCall (Var "b") [[]]),E (FuncCall (Var "c") [[]])]])
+                [E (FuncCall (Var "a") [[E (FuncCall (Var "b") [[]]),E (FuncCall (Var "c") [[]])]])]
+                [E (FuncCall (Var "a") [[E (Int 1),E (Int 2)]])]] ~=? parse "daca a(b(), c()) atunci a(b(), c()) altfel a(1, 2) sfdaca"
+
+ , "function followed by if" ~:
+    [FuncDef "x" []
+             [SimpleIf (Int 1)
+                       [Ret (E (Int 2))]],
+     SimpleIf (Int 3)
+              [Ret (E (Int 42))]] ~=? parse "func x() daca 1 atunci ret 2 sfdaca sffunc daca 3 atunci ret 42 sfdaca"
+
+
+ , "return followed by return" ~:
+    [FuncDef "x" []
+             [Ret (FuncDef "y" []
+                           [Ret (E (Int 1))]),
+              Ret (E (Int 2))]] ~=? parse "func x() ret func y() ret 1 sffunc ret 2 sffunc"
+
+ , "return followed by simple if" ~:
+    [FuncDef "x" []
+             [Ret (FuncDef "y" []
+                           [Ret (E (Int 1))]),
+              SimpleIf (Int 2)
+                       [Ret (E (Int 3))]]] ~=? parse "func x() ret func y() ret 1 sffunc daca 2 atunci ret 3 sfdaca sffunc"
+
+ , "simple if with sequence of statements" ~:
+    [SimpleIf (Int 1)
+              [Assign "a" (E (Int 2)),
+               Assign "b" (E (Int 3)),
+               Assign "c" (E (Int 4))]] ~=? parse "daca 1 atunci a=2 b=3 c=4 sfdaca"
+
+ , "complete if with sequence of statements" ~:
+    [CompleteIf (Int 1)
+                [Assign "a" (E (Int 2)),
+                 Assign "b" (E (Int 3)),
+                 Assign "c" (E (Int 4))]
+                [Assign "a" (E (Int 3)),
+                 Assign "b" (E (Int 42)),
+                 Assign "c" (E (Int 5))]] ~=? parse "daca 1 atunci a=2 b=3 c=4 altfel a=3 b=42 c=5 sfdaca"
+
+ , "for with sequence of statements" ~:
+    [For (Assign "a" (E (Int 1))) (BinExpr Lt (Var "a") (Int 42)) (Assign "a" (E (BinExpr Plus (Var "a") (Int 1))))
+         [Assign "b" (E (Int 3)),
+          Assign "c" (E (Var "a"))]] ~=? parse "pt a=1;a<42;a=a+1 executa b=3 c=a sfpt"
+
+ , "while with sequence of statements" ~:
+    [While (Bool True)
+           [Assign "a" (E (Int 1)),
+            Assign "b" (E (Int 2)),
+            Assign "c" (E (Int 3))]] ~=? parse "cattimp adevarat executa a=1 b=2 c=3 sfcattimp"
+
+ , "function definition with sequence of statements" ~:
+    [FuncDef "a" []
+             [Assign "b" (E (Int 3)),
+              Assign "c" (E (Int 4))]] ~=? parse "func a() b=3 c=4 sffunc"
  ]

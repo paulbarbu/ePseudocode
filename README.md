@@ -17,7 +17,6 @@ TODO: AST from repl, AST from file
 TODO: lambdas (done), floating point, strings (done), vectors, lists (done), functions - capture environment(done), comments (nested), io, stdlib (math, string, list & vector operations), dictionaries, files
 TODO: ?modules?
 TODO: turing complete
-TODO: codeblocks extension
 TODO: debugger
 TODO: scientific notation
 TODO: unicode support
@@ -27,8 +26,7 @@ TODO: booleans, boolean operators
 TODO: LC3 backend
 TODO: x86 backend
 TODO: FFI and C libraries (interop?)
-TODO: multiple files parameters -> combined in a single one
-TODO: vim, kdevelop, visualstudio, eclipse? syntax highlighting
+TODO: codeblocks, vim, kdevelop, visualstudio, eclipse? syntax highlighting
 TODO: tail call optimization?
 TODO: no structs?
 
@@ -39,6 +37,8 @@ TODO: apply, curry
 TODO: coursera
 
 TODO: short-circuit the sau and si operators
+
+TODO: do not assign to function name inside function OR create separate variable
 
 Not supported: variadic functions
 
@@ -66,6 +66,7 @@ TODO: ...
 For more see the `examples` directory.
 
 TODO: compile in itself
+TODO: raytracer: http://fabiensanglard.net/rayTracing_back_of_business_card/
 
 * List operations:
 ```
