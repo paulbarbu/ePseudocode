@@ -32,10 +32,12 @@ parserTests = TestList [
     [E (FuncCall (Var "scrie") [[E (Index "a" [Int 2])]])] ~=? parse "scrie(a[2])"
 
  , "simple if and assignment" ~:
-    [SimpleIf (Var "a") [Assign "a" (E (BinExpr Plus (Var "a") (Int 2)))]] ~=? parse "daca a atunci a=a+2 sfdaca"
+    [SimpleIf (BinExpr Ge (Var "a") (Int 2))
+              [Assign "a" (E (BinExpr Plus (Var "a") (Int 2)))]] ~=? parse "daca a>=2 atunci a=a+2 sfdaca"
 
  , "simple if with index condition" ~:
-    [SimpleIf (Index "a" [Int 2]) [Assign "a" (E (BinExpr Plus (Var "a") (Int 2)))]] ~=? parse "daca a[2] atunci a=a+2 sfdaca"
+    [SimpleIf (Index "a" [Int 2])
+              [Assign "a" (E (BinExpr Plus (Var "a") (Int 2)))]] ~=? parse "daca a[2] atunci a=a+2 sfdaca"
 
  , "simple func def" ~:
     [FuncDef "x" [] [Ret (E (Int 3))]] ~=? parse "func x() ret 3 sffunc"
@@ -197,14 +199,14 @@ parserTests = TestList [
              [SimpleIf (Int 1)
                        [Ret (E (Int 2))]],
      SimpleIf (Int 3)
-              [Ret (E (Int 42))]] ~=? parse "func x() daca 1 atunci ret 2 sfdaca sffunc daca 3 atunci ret 42 sfdaca"
+              [Ret (E (Float 4.2))]] ~=? parse "func x() daca 1 atunci ret 2 sfdaca sffunc daca 3 atunci ret 4.2 sfdaca"
 
 
  , "return followed by return" ~:
     [FuncDef "x" []
              [Ret (FuncDef "y" []
-                           [Ret (E (Int 1))]),
-              Ret (E (Int 2))]] ~=? parse "func x() ret func y() ret 1 sffunc ret 2 sffunc"
+                           [Ret (E (UnExpr UnMinus (Int 1)))]),
+              Ret (E (Int 2))]] ~=? parse "func x() ret func y() ret -1 sffunc ret 2 sffunc"
 
  , "return followed by simple if" ~:
     [FuncDef "x" []
@@ -214,19 +216,19 @@ parserTests = TestList [
                        [Ret (E (Int 3))]]] ~=? parse "func x() ret func y() ret 1 sffunc daca 2 atunci ret 3 sfdaca sffunc"
 
  , "simple if with sequence of statements" ~:
-    [SimpleIf (Int 1)
-              [Assign "a" (E (Int 2)),
+    [SimpleIf (UnExpr Not (Bool False))
+              [Assign "a" (E (BinExpr Mul (BinExpr Minus (Int 2) (Int 1)) (Int 3))),
                Assign "b" (E (Int 3)),
-               Assign "c" (E (Int 4))]] ~=? parse "daca 1 atunci a=2 b=3 c=4 sfdaca"
+               Assign "c" (E (Int 4))]] ~=? parse "daca !fals atunci a=(2-1)*3 b=3 c=4 sfdaca"
 
  , "complete if with sequence of statements" ~:
-    [CompleteIf (Int 1)
+    [CompleteIf (BinExpr Or (Int 1) (Int 1))
                 [Assign "a" (E (Int 2)),
                  Assign "b" (E (Int 3)),
                  Assign "c" (E (Int 4))]
                 [Assign "a" (E (Int 3)),
                  Assign "b" (E (Int 42)),
-                 Assign "c" (E (Int 5))]] ~=? parse "daca 1 atunci a=2 b=3 c=4 altfel a=3 b=42 c=5 sfdaca"
+                 Assign "c" (E (Int 5))]] ~=? parse "daca 1 sau 1 atunci a=2 b=3 c=4 altfel a=3 b=42 c=5 sfdaca"
 
  , "for with sequence of statements" ~:
     [For (Assign "a" (E (Int 1))) (BinExpr Lt (Var "a") (Int 42)) (Assign "a" (E (BinExpr Plus (Var "a") (Int 1))))

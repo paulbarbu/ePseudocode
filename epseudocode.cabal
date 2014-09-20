@@ -34,4 +34,4 @@ Test-Suite tests
   build-depends:       base, HUnit, Cabal >= 1.9.2,
                        parsec,
                        haskeline
-  -- ghc-options:         -Wall
+  ghc-options:         -fhpc
