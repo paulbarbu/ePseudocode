@@ -41,10 +41,10 @@ parserTests = TestList [
     [FuncDef "x" [] [Ret (E (Int 3))]] ~=? parse "func x() ret 3 sffunc"
 
  , "assign function (returns function call) to variable" ~:
-    [Assign "a" (FuncDef "x" [] [Ret (E (FuncCall (Var "x") [[]]))])] ~=? parse "a=func x() ret x() sffunc"
+    [Assign "a" (FuncDef "x" [] [Ret (E (FuncCall (Var "y") [[]]))])] ~=? parse "a=func x() ret y() sffunc"
 
  , "list containing lambda" ~:
-    [E (List [E (Int 1),E (Int 5),FuncDef "" [] [Ret (E (Int 4))]])] ~=? parse "{1, 5, func() ret 4 sffunc}"
+    [E (List [E (Int 1),E (Int 5),FuncDef "" [] [Ret (E (Int 42))]])] ~=? parse "{1, 5, func() ret 42 sffunc}"
 
  , "simple 'for' program" ~:
     do c <- readFile "examples/for.epc"
@@ -125,4 +125,40 @@ parserTests = TestList [
                                                   [E (FuncCall (Var "scrie") [[E (String "buzz")]])]
                                                   [E (FuncCall (Var "scrie") [[E (Var "i")]])]]],
                Assign "i" (E (BinExpr Plus (Var "i") (Int 1)))]] @=? parse c
+
+ , "imbricated ifs" ~:
+    [SimpleIf (Int 1)
+              [SimpleIf (Int 2)
+                        [Ret (E (Int 3))],
+               SimpleIf (Int 42)
+                        [Ret (E (Int 5))]]] ~=? parse "daca 1 atunci daca 2 atunci ret 3 sfdaca daca 42 atunci ret 5 sfdaca sfdaca"
+
+ , "sequential ifs (complete, simple)" ~:
+    [CompleteIf (Int 1)
+                [Ret (E (Int 2))]
+                [Ret (E (Int 3))],
+     SimpleIf (Int 42)
+              [Ret (E (Int 5))]] ~=? parse "daca 1 atunci ret 2 altfel ret 3 sfdaca daca 42 atunci ret 5 sfdaca"
+
+ , "function with sequential simple ifs" ~:
+    [FuncDef "x" []
+             [SimpleIf (Int 1)
+                       [Ret (E (Int 2))],
+              SimpleIf (Int 3)
+                       [Ret (E (Int 42))]]] ~=? parse "func x() daca 1 atunci ret 2 sfdaca daca 3 atunci ret 42 sfdaca sffunc"
+
+ , "lists and function calls passed to each other" ~:
+    [E (List [E (Int 1),E (Int 2),
+              E (FuncCall (Var "a") [[E (List [E (Int 3),E (Int 4),
+                                               E (FuncCall (Var "b") [[]])]),
+              E (Int 5)]])])] ~=? parse "{1, 2, a({3, 4, b()}, 5)}"
+
+ , "function returns function" ~:
+    [FuncDef "a" []
+             [Ret (FuncDef "" []
+                           [Ret (E (Int 1))])]] ~=? parse "func a() ret func() ret 1 sffunc sffunc"
+
+ , "function call with anon function as arg" ~:
+    [E (FuncCall (Var "a") [[FuncDef "" []
+                                     [Ret (E (Int 42))]]])] ~=? parse "a(func() ret 42 sffunc)"
  ]
