@@ -17,7 +17,8 @@ expr = buildExpressionParser exprTable term
 
 exprTable :: [[Operator Char () Expr]]
 exprTable = [
-      [pop "-" UnMinus, pop "!" Not]
+     [riop "**" Pow]
+    , [pop "-" UnMinus, pop "!" Not]
     , [iop "*" Mul, iop "/" Div, iop "%" Mod]
     , [iop "+" Plus, iop "-" Minus]
     , [iop "<" Lt, iop "<=" Le, iop ">" Gt, iop ">=" Ge]
@@ -26,6 +27,7 @@ exprTable = [
     , [iop tOr Or]
     ]
     where iop id f= Infix (op id (BinExpr f)) AssocLeft
+          riop id f= Infix (op id (BinExpr f)) AssocRight
           pop id f = Prefix $ op id (UnExpr f)
           op id f = reservedOp id >> return f <?> "operator" -- FIXME: translate
 

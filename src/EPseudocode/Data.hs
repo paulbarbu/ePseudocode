@@ -21,7 +21,7 @@ data Expr =
     | FuncCall Expr [[Stmt]] -- foo() = [[]], func_in_func()(2) = [[],[2]], func_in_list[1]() = [[]], a(1)() = [[1],[]]
     deriving (Show, Eq)
 
-data BinOp = And | Or | Plus | Minus | Mul | Div | Mod | Lt | Le | Gt | Ge | Neq | Eq
+data BinOp = And | Or | Plus | Minus | Mul | Div | Mod | Lt | Le | Gt | Ge | Neq | Eq | Pow
     deriving (Show, Eq)
 
 

@@ -238,11 +238,30 @@ parserTests = TestList [
  , "while with sequence of statements" ~:
     [While (Bool True)
            [Assign "a" (E (Int 1)),
-            Assign "b" (E (Int 2)),
-            Assign "c" (E (Int 3))]] ~=? parse "cattimp adevarat executa a=1 b=2 c=3 sfcattimp"
+            Assign "b" (E (BinExpr Div (Int 2) (Int 4))),
+            Assign "c" (E (Int 3))]] ~=? parse "cattimp adevarat executa a=1 b=2/4 c=3 sfcattimp"
 
  , "function definition with sequence of statements" ~:
     [FuncDef "a" []
              [Assign "b" (E (Int 3)),
               Assign "c" (E (Int 4))]] ~=? parse "func a() b=3 c=4 sffunc"
+
+ , "pow(positive int, positive int)" ~:
+    [E (BinExpr Pow (Int 2) (Int 4))] ~=? parse "2 ** 4"
+
+ , "-pow(positive int, positive int)" ~:
+    [E (UnExpr UnMinus (BinExpr Pow (Int 2) (Int 4)))] ~=? parse "-2 ** 4"
+
+ , "pow(negative expr, positive int)" ~:
+    [E (BinExpr Pow (UnExpr UnMinus (Int 2)) (Int 4))] ~=? parse "(-2) ** 4"
+
+ , "pow(negative expr, negative int)" ~:
+    [E (BinExpr Pow (UnExpr UnMinus (Int 2)) (Int (-4)))] ~=? parse "(-2) ** -4"
+
+ , "pow(negative expr, negative expr)" ~:
+    [E (BinExpr Pow (UnExpr UnMinus (Int 2)) (UnExpr UnMinus (Int 4)))] ~=? parse "(-2) ** (-4)"
+
+ , "pow(int , float)" ~:
+    [E (BinExpr Pow (Int 4) (Float 2.5))] ~=? parse "4 ** 2.5"
+
  ]
