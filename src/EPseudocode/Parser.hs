@@ -40,7 +40,7 @@ term = parens expr
   <|> (reserved tTrue >> return (Bool True))
   <|> (reserved tFalse >> return (Bool False))
   <|> liftM List (braces (commaSep (liftM E expr <|> funcDef)))
-  <|> try (funcCall <?> "functionc call") -- FIXME: translate -- this occurs twice
+  <|> try (funcCall <?> "function call") -- FIXME: translate -- this occurs twice
   <|> try indexAccess
   <|> liftM Var identifier
   <?> "simple expression" -- FIXME: translate
@@ -78,11 +78,11 @@ mainParser =
   <|>
   -- for
   do reserved tFor <?> tFor
-     initial <- mainParser
+     initial <- liftM Just assignment <|> return Nothing
      semi
-     cond <- expr
+     cond <- liftM Just expr <|> return Nothing
      semi
-     iteration <- assignment
+     iteration <- liftM Just assignment <|> return Nothing -- TODO: I don't want this to allow function difinitions here an for the 'initial' part
      reserved tDo <?> tDo
      stmts <- many mainParser
      reserved tEndFor <?> tEndFor
@@ -119,9 +119,9 @@ funcCall = do name <- try indexAccess <|> try (liftM Var identifier)
 
 
 assignment :: Parser Stmt
-assignment = do name <- identifier
+assignment = do lval <- try indexAccess <|> liftM Var identifier
                 reservedOp "="
-                liftM (Assign name) funcExpr
+                liftM (Assign lval) funcExpr
 
 
 indexAccess :: Parser Expr

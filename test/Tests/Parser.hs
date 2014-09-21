@@ -24,15 +24,15 @@ parseFail input needle = case eParse input of
 "pt 1;2;3;"
 "daca 2 atunci ret 2 altfel sf" --because the sfdaca is not complete the error si ambigous
 "daca a atunci altfel a( sfdaca" -- the error is on the "else" branch but the keyword "altfel" is blamed
+"daca 2 atucni sfdaca" -- unexpected "a"
 -}
-
 
 parserTests = TestList [
    "assign list to the variable a" ~:
-    [Assign "a" (E (List [E (Int 1)]))] ~=? parse "a={1}"
+    [Assign (Var "a") (E (List [E (Int 1)]))] ~=? parse "a={1}"
 
  , "assign int to the variable a" ~:
-    [Assign "a" (E (Int 1))] ~=? parse "a=1"
+    [Assign (Var "a") (E (Int 1))] ~=? parse "a=1"
 
  , "function call" ~:
     [E (FuncCall (Var "a") [[]])] ~=? parse "a()"
@@ -48,26 +48,26 @@ parserTests = TestList [
 
  , "simple if and assignment" ~:
     [SimpleIf (BinExpr Ge (Var "a") (Int 2))
-              [Assign "a" (E (BinExpr Plus (Var "a") (Int 2)))]] ~=? parse "daca a>=2 atunci a=a+2 sfdaca"
+              [Assign (Var "a") (E (BinExpr Plus (Var "a") (Int 2)))]] ~=? parse "daca a>=2 atunci a=a+2 sfdaca"
 
  , "simple if with index condition" ~:
     [SimpleIf (Index "a" [Int 2])
-              [Assign "a" (E (BinExpr Plus (Var "a") (Int 2)))]] ~=? parse "daca a[2] atunci a=a+2 sfdaca"
+              [Assign (Var "a") (E (BinExpr Plus (Var "a") (Int 2)))]] ~=? parse "daca a[2] atunci a=a+2 sfdaca"
 
  , "simple func def" ~:
     [FuncDef "x" [] [Ret (E (Int 3))]] ~=? parse "func x() ret 3 sffunc"
 
  , "assign function (returns function call) to variable" ~:
-    [Assign "a" (FuncDef "x" [] [Ret (E (FuncCall (Var "y") [[]]))])] ~=? parse "a=func x() ret y() sffunc"
+    [Assign (Var "a") (FuncDef "x" [] [Ret (E (FuncCall (Var "y") [[]]))])] ~=? parse "a=func x() ret y() sffunc"
 
  , "list containing lambdas" ~:
     [E (List [E (Int 1),E (Int 5),FuncDef "" [] [Ret (E (Int 42))],FuncDef "" [] [Ret (E (Int 43))]])] ~=? parse "{1, 5, func() ret 42 sffunc, func() ret 43 sffunc}"
 
  , "simple 'for' program" ~:
     do c <- readFile "examples/for.epc"
-       [Assign "sum" (E (Int 0)),
-        For (Assign "i" (E (Int 1))) (BinExpr Le (Var "i") (Int 100)) (Assign "i" (E (BinExpr Plus (Var "i") (Int 1))))
-            [Assign "sum" (E (BinExpr Plus (Var "sum") (Var "i")))],
+       [Assign (Var "sum") (E (Int 0)),
+        For (Just (Assign (Var "i") (E (Int 1)))) (Just (BinExpr Le (Var "i") (Int 100))) (Just (Assign (Var "i") (E (BinExpr Plus (Var "i") (Int 1)))))
+            [Assign (Var "sum") (E (BinExpr Plus (Var "sum") (Var "i")))],
         E (FuncCall (Var "scrie") [[E (String "Sum = "),E (Var "sum")]])] @=? parse c
 
  , "simple 'hello world' program" ~:
@@ -77,7 +77,7 @@ parserTests = TestList [
  , "process a range of numbers with a callback function and a custom step" ~:
     do c <- readFile "examples/callback.epc"
        [FuncDef "applyToRange" ["a","b","step","f"]
-                [For (Assign "i" (E (Var "a"))) (BinExpr Le (Var "i") (Var "b")) (Assign "i" (E (FuncCall (Var "step") [[E (Var "i")]])))
+                [For (Just (Assign (Var "i") (E (Var "a")))) (Just (BinExpr Le (Var "i") (Var "b"))) (Just (Assign (Var "i") (E (FuncCall (Var "step") [[E (Var "i")]]))))
                      [E (FuncCall (Var "f") [[E (Var "i")]])]],
         FuncDef "main" []
                 [E (FuncCall (Var "applyToRange")
@@ -98,8 +98,8 @@ parserTests = TestList [
 
  , "display indices in a list along with values" ~:
     do c <- readFile "examples/lists.epc"
-       [Assign "l" (E (List [E (Int 1),E (Int 2),E (Int 5),E (Int 7),E (Int 8)])),
-        For (Assign "i" (E (Int 0))) (BinExpr Lt (Var "i") (FuncCall (Var "lung") [[E (Var "l")]])) (Assign "i" (E (BinExpr Plus (Var "i") (Int 1))))
+       [Assign (Var "l") (E (List [E (Int 1),E (Int 2),E (Int 5),E (Int 7),E (Int 8)])),
+        For (Just (Assign (Var "i") (E (Int 0)))) (Just (BinExpr Lt (Var "i") (FuncCall (Var "lung") [[E (Var "l")]]))) (Just (Assign (Var "i") (E (BinExpr Plus (Var "i") (Int 1)))))
             [E (FuncCall (Var "scrie") [[E (Var "i"),E (Index "l" [Var "i"])]])]] @=? parse c
 
  , "greatest common divisor program" ~:
@@ -107,8 +107,8 @@ parserTests = TestList [
        [FuncDef "greatestCommonDivisor" ["a","b"]
                 [While (BinExpr Neq (Var "a") (Var "b"))
                        [CompleteIf (BinExpr Gt (Var "a") (Var "b"))
-                                   [Assign "a" (E (BinExpr Minus (Var "a") (Var "b")))]
-                                   [Assign "b" (E (BinExpr Minus (Var "b") (Var "a")))]],
+                                   [Assign (Var "a") (E (BinExpr Minus (Var "a") (Var "b")))]
+                                   [Assign (Var "b") (E (BinExpr Minus (Var "b") (Var "a")))]],
                  Ret (E (Var "a"))],
         FuncDef "gcd" ["a","b"]
                 [SimpleIf (BinExpr Eq (Var "b") (Int 0))
@@ -124,13 +124,13 @@ parserTests = TestList [
                 [Ret (FuncDef "" ["x"]
                               [Ret (E (BinExpr Plus (Var "n") (Var "x")))])],
         FuncDef "main" []
-                [Assign "plus3" (E (FuncCall (Var "plusN") [[E (Int 3)]])),
+                [Assign (Var "plus3") (E (FuncCall (Var "plusN") [[E (Int 3)]])),
                  E (FuncCall (Var "scrie") [[E (FuncCall (Var "plus3") [[E (Int 5)]])]])]] @=? parse c
 
   , "fizzbuzz program" ~:
     do c <- readFile "examples/fizzbuzz.epc"
-       [Assign "n" (E (FuncCall (Var "citeste") [[]])),
-        Assign "i" (E (Int 1)),
+       [Assign (Var "n") (E (FuncCall (Var "citeste") [[]])),
+        Assign (Var "i") (E (Int 1)),
         While (BinExpr Le (Var "i") (Var "n"))
               [CompleteIf (BinExpr And
                                     (BinExpr Eq (BinExpr Mod (Var "i") (Int 3)) (Int 0))
@@ -141,7 +141,7 @@ parserTests = TestList [
                                       [CompleteIf (BinExpr Eq (BinExpr Mod (Var "i") (Int 5)) (Int 0))
                                                   [E (FuncCall (Var "scrie") [[E (String "buzz")]])]
                                                   [E (FuncCall (Var "scrie") [[E (Var "i")]])]]],
-               Assign "i" (E (BinExpr Plus (Var "i") (Int 1)))]] @=? parse c
+               Assign (Var "i") (E (BinExpr Plus (Var "i") (Int 1)))]] @=? parse c
 
  , "imbricated ifs" ~:
     [SimpleIf (Int 1)
@@ -181,9 +181,9 @@ parserTests = TestList [
 
  , "function with sequential if and return" ~:
     [FuncDef "x" []
-             [Assign "a" (E (Bool False)),
+             [Assign (Var "a") (E (Bool False)),
               SimpleIf (Var "a")
-                       [Assign "a" (E (Bool True))],
+                       [Assign (Var "a") (E (Bool True))],
               Ret (E (Int 42))]] ~=? parse "func x() a=fals daca a atunci a=adevarat sfdaca ret 42 sffunc"
 
  , "multiple function call - first function returned a function" ~:
@@ -232,34 +232,34 @@ parserTests = TestList [
 
  , "simple if with sequence of statements" ~:
     [SimpleIf (UnExpr Not (Bool False))
-              [Assign "a" (E (BinExpr Mul (BinExpr Minus (Int 2) (Int 1)) (Int 3))),
-               Assign "b" (E (Int 3)),
-               Assign "c" (E (Int 4))]] ~=? parse "daca !fals atunci a=(2-1)*3 b=3 c=4 sfdaca"
+              [Assign (Var "a") (E (BinExpr Mul (BinExpr Minus (Int 2) (Int 1)) (Int 3))),
+               Assign (Var "b") (E (Int 3)),
+               Assign (Var "c") (E (Int 4))]] ~=? parse "daca !fals atunci a=(2-1)*3 b=3 c=4 sfdaca"
 
  , "complete if with sequence of statements" ~:
     [CompleteIf (BinExpr Or (Int 1) (Int 1))
-                [Assign "a" (E (Int 2)),
-                 Assign "b" (E (Int 3)),
-                 Assign "c" (E (Int 4))]
-                [Assign "a" (E (Int 3)),
-                 Assign "b" (E (Int 42)),
-                 Assign "c" (E (Int 5))]] ~=? parse "daca 1 sau 1 atunci a=2 b=3 c=4 altfel a=3 b=42 c=5 sfdaca"
+                [Assign (Var "a") (E (Int 2)),
+                 Assign (Var "b") (E (Int 3)),
+                 Assign (Var "c") (E (Int 4))]
+                [Assign (Var "a") (E (Int 3)),
+                 Assign (Var "b") (E (Int 42)),
+                 Assign (Var "c") (E (Int 5))]] ~=? parse "daca 1 sau 1 atunci a=2 b=3 c=4 altfel a=3 b=42 c=5 sfdaca"
 
  , "for with sequence of statements" ~:
-    [For (Assign "a" (E (Int 1))) (BinExpr Lt (Var "a") (Int 42)) (Assign "a" (E (BinExpr Plus (Var "a") (Int 1))))
-         [Assign "b" (E (Int 3)),
-          Assign "c" (E (Var "a"))]] ~=? parse "pt a=1;a<42;a=a+1 executa b=3 c=a sfpt"
+    [For (Just (Assign (Var "a") (E (Int 1)))) (Just (BinExpr Lt (Var "a") (Int 42))) (Just (Assign (Var "a") (E (BinExpr Plus (Var "a") (Int 1)))))
+         [Assign (Var "b") (E (Int 3)),
+          Assign (Var "c") (E (Var "a"))]] ~=? parse "pt a=1;a<42;a=a+1 executa b=3 c=a sfpt"
 
  , "while with sequence of statements" ~:
     [While (Bool True)
-           [Assign "a" (E (Int 1)),
-            Assign "b" (E (BinExpr Div (Int 2) (Int 4))),
-            Assign "c" (E (Int 3))]] ~=? parse "cattimp adevarat executa a=1 b=2/4 c=3 sfcattimp"
+           [Assign (Var "a") (E (Int 1)),
+            Assign (Var "b") (E (BinExpr Div (Int 2) (Int 4))),
+            Assign (Var "c") (E (Int 3))]] ~=? parse "cattimp adevarat executa a=1 b=2/4 c=3 sfcattimp"
 
  , "function definition with sequence of statements" ~:
     [FuncDef "a" []
-             [Assign "b" (E (Int 3)),
-              Assign "c" (E (Int 4))]] ~=? parse "func a() b=3 c=4 sffunc"
+             [Assign (Var "b") (E (Int 3)),
+              Assign (Var "c") (E (Int 4))]] ~=? parse "func a() b=3 c=4 sffunc"
 
  , "pow(positive int, positive int)" ~:
     [E (BinExpr Pow (Int 2) (Int 4))] ~=? parse "2 ** 4"
@@ -285,6 +285,31 @@ parserTests = TestList [
  , "expression" ~:
     [E (BinExpr Minus (BinExpr Plus (BinExpr Plus (Int 15) (Int 1)) (Int 4)) (Int 5))] ~=? parse " 0xF +  1 + /*com/*inside comment*/ment*/   4 - 5 //comment"
 
+ , "empty while" ~:
+    [While (BinExpr Mod (Int 2) (Int 3)) []] ~=? parse "cattimp 2%3 executa sfcattimp"
+
+ , "empty complete if" ~:
+    [CompleteIf (Int 2) [] []] ~=? parse "daca 2 atunci altfel sfdaca"
+
+ , "empty for" ~:
+    [For (Just (Assign (Var "a") (E (Int 1))))
+         (Just (BinExpr Le (Var "a") (Int 12)))
+         (Just (Assign (Var "a") (E (BinExpr Plus (Var "a") (Int 3))))) []] ~=? parse "pt a=1;a<=12;a=a+3 executa sfpt"
+
+ , "infinite empty for" ~:
+    [For Nothing Nothing Nothing []] ~=? parse "pt ;; executa sfpt"
+
+ , "empty simple if" ~:
+    [SimpleIf (BinExpr Mod (Var "a") (Int 2)) []] ~=? parse "daca a%2 atunci sfdaca"
+
+ , "assign to list index" ~:
+    [Assign (Index "a" [Int 2]) (E (Int 3))] ~=? parse "a[2]=3"
+
+ , "for with list indices" ~:
+    [For (Just (Assign (Index "a" [Int 2]) (E (Int 1))))
+         (Just (BinExpr Le (Index "a" [Int 2]) (Int 5)))
+         (Just (Assign (Index "a" [Int 2]) (E (Int 3)))) []] ~=? parse "pt a[2]=1;a[2]<=5;a[2]=3 executa sfpt"
+
  , "run parser, simple expression" ~:
     "[E (Int 1)]" ~=? runParser "1"
 
@@ -306,9 +331,11 @@ parserTests = TestList [
 
  , "no tEndIf for simple if" ~: parseFail "daca a atunci" tEndIf
 
- , "incomplete for" ~: parseFail "pt 1;2;a=2 executa" tDo
+ , "incomplete for" ~: parseFail "pt a=1;a<=2;a=a+1 executa" tDo
 
- , "incomplete for (without tDo)" ~: parseFail "pt 1;2;a=2" tDo
+ , "for with expression as initial" ~: parseFail "pt a+1;2;a=2 executa sfpt" "unexpected \"+\""
+
+ , "incomplete for (without tDo)" ~: parseFail "pt a=1;a<=2;a=a+1" tDo
 
  , "tDo as variable" ~: parseFail tDo tDo
 
@@ -319,3 +346,13 @@ parserTests = TestList [
  , "run parser, parse error" ~:
     "parse error at" `isPrefixOf` runParser "a(" @? "parser succeeded"
  ]
+
+
+{---TODO:
+error for: epc> pt a=func() sffunc;2;a=3 executa sfpt
+[For (Just (Assign (Var "a") (FuncDef "" [] []))) (BinExpr Le (Var "a") (Int 2)) (Assign (Var "a") (E (Int 3))) []]
+
+error for:
+epc> pt a=2;a<=2;a=func() sffunc executa sfpt
+[For (Just (Assign (Var "a") (E (Int 2)))) (BinExpr Le (Var "a") (Int 2)) (Assign (Var "a") (FuncDef "" [] [])) []]
+-}

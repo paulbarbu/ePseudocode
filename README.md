@@ -12,17 +12,13 @@ compiler/parser since I didn't focus on translating strings from parsec)
 Description
 ===========
 
-TODO: AST from repl, AST from file
-
-TODO: lambdas (done), floating point, strings (done), vectors, lists (done), functions - capture environment(done), comments (nested), io, stdlib (math, string, list & vector operations), dictionaries, files
-TODO: ?modules?
+TODO: lambdas (done), floating point, strings (done), lists (done), functions - capture environment(done), io, stdlib (math, string, list & vector operations), files
 TODO: turing complete
 TODO: debugger
 TODO: scientific notation
 TODO: unicode support
 TODO: list slicing
 TODO: Bitwise operators
-TODO: booleans, boolean operators
 TODO: LC3 backend
 TODO: x86 backend
 TODO: FFI and C libraries (interop?)
@@ -43,7 +39,7 @@ TODO: do not assign to function name inside function OR create separate variable
 Not supported: variadic functions
 
 * Case sensitive
-* Highly influenced by C (a feature because one of the reasons it exists is to provide a lower learning curve, next step being C)
+* Influenced by C (a feature because one of the reasons it exists is to provide a lower learning curve, next step being C)
 * If no `main` function is defined then all code in a file is executed as if it was in a `main` function
 * Variables are declared on the spot, calid names start with "_" or with letters and continue with leters and numbers
 * Operators: `=`, `+`, `-`, `*`, `/`, `%`, `==`, `!=`, `<` , `>`, `<=`, `>=`, `!`, `sau` (or), `si` (and), TODO

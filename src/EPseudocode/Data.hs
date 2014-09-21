@@ -9,7 +9,7 @@ data Expr =
     | Float Double
     | String String
     | Bool Bool
-    | List [Stmt] --list of experssions, fucntion definitions or function calls
+    | List [Stmt] --list of expressions, function definitions or function calls
     -- variables
     | Var String
     -- list indexing
@@ -29,12 +29,12 @@ data UnOp = Not | UnMinus
     deriving (Show, Eq)
 
 
-data Stmt = Assign String Stmt -- assignments (stmt is limited here to expression or function similarly to Ret)
+data Stmt = Assign Expr Stmt -- assignments (expr is limited to variable or list index and stmt is limited here to expression or function (call/def) similarly to Ret)
     | CompleteIf Expr [Stmt] [Stmt] -- if condition then statements else statements
     | SimpleIf Expr [Stmt] -- if condition then statements
     | While Expr [Stmt] -- while condition then statements
-    | For Stmt Expr Stmt [Stmt] -- for initial, condition, iteration then statements
-    | Ret Stmt -- return statement (only expression or function)
+    | For (Maybe Stmt) (Maybe Expr) (Maybe Stmt) [Stmt] -- for initial, condition, iteration then statements
+    | Ret Stmt -- return statement (only expression or function call/def)
     | FuncDef String [String] [Stmt] -- func name args body
     | E Expr
     deriving (Show, Eq)
