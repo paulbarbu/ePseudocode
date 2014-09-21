@@ -34,8 +34,10 @@ epcTokens  = emptyDef {
   , commentLine = "//"
   , identStart = letter <|> char '_'
   , identLetter = alphaNum <|> char '_'
-  , reservedOpNames = ["!", "<", "=", ">", ">=", "<=", "==", "!=", "+", "-", "/", "%", "*", tOr, tAnd]
-  , reservedNames = [tTrue, tFalse, tReturn, tIf, tThen, tElse, tEndIf, tWhile, tEndWhile, tFor, tEndFor, tFunc, tEndFunc]
+  --, opStart = opLetter emptyDef
+  , opLetter = oneOf "=*"
+  --, reservedOpNames = ["!", "<", "=", ">", ">=", "<=", "==", "!=", "+", "-", "/", "%", "*", "**"]
+  , reservedNames = [tOr, tAnd, tTrue, tFalse, tReturn, tIf, tThen, tElse, tEndIf, tWhile, tDo, tEndWhile, tFor, tEndFor, tFunc, tEndFunc]
 }
 
 

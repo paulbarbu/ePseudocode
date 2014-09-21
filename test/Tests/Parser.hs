@@ -1,15 +1,30 @@
 module Tests.Parser (parserTests)
 where
 
+import Data.List (isPrefixOf, isInfixOf)
+
 import Test.HUnit
 
-import EPseudocode.Parser (eParse)
+import EPseudocode.Parser (eParse, runParser)
+import EPseudocode.Lexer
 import EPseudocode.Data
 
 
 parse input = case eParse input of
     Left err -> error err
     Right expr -> expr
+
+
+parseFail input needle = case eParse input of
+    Left err -> needle `isInfixOf` err @? "parser succeeded: " ++ err
+    Right ast -> error $ "parser succeeded with: " ++ show ast
+
+{- TODO: improve error messages:
+"pt " -- do not use the mainParser there, instead just the specific ones
+"pt 1;2;3;"
+"daca 2 atunci ret 2 altfel sf" --because the sfdaca is not complete the error si ambigous
+"daca a atunci altfel a( sfdaca" -- the error is on the "else" branch but the keyword "altfel" is blamed
+-}
 
 
 parserTests = TestList [
@@ -258,10 +273,49 @@ parserTests = TestList [
  , "pow(negative expr, negative int)" ~:
     [E (BinExpr Pow (UnExpr UnMinus (Int 2)) (Int (-4)))] ~=? parse "(-2) ** -4"
 
+ , "pow(negative expr, negative int) - no space" ~:
+    [E (BinExpr Pow (UnExpr UnMinus (Int 2)) (Int (-4)))] ~=? parse "(-2) **-4"
+
  , "pow(negative expr, negative expr)" ~:
     [E (BinExpr Pow (UnExpr UnMinus (Int 2)) (UnExpr UnMinus (Int 4)))] ~=? parse "(-2) ** (-4)"
 
  , "pow(int , float)" ~:
     [E (BinExpr Pow (Int 4) (Float 2.5))] ~=? parse "4 ** 2.5"
 
+ , "expression" ~:
+    [E (BinExpr Minus (BinExpr Plus (BinExpr Plus (Int 15) (Int 1)) (Int 4)) (Int 5))] ~=? parse " 0xF +  1 + /*com/*inside comment*/ment*/   4 - 5 //comment"
+
+ , "run parser, simple expression" ~:
+    "[E (Int 1)]" ~=? runParser "1"
+
+ , "run parser, simple minus expression" ~:
+    "[E (UnExpr UnMinus (Int 1))]" ~=? runParser "-1"
+
+ , "run parser, simple expression" ~:
+    "[E (FuncCall (Var \"a\") [[E (BinExpr Div (Int 5) (Int 2))]])]" ~=? runParser "a(5/2)"
+
+ , "incomplete if and function call" ~: parseFail "daca a(" tThen
+
+ , "incomplete function def" ~: parseFail "func a" "parameters list"
+
+ , "incomplete parameter listf" ~: parseFail "func a()" tEndFunc
+
+ , "incomplete while" ~: parseFail "cattimp adevarat executa" tDo
+
+ , "incomplete while with no tDo" ~: parseFail "cattimp a" tDo
+
+ , "no tEndIf for simple if" ~: parseFail "daca a atunci" tEndIf
+
+ , "incomplete for" ~: parseFail "pt 1;2;a=2 executa" tDo
+
+ , "incomplete for (without tDo)" ~: parseFail "pt 1;2;a=2" tDo
+
+ , "tDo as variable" ~: parseFail tDo tDo
+
+ , "tOr as variable" ~: parseFail tOr tOr
+
+ , "tAnd as variable" ~: parseFail tAnd tAnd
+
+ , "run parser, parse error" ~:
+    "parse error at" `isPrefixOf` runParser "a(" @? "parser succeeded"
  ]
