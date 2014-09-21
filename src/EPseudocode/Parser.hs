@@ -78,11 +78,11 @@ mainParser =
   <|>
   -- for
   do reserved tFor <?> tFor
-     initial <- liftM Just assignment <|> return Nothing
+     initial <- liftM Just (assignment $ liftM E expr) <|> return Nothing
      semi
      cond <- liftM Just expr <|> return Nothing
      semi
-     iteration <- liftM Just assignment <|> return Nothing -- TODO: I don't want this to allow function difinitions here an for the 'initial' part
+     iteration <- liftM Just (assignment $ liftM E expr) <|> return Nothing
      reserved tDo <?> tDo
      stmts <- many mainParser
      reserved tEndFor <?> tEndFor
@@ -95,7 +95,7 @@ mainParser =
   (funcDef <?> "function definition")  -- FIXME: translate
   <|>
   -- assignment
-  try assignment
+  (try $ assignment funcExpr)
   <|>
   liftM E expr -- TODO: is this the right thing?
 
@@ -118,10 +118,10 @@ funcCall = do name <- try indexAccess <|> try (liftM Var identifier)
               liftM (FuncCall name) (many1 . parens $ commaSep (liftM E expr <|> funcDef)) <?> "arguments list" -- FIXME: translate
 
 
-assignment :: Parser Stmt
-assignment = do lval <- try indexAccess <|> liftM Var identifier
-                reservedOp "="
-                liftM (Assign lval) funcExpr
+assignment :: Parser Stmt -> Parser Stmt
+assignment rhsParser = do lval <- try indexAccess <|> liftM Var identifier
+                          reservedOp "="
+                          liftM (Assign lval) rhsParser
 
 
 indexAccess :: Parser Expr

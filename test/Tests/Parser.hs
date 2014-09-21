@@ -20,8 +20,6 @@ parseFail input needle = case eParse input of
     Right ast -> error $ "parser succeeded with: " ++ show ast
 
 {- TODO: improve error messages:
-"pt " -- do not use the mainParser there, instead just the specific ones
-"pt 1;2;3;"
 "daca 2 atunci ret 2 altfel sf" --because the sfdaca is not complete the error si ambigous
 "daca a atunci altfel a( sfdaca" -- the error is on the "else" branch but the keyword "altfel" is blamed
 "daca 2 atucni sfdaca" -- unexpected "a"
@@ -335,6 +333,10 @@ parserTests = TestList [
 
  , "for with expression as initial" ~: parseFail "pt a+1;2;a=2 executa sfpt" "unexpected \"+\""
 
+ , "for with function as initial" ~: parseFail "pt a=func() sffunc;2;a=3 executa sfpt" "unexpected reserved word \"func\""
+
+ , "for with function as initial" ~: parseFail "pt a=2;a<=2;a=func() sffunc executa sfpt" "unexpected reserved word \"func\""
+
  , "incomplete for (without tDo)" ~: parseFail "pt a=1;a<=2;a=a+1" tDo
 
  , "tDo as variable" ~: parseFail tDo tDo
@@ -346,13 +348,3 @@ parserTests = TestList [
  , "run parser, parse error" ~:
     "parse error at" `isPrefixOf` runParser "a(" @? "parser succeeded"
  ]
-
-
-{---TODO:
-error for: epc> pt a=func() sffunc;2;a=3 executa sfpt
-[For (Just (Assign (Var "a") (FuncDef "" [] []))) (BinExpr Le (Var "a") (Int 2)) (Assign (Var "a") (E (Int 3))) []]
-
-error for:
-epc> pt a=2;a<=2;a=func() sffunc executa sfpt
-[For (Just (Assign (Var "a") (E (Int 2)))) (BinExpr Le (Var "a") (Int 2)) (Assign (Var "a") (FuncDef "" [] [])) []]
--}
