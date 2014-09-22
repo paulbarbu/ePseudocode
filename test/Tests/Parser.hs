@@ -357,4 +357,11 @@ parserTests = TestList [
  , "empty repl line" ~: parseFailRepl "" "unexpected end of input"
 
  , "empty file" ~: parseFailFile "" "unexpected end of input"
+
+ , "global definitions" ~:
+    do c <- readFile "examples/global.epc"
+       [Assign (Var "a") (FuncDef "" []
+                                  [Ret (E (Int 42))]),
+        FuncDef "main" []
+                [E (FuncCall (Var "scrie") [[E (FuncCall (Var "a") [[]])]])]] @=? parseFile c
  ]
