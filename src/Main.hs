@@ -20,7 +20,7 @@ runRepl = runInputT defaultSettings loop
                 Nothing -> return ()
                 Just "quit" -> return ()
                 Just input -> do
-                    outputStrLn $ EPP.runParser input
+                    outputStrLn $ EPP.runParser EPP.mainParser input
                     loop
 
 
@@ -29,5 +29,5 @@ main = do
     args <- getArgs
     case length args of
         0 -> runRepl
-        1 -> readFile (head args) >>= \contents -> putStrLn $ EPP.runParser contents -- TODO: cleanly check if file exists
+        1 -> readFile (head args) >>= \contents -> putStrLn $ EPP.runParser EPP.toplevelParser contents -- TODO: cleanly check if file exists
         _ -> putStrLn help

@@ -1,10 +1,12 @@
 // "Hello world" example in ePseudocode
 
-scrie("Hello world")
+func main()
+    scrie("Hello world")
 
 
-/* multi
-    /* inside comment */
-    line
-    commend
-*/
+    /* multi
+        /* inside comment */
+        line
+        commend
+    */
+sffunc

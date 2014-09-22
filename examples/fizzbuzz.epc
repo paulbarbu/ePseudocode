@@ -1,19 +1,20 @@
 //Fizz Buzz game in ePseudocode
+func main()
+    n = citeste()
 
-n = citeste()
+    i = 1
 
-i = 1
+    cattimp i <= n executa
+        daca i % 3 == 0 si i % 5 == 0 atunci
+            scrie("fizzbuzz")
+        altfel daca i % 3 == 0 atunci
+            scrie("fizz")
+        altfel daca i % 5 == 0 atunci
+            scrie("buzz")
+        altfel
+            scrie(i)
+        sfdaca    sfdaca    sfdaca //TODO: maybe here I can put a single sfdaca
 
-cattimp i <= n executa
-    daca i % 3 == 0 si i % 5 == 0 atunci
-        scrie("fizzbuzz")
-    altfel daca i % 3 == 0 atunci
-        scrie("fizz")
-    altfel daca i % 5 == 0 atunci
-        scrie("buzz")
-    altfel
-        scrie(i)
-    sfdaca    sfdaca    sfdaca //TODO: maybe here I can put a single sfdaca
-
-    i = i + 1
-sfcattimp
+        i = i + 1
+    sfcattimp
+sffunc

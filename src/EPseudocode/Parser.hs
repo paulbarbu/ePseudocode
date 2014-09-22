@@ -1,4 +1,4 @@
-module EPseudocode.Parser (eParse, runParser)
+module EPseudocode.Parser (eParse, runParser, mainParser, toplevelParser)
 where
 import Prelude hiding (id)
 import Control.Applicative hiding ((<|>), many)
@@ -44,6 +44,10 @@ term = parens expr
   <|> try indexAccess
   <|> liftM Var identifier
   <?> "simple expression" -- FIXME: translate
+
+
+toplevelParser :: Parser Stmt
+toplevelParser = funcDef <|> assignment funcExpr
 
 
 mainParser :: Parser Stmt
@@ -128,13 +132,13 @@ indexAccess :: Parser Expr
 indexAccess = liftM2 Index identifier (many1 $ brackets expr)
 
 
-runParser :: String -> String
-runParser input = case eParse input of
+runParser :: Parser Stmt -> String -> String
+runParser p input = case eParse p input of
   Left err -> "parse error at " ++ err -- FIXME: translate
   Right x -> show x
 
 
-eParse :: String -> Either String [Stmt]
-eParse input = case parse (whiteSpace *> many mainParser <* eof) "" input of
+eParse :: Parser Stmt -> String -> Either String [Stmt]
+eParse p input = case parse (whiteSpace *> many1 p <* eof) "" input of
   Left err -> Left $ show err
   Right program -> Right program
