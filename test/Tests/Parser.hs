@@ -364,4 +364,7 @@ parserTests = TestList [
                                   [Ret (E (Int 42))]),
         FuncDef "main" []
                 [E (FuncCall (Var "scrie") [[E (FuncCall (Var "a") [[]])]])]] @=? parseFile c
+
+ , "index a list with another list index" ~:
+    [E (Index "a" [Index "b" [Int 1]])] ~=? parseRepl "a[b[1]]"
  ]

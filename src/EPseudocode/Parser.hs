@@ -94,7 +94,7 @@ mainParser =
   <|>
   -- return
   do reserved tReturn <?> tReturn
-     liftM Ret funcExpr
+     liftM Ret funcExpr -- TODO: cannot return a function from the main function
   <|>
   (funcDef <?> "function definition")  -- FIXME: translate
   <|>
