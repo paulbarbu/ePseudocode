@@ -21,7 +21,10 @@ executable epseudocode
   -- other-extensions:
   build-depends:       base >=4.7 && <4.8,
                        parsec,
-                       haskeline
+                       haskeline,
+                       transformers,
+                       containers,
+                       mtl
   hs-source-dirs:      src
   default-language:    Haskell2010
   ghc-options:         -Wall -fno-warn-unused-do-bind
@@ -33,5 +36,8 @@ Test-Suite tests
   default-language:    Haskell2010
   build-depends:       base, HUnit, Cabal >= 1.9.2,
                        parsec,
-                       haskeline
+                       haskeline,
+                       transformers,
+                       containers,
+                       mtl
   ghc-options:         -fhpc

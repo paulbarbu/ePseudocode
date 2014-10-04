@@ -2,7 +2,8 @@ import System.Environment
 
 import System.Console.Haskeline
 
-import qualified EPseudocode.Parser as EPP
+import EPseudocode.Parser
+import EPseudocode.Scope
 
 
 help :: String
@@ -20,7 +21,7 @@ runRepl = runInputT defaultSettings loop
                 Nothing -> return ()
                 Just "quit" -> return ()
                 Just input -> do
-                    outputStrLn $ EPP.runParser EPP.mainParser input
+                    outputStrLn $ runParser mainParser input
                     loop
 
 
@@ -29,5 +30,16 @@ main = do
     args <- getArgs
     case length args of
         0 -> runRepl
-        1 -> readFile (head args) >>= \contents -> putStrLn $ EPP.runParser EPP.toplevelParser contents -- TODO: cleanly check if file exists
+        -- 1 -> readFile (head args) >>= \contents -> putStrLn $ runParser toplevelParser contents -- TODO: cleanly check if file exists
+        1 -> do
+            contents <- readFile (head args)
+            let prog = eParse toplevelParser contents
+
+            case prog of
+                Left err -> putStrLn $ "failed: " ++ err
+                Right p -> do let e = isValidScope p
+                              case e of
+                               Left err -> putStrLn $ "failed: " ++ err
+                               Right n -> putStrLn $ "ok: " ++ show n
+            return ()
         _ -> putStrLn help

@@ -24,7 +24,6 @@ TODO: x86 backend
 TODO: FFI and C libraries (interop?)
 TODO: codeblocks, vim, kdevelop, visualstudio, eclipse? syntax highlighting
 TODO: tail call optimization?
-TODO: no structs?
 
 TODO: bound, uniplate library
 TODO: ivory language
@@ -53,6 +52,18 @@ Not supported: variadic functions
 Demo:
 * " 0xF +  1 + /*com/*inside comment*/ment*/   4 - 5 //comment" => 15
 
+Scoping rules
+=============
+ * There is a single "main" function in the global scope
+ * Functions with the same name cannot be defined more than once in the same scope
+ * Function names cannot be used as variable names
+ * (impl) Functions are discovered on an initial pass through the respective scope
+ * Parameter names must be unique and they create a variable in the current funcion's scope
+ * Variables inside a function cannot have the same name as the function in which they exist (the same applies for functions)
+ * When a function call is made or a variable name encountered this must already exist
+ (the function is searched in the list constructed in the 1st pass
+ while the variable name should've been declared - assigned to - previously in the current scope)
+ * Only function bodies introduce new scope
 
 Examples
 ========

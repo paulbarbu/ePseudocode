@@ -1,4 +1,4 @@
-module Tests.Parser (parserTests)
+module Tests.Parser (parserTests, parseFile)
 where
 
 import Data.List (isPrefixOf, isInfixOf)
@@ -357,6 +357,8 @@ parserTests = TestList [
  , "empty repl line" ~: parseFailRepl "" "unexpected end of input"
 
  , "empty file" ~: parseFailFile "" "unexpected end of input"
+
+ , "function call in global scope" ~: parseFailFile "func main() ret 1 sffunc main()" "unexpected \"(\""
 
  , "global definitions" ~:
     do c <- readFile "examples/global.epc"
