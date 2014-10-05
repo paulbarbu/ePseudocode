@@ -99,7 +99,7 @@ mainParser =
   (funcDef <?> "function definition")  -- FIXME: translate
   <|>
   -- assignment
-  (try $ assignment funcExpr)
+  try (assignment funcExpr)
   <|>
   liftM E expr -- TODO: is this the right thing?
 
