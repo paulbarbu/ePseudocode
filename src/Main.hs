@@ -9,6 +9,7 @@ import EPseudocode.Scope
 help :: String
 help = "TODO: One or zero arguments"
 
+-- TODO: cleanup
 
 -- TODO: multiline input
 runRepl :: IO ()

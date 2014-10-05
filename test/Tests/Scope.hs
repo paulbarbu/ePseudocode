@@ -56,4 +56,45 @@ scopeTests = TestList [
  , "single definition and local function" ~: scopeTest "func foo() ret 1 sffunc func main() func foo() ret 1 sffunc ret 42 sffunc"
 
  , "double main with local function" ~: scopeTestFail "func main() ret 42 sffunc func main() func foo() ret 1 sffunc sffunc"
+
+ , "complete if introduces new scope" ~: scopeTestFail "func main() daca 1 atunci a=2 altfel a=3 sfdaca a sffunc"
+
+ , "defined variable in complete if that is not referenced" ~: scopeTest "func main() daca 1 atunci a=2 altfel a=3 sfdaca sffunc"
+
+ , "defined variable in complete if and referenced it" ~: scopeTest "func main() daca 1 atunci a=2 a altfel a=3 sfdaca sffunc"
+
+ , "defined variable in complete if and referenced it on both branches" ~: scopeTest "func main() daca 1 atunci a=2 a altfel a=3 a sfdaca sffunc"
+
+ , "undefined variable in complete if's condition" ~: scopeTestFail "func main() daca x == 1 atunci a=2 a altfel a=3 a sfdaca sffunc"
+
+ , "defined variable in complete if's condition" ~: scopeTest "func main() x = 1 daca x <= 1 atunci a=2 a altfel a=3 a sfdaca sffunc"
+
+ , "simple if introduces new scope" ~: scopeTestFail "func main() daca 1 atunci a=2 sfdaca a sffunc"
+
+ , "defined variable in simple if that is not referenced" ~: scopeTest "func main() daca 1 atunci a=2 sfdaca sffunc"
+
+ , "defined variable in simple if and referenced it" ~: scopeTest "func main() daca 1 atunci a=2 a sfdaca sffunc"
+
+ , "undefined variable in simple if's condition" ~: scopeTestFail "func main() daca x >= 1 atunci a=2 a sfdaca sffunc"
+
+ , "defined variable in simple if's condition" ~: scopeTest "func main() x = 1 daca x != 1 atunci a=2 a sfdaca sffunc"
+
+ , "valid func call in simple if's condition" ~: scopeTest "func foo() ret adevarat sffunc func main() daca foo() atunci ret 3 sfdaca sffunc"
+
+ , "invalid func call in simple if's condition" ~: scopeTestFail "func main() daca foo() atunci ret 3 sfdaca sffunc"
+
+ , "valid func call in complete if's condition" ~:
+    scopeTest "func foo() ret adevarat sffunc func main() daca foo() atunci ret 3 altfel ret 1 sfdaca sffunc"
+
+ , "invalid func call in complete if's condition" ~: scopeTestFail "func main() daca foo() atunci ret 3 altfel ret 1 sfdaca sffunc"
+
+ , "valid func call in while's condition" ~: scopeTest "func foo() ret adevarat sffunc func main() cattimp foo() executa ret 3 sfcattimp sffunc" -- TODO: do the same for while, for, if, etc
+
+ , "invalid func call in while's condition" ~: scopeTestFail "func main() cattimp foo() executa ret 3 sfcattimp sffunc" -- TODO: do the same for while, for, if, etc
+
+ , "undefined variable in while's condition" ~: scopeTestFail "func main() cattimp !x executa ret 1 sfcattimp sffunc" --TODO: do the same for for & others
+
+ , "defined variable in while's condition" ~: scopeTest "func main() x=2 y=0 cattimp x%2 == y executa x=x/2 sfcattimp sffunc" --TODO: do the same for for & others
+
+ , "undefined list" ~: scopeTestFail "func main() daca a[2] atunci ret 1 altfel ret 3 sfdaca sffunc" --TODO: for others other than complete if too
  ]

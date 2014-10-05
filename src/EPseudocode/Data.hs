@@ -33,7 +33,7 @@ data Stmt = Assign Expr Stmt -- assignments (expr is limited to variable or list
     | CompleteIf Expr [Stmt] [Stmt] -- if condition then statements else statements
     | SimpleIf Expr [Stmt] -- if condition then statements
     | While Expr [Stmt] -- while condition then statements
-    | For (Maybe Stmt) (Maybe Expr) (Maybe Stmt) [Stmt] -- for initial, condition, iteration then statements
+    | For (Maybe Stmt) (Maybe Expr) (Maybe Stmt) [Stmt] -- for initial, condition, iteration then statements (the initial and the iteration are limited to assignments)
     | Ret Stmt -- return statement (only expression or function call/def)
     | FuncDef String [String] [Stmt] -- func name args body
     | E Expr

@@ -63,7 +63,6 @@ Scoping rules
  * When a function call is made or a variable name encountered this must already exist
  (the function is searched in the list constructed in the 1st pass
  while the variable name should've been declared - assigned to - previously in the current scope)
- * Only function bodies introduce new scope
 
 Examples
 ========

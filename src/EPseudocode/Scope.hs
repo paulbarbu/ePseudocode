@@ -57,9 +57,62 @@ checkInnerScope scope ((FuncDef name args body):xs) =
           else checkInnerScope scope' body
        checkInnerScope scope xs -- TODO: check this, I think I have to add the current function to be able to reference it later
 
+checkInnerScope scope ((CompleteIf cond thenBody elseBody):xs) = do
+    checkInnerScope scope [E cond]
+    checkInnerScope scope thenBody
+    checkInnerScope scope elseBody
+    checkInnerScope scope xs
+
+checkInnerScope scope ((SimpleIf cond body):xs) = do
+    checkInnerScope scope [E cond]
+    checkInnerScope scope body
+    checkInnerScope scope xs
+
+checkInnerScope scope ((While cond body):xs) = do
+    checkInnerScope scope [E cond]
+    checkInnerScope scope body
+    checkInnerScope scope xs
+
+-- checkInnerScope scope ((For (Just initial) (Just cond) (Just iter) body):xs) = do
+--   error "implement"
+--   --TODO: tests
+--   --TODO: make the assigned value available in the body an din the condition
+--   --TOOD: check if the assigned value in the condition exists
+-- checkInnerScope scope ((For (Nothing) (Just cond) (Just iter) body):xs) = do
+--   error "implement"
+-- checkInnerScope scope ((For (Just initial) (Nothing) (Just iter) body):xs) = do
+--   error "implement"
+-- checkInnerScope scope ((For (Just initial) (Just cond) (Nothing) body):xs) = do
+--   error "implement"
+-- checkInnerScope scope ((For (Nothing) (Nothing) (Just iter) body):xs) = do
+--   error "implement"
+-- checkInnerScope scope ((For (Nothing) (Just cond) (Nothing) body):xs) = do
+--   error "implement"
+-- checkInnerScope scope ((For (Just initial) (Nothing) (Nothing) body):xs) = do
+--   error "implement"
+-- checkInnerScope scope ((For (Nothing) (Nothing) (Nothing) body):xs) = do
+--   error "implement"
+
 checkInnerScope scope ((Assign (Var name) s):xs) = do
     checkInnerScope scope [s]
     checkInnerScope (scope ++ [VarName name]) xs
+
+checkInnerScope scope ((Assign (Index name exprs) s):xs) = do
+    --TODO: tests
+    mapM (\e -> checkInnerScope scope [E e]) exprs
+    checkInnerScope scope [s]
+    checkInnerScope (scope ++ [VarName name]) xs
+
+checkInnerScope _ ((Assign _ _):_) = error "Invalid assignment, please file a bug report" -- FIXME: translate
+
+checkInnerScope scope ((E (BinExpr _ leftExpr rightExpr)):xs) = do
+    checkInnerScope scope [E leftExpr]
+    checkInnerScope scope [E rightExpr]
+    checkInnerScope scope xs
+
+checkInnerScope scope ((E (UnExpr _ expr)):xs) = do
+    checkInnerScope scope [E expr]
+    checkInnerScope scope xs
 
 checkInnerScope scope ((E (FuncCall (Var name) _)):xs) = do
    if (FuncName name) `elem` scope
@@ -70,8 +123,15 @@ checkInnerScope scope ((E (Var name)):xs) = if (VarName name) `elem` scope
     then checkInnerScope scope xs
     else throwError $ "Reference to undefined variable name: " ++ name -- FIXME: translate
 
-checkInnerScope _ _ = return ()
+checkInnerScope scope ((E (Index name exprs)):xs) = if (VarName name) `elem` scope
+    --TODO: tests
+    then do
+      mapM (\e -> checkInnerScope scope [E e]) exprs
+      checkInnerScope scope xs
+    else throwError $ "Reference to undefined variable name: " ++ name -- FIXME: translate
+
+--checkInnerScope _ _ = return ()
 
 -- TODO: global variables
 
--- checkInnerScope _ [] = return () TODO
+checkInnerScope _ [] = return () -- TODO: cover all cases
