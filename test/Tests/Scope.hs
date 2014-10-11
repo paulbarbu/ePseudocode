@@ -97,4 +97,22 @@ scopeTests = TestList [
  , "defined variable in while's condition" ~: scopeTest "func main() x=2 y=0 cattimp x%2 == y executa x=x/2 sfcattimp sffunc" --TODO: do the same for for & others
 
  , "undefined list" ~: scopeTestFail "func main() daca a[2] atunci ret 1 altfel ret 3 sfdaca sffunc" --TODO: for others other than complete if too
+
+ , "variable in list index" ~: scopeTest "func main() b=1 a[b]=2 ret a sffunc"
+
+ , "undefined variable in list index" ~: scopeTestFail "func main() b=1 a[c]=2 ret a sffunc"
+
+ , "variable in expression in list index" ~: scopeTest "func main() b=1 a[b % 2]=2  ret a sffunc"
+
+ , "undefined variable in expression in list index" ~: scopeTestFail "func main() a[b + 1]=2  ret a sffunc"
+
+ , "undefined variable after list index" ~: scopeTestFail "func main() b=1 a[b]=2 ret foo sffunc" -- TODO: this ret here will eventually cause the test to fail
+
+ , "access to undefined list" ~: scopeTestFail "func main() a={1,2,3} foo[2] sffunc"
+
+ , "access to defined list" ~: scopeTest "func main() a={1,2,3} a[2] sffunc"
+
+ , "access with undefined variable to defined list" ~: scopeTestFail "func main() a={1,2,3} a[b] sffunc"
+
+ , "access with defined variable to defined list" ~: scopeTest "func main() b=1 a={1,2,3} a[b] sffunc"
  ]

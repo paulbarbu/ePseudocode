@@ -31,7 +31,7 @@ TODO: apply, curry
 
 TODO: coursera
 
-TODO: short-circuit the sau and si operators
+TODO: short-circuit the sau and si operators: "adevarat si ret 42"
 
 TODO: do not assign to function name inside function OR create separate variable
 

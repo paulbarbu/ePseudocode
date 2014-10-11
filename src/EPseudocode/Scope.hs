@@ -98,7 +98,6 @@ checkInnerScope scope (Assign (Var name) s:xs) = do
     checkInnerScope (scope ++ [VarName name]) xs
 
 checkInnerScope scope (Assign (Index name exprs) s:xs) = do
-    --TODO: tests
     mapM (\e -> checkInnerScope scope [E e]) exprs
     checkInnerScope scope [s]
     checkInnerScope (scope ++ [VarName name]) xs
@@ -123,7 +122,6 @@ checkInnerScope scope (E (Var name):xs) = if VarName name `elem` scope
     else throwError $ "Reference to undefined variable name: " ++ name -- FIXME: translate
 
 checkInnerScope scope (E (Index name exprs):xs) = if VarName name `elem` scope
-    --TODO: tests
     then do
       mapM (\e -> checkInnerScope scope [E e]) exprs
       checkInnerScope scope xs
