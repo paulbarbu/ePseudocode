@@ -74,14 +74,15 @@ checkInnerScope scope (While cond body:xs) = do
     checkInnerScope scope xs
 
 checkInnerScope scope ((For (Just initial) (Just cond) (Just iter) body):xs) = do
-  --   --TODO: tests+impl
-  checkInnerScope scope body
+  checkInnerScope scope [initial]
+  checkInnerScope (scope ++ [getAssignedVarName initial]) [E cond]
+  checkInnerScope (scope ++ [getAssignedVarName initial]) [iter]
+  checkInnerScope (scope ++ [getAssignedVarName initial]) body
   checkInnerScope scope xs
---   --TODO: make the assigned value available in the body and in the condition
---   --TOOD: check if the assigned value in the condition exists
 
 checkInnerScope scope ((For (Nothing) (Just cond) (Just iter) body):xs) = do
-  --   --TODO: tests+impl
+  checkInnerScope scope [E cond]
+  checkInnerScope scope [iter]
   checkInnerScope scope body
   checkInnerScope scope xs
 

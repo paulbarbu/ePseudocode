@@ -147,4 +147,16 @@ scopeTests = TestList [
  , "defined variable in for initial and used in for iter and for body" ~: scopeTest "func main() pt a=1;;a=a+1 executa a=a+0 sfpt sffunc"
 
  , "defined a variable in for initial and using another one in for condition" ~: scopeTestFail "func main() pt b=1;;a=a+1 executa 1 sfpt sffunc"
+
+ , "undefined variable used in for condition and in iter" ~: scopeTestFail "func main() pt ;a>2;a=a+1 executa sfpt sffunc"
+
+ , "defined variable used in for condition and in iter" ~: scopeTest "func main() a=1 pt ;a<2;a=a+1 executa sfpt sffunc"
+
+ , "fully blown for loop" ~: scopeTest "func main() pt i=0;i<42;i=i+1 executa i scrie(i) sfpt sffunc"
+
+ , "fully blown for loop, separate condition" ~: scopeTest "func main() a=2 pt i=0;a<42;a=i+1 executa scrie(i) sfpt sffunc"
+
+ , "fully blown for loop, undefined variable in cond and iter" ~: scopeTestFail "func main() b=0 pt i=0;a<42;a=i+1 executa scrie(i) sfpt sffunc"
+
+ , "fully blown for loop with statements after it" ~: scopeTest "func main() pt i=0;i<42;i=i+1 executa scrie(i) sfpt scrie(\"bye\") sffunc"
  ]
