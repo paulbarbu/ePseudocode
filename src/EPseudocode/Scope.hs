@@ -73,25 +73,48 @@ checkInnerScope scope (While cond body:xs) = do
     checkInnerScope scope body
     checkInnerScope scope xs
 
--- checkInnerScope scope ((For (Just initial) (Just cond) (Just iter) body):xs) = do
---   error "implement"
---   --TODO: tests
---   --TODO: make the assigned value available in the body an din the condition
+checkInnerScope scope ((For (Just initial) (Just cond) (Just iter) body):xs) = do
+  --   --TODO: tests+impl
+  checkInnerScope scope body
+  checkInnerScope scope xs
+--   --TODO: make the assigned value available in the body and in the condition
 --   --TOOD: check if the assigned value in the condition exists
--- checkInnerScope scope ((For (Nothing) (Just cond) (Just iter) body):xs) = do
---   error "implement"
--- checkInnerScope scope ((For (Just initial) (Nothing) (Just iter) body):xs) = do
---   error "implement"
--- checkInnerScope scope ((For (Just initial) (Just cond) (Nothing) body):xs) = do
---   error "implement"
--- checkInnerScope scope ((For (Nothing) (Nothing) (Just iter) body):xs) = do
---   error "implement"
--- checkInnerScope scope ((For (Nothing) (Just cond) (Nothing) body):xs) = do
---   error "implement"
--- checkInnerScope scope ((For (Just initial) (Nothing) (Nothing) body):xs) = do
---   error "implement"
--- checkInnerScope scope ((For (Nothing) (Nothing) (Nothing) body):xs) = do
---   error "implement"
+
+checkInnerScope scope ((For (Nothing) (Just cond) (Just iter) body):xs) = do
+  --   --TODO: tests+impl
+  checkInnerScope scope body
+  checkInnerScope scope xs
+
+checkInnerScope scope ((For (Just initial) (Nothing) (Just iter) body):xs) = do
+  checkInnerScope scope [initial]
+  checkInnerScope (scope ++ [getAssignedVarName initial]) [iter]
+  checkInnerScope (scope ++ [getAssignedVarName initial]) body
+  checkInnerScope scope xs
+
+checkInnerScope scope ((For (Just initial) (Just cond) (Nothing) body):xs) = do
+  checkInnerScope scope [initial]
+  checkInnerScope (scope ++ [getAssignedVarName initial]) [E cond]
+  checkInnerScope (scope ++ [getAssignedVarName initial]) body
+  checkInnerScope scope xs
+
+checkInnerScope scope ((For (Nothing) (Nothing) (Just iter) body):xs) = do
+  checkInnerScope scope [iter]
+  checkInnerScope scope body
+  checkInnerScope scope xs
+
+checkInnerScope scope ((For (Nothing) (Just cond) (Nothing) body):xs) = do
+  checkInnerScope scope [E cond]
+  checkInnerScope scope body
+  checkInnerScope scope xs
+
+checkInnerScope scope ((For (Just initial) (Nothing) (Nothing) body):xs) = do
+  checkInnerScope scope [initial]
+  checkInnerScope (scope ++ [getAssignedVarName initial]) body
+  checkInnerScope scope xs
+
+checkInnerScope scope ((For (Nothing) (Nothing) (Nothing) body):xs) = do
+  checkInnerScope scope body
+  checkInnerScope scope xs
 
 checkInnerScope scope (Assign (Var name) s:xs) = do
     checkInnerScope scope [s]
@@ -128,6 +151,12 @@ checkInnerScope scope (E (Index name exprs):xs) = if VarName name `elem` scope
     else throwError $ "Reference to undefined variable name: " ++ name -- FIXME: translate
 
 checkInnerScope _ _ = return ()
+
+
+getAssignedVarName :: Stmt -> Name
+getAssignedVarName (Assign (Var name) _) = VarName name
+getAssignedVarName (Assign (Index name _) _) = VarName name
+getAssignedVarName _ = error "Invalid for initial expression, please file a bug report"
 
 -- TODO: global variables
 

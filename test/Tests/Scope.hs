@@ -115,4 +115,36 @@ scopeTests = TestList [
  , "access with undefined variable to defined list" ~: scopeTestFail "func main() a={1,2,3} a[b] sffunc"
 
  , "access with defined variable to defined list" ~: scopeTest "func main() b=1 a={1,2,3} a[b] sffunc"
+
+ , "empty for with empty body" ~: scopeTest "func main() pt ;; executa sfpt sffunc"
+
+ , "empty for with var access in body" ~: scopeTest "func main() a=2 pt ;; executa a=a+1 sfpt sffunc"
+
+ , "empty for with undefined var access in body" ~: scopeTestFail "func main() pt ;; executa a=a+1 sfpt sffunc"
+
+ , "undefined variable in list index used in for initial" ~: scopeTestFail "func main() pt a[b]=2 ;; executa sfpt sffunc"
+
+ , "defined variable in for initial used in the body" ~: scopeTest "func main() pt a=2;; executa a sfpt sffunc"
+
+ , "defined list index in for initial used in the body" ~: scopeTest "func main() a={1, 2} pt a[1]=2;; executa a[2] sfpt sffunc"
+
+ , "defined variable used in for condition" ~: scopeTest "func main() a=2 pt ;a>2; executa 1 sfpt sffunc"
+
+ , "undefined variable used in for condition" ~: scopeTestFail "func main() pt ;a>2; executa 1 sfpt sffunc"
+
+ , "undefined list index used in for condition" ~: scopeTestFail "func main() pt ;a[2]>2; executa 1 sfpt sffunc"
+
+ , "defined list index used in for condition" ~: scopeTest "func main() a={1,2} pt ;a[2]>2; executa 1 sfpt sffunc"
+
+ , "undefined variable in for condition" ~: scopeTestFail "func main() pt ;;a=a+1 executa sfpt sffunc"
+
+ , "defined variable (in a higher scope) in for condition" ~: scopeTest "func main() a=1 pt ;;a=a+1 executa sfpt sffunc"
+
+ , "defined variable in for inital and used in for condition and for body" ~: scopeTest "func main() pt a=1;a<42; executa a=a+1 sfpt sffunc"
+
+ , "undefined variable in for condition" ~: scopeTestFail "func main() pt a=1;b<42; executa 1 sfpt sffunc"
+
+ , "defined variable in for initial and used in for iter and for body" ~: scopeTest "func main() pt a=1;;a=a+1 executa a=a+0 sfpt sffunc"
+
+ , "defined a variable in for initial and using another one in for condition" ~: scopeTestFail "func main() pt b=1;;a=a+1 executa 1 sfpt sffunc"
  ]
