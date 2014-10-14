@@ -48,6 +48,8 @@ isValidScope' defScope program = do
     checkInnerScope globalScope program
 
 
+--TODO: ret 42
+
 checkInnerScope :: Scope -> [Stmt] -> ScopeError ()
 checkInnerScope scope (FuncDef name args body:xs) =
     do let localFuncs = gatherFunctions body
