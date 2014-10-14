@@ -1,63 +1,33 @@
 ePseudocode
 ===========
+(work in progress)
 ePseudocode stands for "electronic [pseudocode](https://en.wikipedia.org/wiki/Pseudocode)".
 
 This is an interpreter for a language designed to be similar to the pseudocode that students write on paper.
 
 A word of warning though: All the keywords in the language itself are in Romanian, not in English, since ePseudocode
 was specifically designed for romanian students, but you're always welcome to fork the project and contribute.
-(Only the keywords are in Romanian, comments, docs and other stuff is in English, inlcuding errors issued by the
+(Only the keywords are in Romanian, comments, docs and other stuff is in English, including errors issued by the
 compiler/parser since I didn't focus on translating strings from parsec)
 
 Description
 ===========
-
-TODO: lambdas (done), floating point, strings (done), lists (done), functions - capture environment(done), io, stdlib (math, string, list & vector operations), files
-TODO: turing complete
-TODO: debugger
-TODO: scientific notation
-TODO: unicode support
-TODO: list slicing
-TODO: Bitwise operators
-TODO: LC3 backend
-TODO: x86 backend
-TODO: FFI and C libraries (interop?)
-TODO: codeblocks, vim, kdevelop, visualstudio, eclipse? syntax highlighting
-TODO: tail call optimization?
-
-TODO: bound, uniplate library
-TODO: ivory language
-TODO: apply, curry
-
-TODO: coursera
-
-TODO: short-circuit the sau and si operators: "adevarat si ret 42"
-
-TODO: do not assign to function name inside function OR create separate variable
-
-Not supported: variadic functions
-
 * Case sensitive
 * Influenced by C (a feature because one of the reasons it exists is to provide a lower learning curve, next step being C)
-* If no `main` function is defined then all code in a file is executed as if it was in a `main` function
-* Variables are declared on the spot, calid names start with "_" or with letters and continue with leters and numbers
-* Operators: `=`, `+`, `-`, `*`, `/`, `%`, `==`, `!=`, `<` , `>`, `<=`, `>=`, `!`, `sau` (or), `si` (and), TODO
+* Variables are declared on the spot, valid names start with "_" or with letters and continue with leters and numbers
+* Operators (English translation in parens): `=`, `+`, `-`, `*`, `/`, `%`, `==`, `!=`, `<` , `>`, `<=`, `>=`, `!`, `sau` (or), `si` (and)
 * Keywords (English translation in parens): `cattimp` (while), `sfcattimp` (end while), `pt` (for), `sfpt` (end for),
     `func` (start function), `sffunc` (end function), `ret` (return), `daca` (if), `atunci` (then), `altfel` (else), `sfdaca` (end if),
-    `adevarat` (true), `fals` (false), TODO
-* Builtins: `lung` (length), `TODO` (to_upper), `TODO` (to_lower), `TODO`, (to_int('c'))
+    `adevarat` (true), `fals` (false)
+* Builtins: `lung` (length), `litere_mari` (to_upper), `litere_mici` (to_lower)
 * Hexadecimal and octal notation: "0xABC", "0o17"
-
-
-Demo:
-* " 0xF +  1 + /*com/*inside comment*/ment*/   4 - 5 //comment" => 15
 
 Scoping rules
 =============
  * There is a single "main" function in the global scope
  * Functions with the same name cannot be defined more than once in the same scope
  * Function names cannot be used as variable names
- * (impl) Functions are discovered on an initial pass through the respective scope
+ * Functions are discovered on an initial pass through the respective scope
  * Parameter names must be unique and they create a variable in the current funcion's scope
  * Variables inside a function cannot have the same name as the function in which they exist (the same applies for functions)
  * When a function call is made or a variable name encountered this must already exist
@@ -67,12 +37,7 @@ Scoping rules
 Examples
 ========
 
-TODO: ...
-
 For more see the `examples` directory.
-
-TODO: compile in itself
-TODO: raytracer: http://fabiensanglard.net/rayTracing_back_of_business_card/
 
 * List operations:
 ```
