@@ -9,15 +9,18 @@ import EPseudocode.Data
 
 import Tests.Parser
 
+
 scopeTest program =
   case isValidScope $ parseFile program of
     Left err -> assertFailure err
     Right () -> True @=? True
 
+
 scopeTestFail program =
   case isValidScope $ parseFile program of
     Left _ -> True @=? True
     Right () -> assertFailure "The test passed"
+
 
 scopeTests = TestList [
    "no main" ~: scopeTestFail "func foo() ret 1 sffunc"
@@ -88,15 +91,15 @@ scopeTests = TestList [
 
  , "invalid func call in complete if's condition" ~: scopeTestFail "func main() daca foo() atunci ret 3 altfel ret 1 sfdaca sffunc"
 
- , "valid func call in while's condition" ~: scopeTest "func foo() ret adevarat sffunc func main() cattimp foo() executa ret 3 sfcattimp sffunc" -- TODO: do the same for while, for, if, etc
+ , "valid func call in while's condition" ~: scopeTest "func foo() ret adevarat sffunc func main() cattimp foo() executa ret 3 sfcattimp sffunc"
 
- , "invalid func call in while's condition" ~: scopeTestFail "func main() cattimp foo() executa ret 3 sfcattimp sffunc" -- TODO: do the same for while, for, if, etc
+ , "invalid func call in while's condition" ~: scopeTestFail "func main() cattimp foo() executa ret 3 sfcattimp sffunc"
 
- , "undefined variable in while's condition" ~: scopeTestFail "func main() cattimp !x executa ret 1 sfcattimp sffunc" --TODO: do the same for for & others
+ , "undefined variable in while's condition" ~: scopeTestFail "func main() cattimp !x executa ret 1 sfcattimp sffunc"
 
- , "defined variable in while's condition" ~: scopeTest "func main() x=2 y=0 cattimp x%2 == y executa x=x/2 sfcattimp sffunc" --TODO: do the same for for & others
+ , "defined variable in while's condition" ~: scopeTest "func main() x=2 y=0 cattimp x%2 == y executa x=x/2 sfcattimp sffunc"
 
- , "undefined list" ~: scopeTestFail "func main() daca a[2] atunci ret 1 altfel ret 3 sfdaca sffunc" --TODO: for others other than complete if too
+ , "undefined list" ~: scopeTestFail "func main() daca a[2] atunci ret 1 altfel ret 3 sfdaca sffunc"
 
  , "variable in list index" ~: scopeTest "func main() b=1 a[b]=2 ret a sffunc"
 
@@ -106,7 +109,7 @@ scopeTests = TestList [
 
  , "undefined variable in expression in list index" ~: scopeTestFail "func main() a[b + 1]=2  ret a sffunc"
 
- , "undefined variable after list index" ~: scopeTestFail "func main() b=1 a[b]=2 ret foo sffunc" -- TODO: this ret here will eventually cause the test to fail
+ , "undefined variable after list index" ~: scopeTestFail "func main() b=1 a[b]=2 ret foo sffunc"
 
  , "access to undefined list" ~: scopeTestFail "func main() a={1,2,3} foo[2] sffunc"
 
@@ -159,4 +162,106 @@ scopeTests = TestList [
  , "fully blown for loop, undefined variable in cond and iter" ~: scopeTestFail "func main() b=0 pt i=0;a<42;a=i+1 executa scrie(i) sfpt sffunc"
 
  , "fully blown for loop with statements after it" ~: scopeTest "func main() pt i=0;i<42;i=i+1 executa scrie(i) sfpt scrie(\"bye\") sffunc"
+
+ , "unknown variable in ret" ~: scopeTestFail "func main() ret a sffunc"
+
+ , "expression with variable in ret" ~: scopeTest "func main() a=3 ret a-2 daca adevarat atunci a=a+2 sfdaca sffunc"
+
+ , "undefined function call in ret" ~: scopeTestFail "func main() ret foo() sffunc"
+
+ , "function call in ret" ~: scopeTest "func foo() scrie(42) sffunc func main() ret foo() sffunc"
+
+ , "lambda in ret" ~: scopeTest "func main() ret func() scrie(42) sffunc sffunc"
+
+ , "undefined index access in ret" ~: scopeTestFail "func main() ret a[3] sffunc"
+
+ , "index access in ret" ~: scopeTest "func main() a={1, 2, 3} ret a[2] sffunc"
+
+ , "undefined arguments in func call" ~: scopeTestFail "func foo(x, y, z) ret 1 sffunc func main() foo(a, b, c) sffunc"
+
+ , "defined arguments in func call" ~: scopeTest "func foo(x, y, z) ret 1 sffunc func main() a=2 b=3 c=1 foo(a, b, c) sffunc"
+
+ , "immediate & variable arguments in func call" ~: scopeTest "func foo(x, y, z) ret 1 sffunc func main() b=3 c=1 foo(1, b, c) sffunc"
+
+ , "func call & immediate & variable arguments in func call" ~:
+    scopeTest "func direct() ret 1 sffunc func foo(x, y, z) ret 1 sffunc func main() c=1 foo(1, direct(), c) sffunc"
+
+ , "undefined func call & immediate args in func call" ~:
+    scopeTestFail "func foo(x, y, z) ret 1 sffunc func main() foo(1, none(), 1) sffunc"
+
+ , "undefined func call in func call" ~:
+    scopeTestFail "func foo(x, y, z) ret 1 sffunc func main() foo(none()) sffunc"
+
+ , "func call with args & immediate & variable arguments in func call" ~:
+    scopeTest "func direct(x) ret x sffunc func foo(x, y, z) ret 1 sffunc func main() c=1 foo(1, direct(2), c) sffunc"
+
+ , "func call with undefined args & immediate & variable arguments in func call" ~:
+    scopeTestFail "func direct(x) ret x sffunc func foo(x, y, z) ret 1 sffunc func main() c=1 foo(1, direct(a), c) sffunc"
+
+ , "lambda argument in func call" ~:
+    scopeTest "func foo(x, y, z) ret x(3) sffunc func main() c=1 foo(func(a) ret a+2 sffunc, 2, c) sffunc"
+
+ , "undefined variable in list" ~: scopeTestFail "func main() a={1, b} sffunc"
+
+ , "variable in list" ~: scopeTest "func main() b=1 a={1, b} sffunc"
+
+ , "one variable in list" ~: scopeTest "func main() b=1 a={b} sffunc"
+
+ , "one undefined variable in list" ~: scopeTestFail "func main() a={b} sffunc"
+
+ , "undefined variable in list in list" ~: scopeTestFail "func main() a={1, {3, b}} sffunc"
+
+ , "variable in list" ~: scopeTest "func main() b=1 a={1, b} sffunc"
+
+ , "undefined function call and value in list" ~: scopeTestFail "func main() a={1, none()} sffunc"
+
+ , "undefined function call in list" ~: scopeTestFail "func main() a={none()} sffunc"
+
+ , "undefined function call in nested list" ~: scopeTestFail "func main() a={1, {none()}} sffunc"
+
+ , "function call in list" ~: scopeTest "func foo() ret 1 sffunc func main() a={foo()} sffunc"
+
+ , "value & function call in list" ~: scopeTest "func foo() ret 1 sffunc func main() a={\"string\", foo()} sffunc"
+
+ , "value & function call in nested list" ~: scopeTest "func foo() ret 1 sffunc func main() a={\"string\", {foo()}} sffunc"
+
+ , "chained list index with undefined variable" ~: scopeTestFail "func main() a={} a[1][2][b] sffunc"
+
+ , "args visible in func body" ~: scopeTest "func main(argc, argv) ret argv[1] sffunc"
+
+ , "name already used by a function" ~: scopeTestFail "func foo() ret 1 sffunc func main() foo=3 sffunc" -- TODO: move this to type tests
+
+ , "duplicate param names" ~: scopeTestFail "func main(a, a) foo=3 sffunc"
+
+ , "undefined function call whose definition is in a list" ~: scopeTestFail "func main() b[1]() sffunc"
+
+ , "function call whose definition is in a list" ~: scopeTest "func main() a={func() ret 1 sffunc} a[1]() sffunc"
+
+ , "fizzbuzz program" ~:
+    do c <- readFile "examples/fizzbuzz.epc"
+       scopeTest c
+
+ , "process a range of numbers with a callback function and a custom step" ~:
+    do c <- readFile "examples/callback.epc"
+       scopeTest c
+
+ , "compute the n-th fibonacci number" ~:
+    do c <- readFile "examples/fib.epc"
+       scopeTest c
+
+ , "display indices in a list along with values" ~:
+    do c <- readFile "examples/lists.epc"
+       scopeTest c
+
+ , "greatest common divisor program" ~:
+    do c <- readFile "examples/greatest_common_div.epc"
+       scopeTest c
+
+ , "simple closure program" ~:
+    do c <- readFile "examples/closure.epc"
+       scopeTest c
+
+ , "global variable program" ~:
+    do  c <- readFile "examples/global.epc"
+        scopeTest c
  ]

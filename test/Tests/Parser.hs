@@ -147,6 +147,14 @@ parserTests = TestList [
                                                   [E (FuncCall (Var "scrie") [[E (Var "i")]])]]],
                Assign (Var "i") (E (BinExpr Plus (Var "i") (Int 1)))]]] @=? parseFile c
 
+  , "global variable program" ~:
+     do c <- readFile "examples/global.epc"
+        [Assign (Var "a")
+                (FuncDef "" []
+                 [Ret (E (Int 42))]),
+         FuncDef "main" []
+          [E (FuncCall (Var "scrie") [[E (FuncCall (Var "a") [[]])]])]] @=? parseFile c
+
  , "imbricated ifs" ~:
     [SimpleIf (Int 1)
               [SimpleIf (Int 2)
