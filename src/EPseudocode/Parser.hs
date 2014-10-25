@@ -101,7 +101,7 @@ mainParser =
   -- assignment
   try (assignment funcExpr)
   <|>
-  liftM E expr -- TODO: is this the right thing?
+  liftM E expr -- TODO: is this the right thing? (because it allows stuff like: "func foo() 1 sffunc")
 
 
 funcExpr :: Parser Stmt

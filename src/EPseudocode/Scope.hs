@@ -12,7 +12,7 @@ type Scope = [Name] -- this is a stack of available names
 type ScopeError = Either String
 
 defaultScope :: [Name]
-defaultScope = [FuncName "scrie"] -- TODO: more stdlib
+defaultScope = [FuncName "scrie", FuncName "citeste", FuncName "lung"] -- TODO: more stdlib
 
 
 gatherFunctions :: [Stmt] -> Scope
@@ -48,16 +48,19 @@ isValidScope' defScope program = do
     checkInnerScope globalScope program
 
 
---TODO: ret 42
-
 checkInnerScope :: Scope -> [Stmt] -> ScopeError ()
 checkInnerScope scope (FuncDef name args body:xs) =
-    do let localFuncs = gatherFunctions body
-       let scope' = scope ++ map VarName args ++ [FuncName name] ++ localFuncs
-       if FuncName name `elem` localFuncs
-          then throwError $ "Duplicate function names defined in the same scope: " ++ name -- FIXME: translate
-          else checkInnerScope scope' body
-       checkInnerScope scope xs -- TODO: check this, I think I have to add the current function to be able to reference it later
+  if args == nub args
+    then do
+      let localFuncs = gatherFunctions body
+      -- add the arguments as both variable names and function names so I can validate lambdas
+      let scope' = scope ++ map VarName args ++ map FuncName args ++ [FuncName name] ++ localFuncs
+      if FuncName name `elem` localFuncs
+        then throwError $ "Duplicate function names defined in the same scope: " ++ name -- FIXME: translate
+        else checkInnerScope scope' body
+      checkInnerScope scope xs
+  else
+    throwError $ "Duplicate parameter names in \"" ++ name ++ "\" function definition"
 
 checkInnerScope scope (CompleteIf cond thenBody elseBody:xs) = do
     checkInnerScope scope [E cond]
@@ -119,7 +122,15 @@ checkInnerScope scope ((For (Nothing) (Nothing) (Nothing) body):xs) = do
   checkInnerScope scope body
   checkInnerScope scope xs
 
-checkInnerScope scope (Assign (Var name) s:xs) = do
+checkInnerScope scope (Assign (Var name) s@(FuncDef _ _ _):xs) = if FuncName name `elem` scope
+  then throwError $ "The name \"" ++ name ++ "\" already denotes a function" -- FIXME: translate
+  else do
+    checkInnerScope scope [s]
+    checkInnerScope (scope ++ [FuncName name]) xs
+
+checkInnerScope scope (Assign (Var name) s:xs) = if FuncName name `elem` scope
+  then throwError $ "The name \"" ++ name ++ "\" already denotes a function" -- FIXME: translate
+  else do
     checkInnerScope scope [s]
     checkInnerScope (scope ++ [VarName name]) xs
 
@@ -130,6 +141,10 @@ checkInnerScope scope (Assign (Index name exprs) s:xs) = do
 
 checkInnerScope _ (Assign _ _:_) = error "Invalid assignment, please file a bug report" -- FIXME: translate
 
+checkInnerScope scope (Ret ret:xs) = do
+  checkInnerScope scope [ret]
+  checkInnerScope scope xs
+
 checkInnerScope scope (E (BinExpr _ leftExpr rightExpr):xs) = do
     checkInnerScope scope [E leftExpr]
     checkInnerScope scope [E rightExpr]
@@ -139,13 +154,19 @@ checkInnerScope scope (E (UnExpr _ expr):xs) = do
     checkInnerScope scope [E expr]
     checkInnerScope scope xs
 
-checkInnerScope scope (E (FuncCall (Var name) _):xs) = if FuncName name `elem` scope
-      then checkInnerScope scope xs
+checkInnerScope scope (E (FuncCall (Var name) args):xs) = if FuncName name `elem` scope
+      then do
+        mapM (\a -> checkInnerScope scope a) args
+        checkInnerScope scope xs
       else throwError $ "Call to undefined function name: " ++ name -- FIXME: translate
 
 checkInnerScope scope (E (Var name):xs) = if VarName name `elem` scope
     then checkInnerScope scope xs
     else throwError $ "Reference to undefined variable name: " ++ name -- FIXME: translate
+
+checkInnerScope scope (E (List stmts):xs) = do
+    checkInnerScope scope stmts
+    checkInnerScope scope xs
 
 checkInnerScope scope (E (Index name exprs):xs) = if VarName name `elem` scope
     then do
@@ -153,7 +174,8 @@ checkInnerScope scope (E (Index name exprs):xs) = if VarName name `elem` scope
       checkInnerScope scope xs
     else throwError $ "Reference to undefined variable name: " ++ name -- FIXME: translate
 
-checkInnerScope _ _ = return ()
+checkInnerScope scope (_:xs) = checkInnerScope scope xs
+checkInnerScope _ [] = return () -- TODO: cover all cases
 
 
 getAssignedVarName :: Stmt -> Name
@@ -162,5 +184,5 @@ getAssignedVarName (Assign (Index name _) _) = VarName name
 getAssignedVarName _ = error "Invalid for initial expression, please file a bug report"
 
 -- TODO: global variables
-
---checkInnerScope _ [] = return () -- TODO: cover all cases
+-- TODO: test coverage
+--TODO: a[1]()
