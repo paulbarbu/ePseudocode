@@ -6,34 +6,30 @@ import Control.Monad.Except
 
 import EPseudocode.Data
 
-data Name = VarName String | FuncName String deriving (Eq, Show)
-type Scope = [Name] -- this is a stack of available names
+--data Name = VarName String | FuncName String deriving (Eq, Show)
+type Scope = [String] -- this is a stack of available names
 
 type ScopeError = Either String
 
-defaultScope :: [Name]
-defaultScope = [FuncName "scrie", FuncName "citeste", FuncName "lung"] -- TODO: more stdlib
+defaultScope :: Scope
+defaultScope = ["scrie", "citeste", "lung"] -- TODO: more stdlib
 
 
 gatherFunctions :: [Stmt] -> Scope
 gatherFunctions program = foldl addFunc [] program
-    where addFunc acc (FuncDef name _ _) = FuncName name : acc
+    where addFunc acc (FuncDef name _ _) = name : acc
           addFunc acc _ = acc
 
 
 isSingleMain :: Scope -> Bool
-isSingleMain globalScope = 1 == length (FuncName "main" `elemIndices` globalScope)
-
-
-noDuplicateFunctions :: Scope -> Bool
-noDuplicateFunctions scope = let funcs = [x | x@(FuncName _) <- scope] in funcs == nub funcs
+isSingleMain globalScope = 1 == length ("main" `elemIndices` globalScope)
 
 
 isValidGlobalScope :: Scope -> ScopeError ()
 isValidGlobalScope globalScope
     | not $ isSingleMain globalScope = throwError "There should be exactly one \"main\" function declared" -- FIXME: translate
-    | not $ noDuplicateFunctions globalScope =
-        throwError $ "Duplicate functions in the same scope: " ++ show (globalScope \\ nub globalScope) -- FIXME: translate
+    | globalScope /= nub globalScope =
+        throwError $ "Duplicate names in the same scope: " ++ show (globalScope \\ nub globalScope) -- FIXME: translate
     | otherwise = return ()
 
 
@@ -54,8 +50,8 @@ checkInnerScope scope (FuncDef name args body:xs) =
     then do
       let localFuncs = gatherFunctions body
       -- add the arguments as both variable names and function names so I can validate lambdas
-      let scope' = scope ++ map VarName args ++ map FuncName args ++ [FuncName name] ++ localFuncs
-      if FuncName name `elem` localFuncs
+      let scope' = scope ++ args ++ [name] ++ localFuncs
+      if name `elem` localFuncs
         then throwError $ "Duplicate function names defined in the same scope: " ++ name -- FIXME: translate
         else checkInnerScope scope' body
       checkInnerScope scope xs
@@ -122,22 +118,14 @@ checkInnerScope scope ((For (Nothing) (Nothing) (Nothing) body):xs) = do
   checkInnerScope scope body
   checkInnerScope scope xs
 
-checkInnerScope scope (Assign (Var name) s@(FuncDef _ _ _):xs) = if FuncName name `elem` scope
-  then throwError $ "The name \"" ++ name ++ "\" already denotes a function" -- FIXME: translate
-  else do
+checkInnerScope scope (Assign (Var name) s:xs) = do
     checkInnerScope scope [s]
-    checkInnerScope (scope ++ [FuncName name]) xs
-
-checkInnerScope scope (Assign (Var name) s:xs) = if FuncName name `elem` scope
-  then throwError $ "The name \"" ++ name ++ "\" already denotes a function" -- FIXME: translate
-  else do
-    checkInnerScope scope [s]
-    checkInnerScope (scope ++ [VarName name]) xs
+    checkInnerScope (scope ++ [name]) xs
 
 checkInnerScope scope (Assign (Index name exprs) s:xs) = do
     mapM (\e -> checkInnerScope scope [E e]) exprs
     checkInnerScope scope [s]
-    checkInnerScope (scope ++ [VarName name]) xs
+    checkInnerScope (scope ++ [name]) xs
 
 checkInnerScope _ (Assign _ _:_) = error "Invalid assignment, please file a bug report" -- FIXME: translate
 
@@ -154,35 +142,40 @@ checkInnerScope scope (E (UnExpr _ expr):xs) = do
     checkInnerScope scope [E expr]
     checkInnerScope scope xs
 
-checkInnerScope scope (E (FuncCall (Var name) args):xs) = if FuncName name `elem` scope
+checkInnerScope scope (E (FuncCall (Var name) args):xs) = if name `elem` scope
       then do
         mapM (\a -> checkInnerScope scope a) args
         checkInnerScope scope xs
-      else throwError $ "Call to undefined function name: " ++ name -- FIXME: translate
+      else throwError $ "Call to undefined name: " ++ name -- FIXME: translate
 
-checkInnerScope scope (E (Var name):xs) = if VarName name `elem` scope
+checkInnerScope scope (E (FuncCall (Index name exprs) args):xs) = if name `elem` scope
+    then do
+      mapM (\e -> checkInnerScope scope [E e]) exprs
+      mapM (\a -> checkInnerScope scope a) args
+      checkInnerScope scope xs
+    else throwError $ "Call to undefined name: " ++ name -- FIXME: translate
+
+checkInnerScope _ (E (FuncCall _ _):_) = error "Invalid function call, plase file a bug report" -- FIXME: translate
+
+checkInnerScope scope (E (Var name):xs) = if name `elem` scope
     then checkInnerScope scope xs
-    else throwError $ "Reference to undefined variable name: " ++ name -- FIXME: translate
+    else throwError $ "Reference to undefined name: " ++ name -- FIXME: translate
 
 checkInnerScope scope (E (List stmts):xs) = do
     checkInnerScope scope stmts
     checkInnerScope scope xs
 
-checkInnerScope scope (E (Index name exprs):xs) = if VarName name `elem` scope
+checkInnerScope scope (E (Index name exprs):xs) = if name `elem` scope
     then do
       mapM (\e -> checkInnerScope scope [E e]) exprs
       checkInnerScope scope xs
-    else throwError $ "Reference to undefined variable name: " ++ name -- FIXME: translate
+    else throwError $ "Reference to undefined name: " ++ name -- FIXME: translate
 
 checkInnerScope scope (_:xs) = checkInnerScope scope xs
-checkInnerScope _ [] = return () -- TODO: cover all cases
+checkInnerScope _ [] = return ()
 
 
-getAssignedVarName :: Stmt -> Name
-getAssignedVarName (Assign (Var name) _) = VarName name
-getAssignedVarName (Assign (Index name _) _) = VarName name
+getAssignedVarName :: Stmt -> String
+getAssignedVarName (Assign (Var name) _) = name
+getAssignedVarName (Assign (Index name _) _) = name
 getAssignedVarName _ = error "Invalid for initial expression, please file a bug report"
-
--- TODO: global variables
--- TODO: test coverage
---TODO: a[1]()

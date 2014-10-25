@@ -56,11 +56,14 @@ Scoping rules
 =============
  * There is a single "main" function in the global scope
  * Functions with the same name cannot be defined more than once in the same scope
- * Function names cannot be used as variable names
  * Parameter names must be unique and they create a variable in the current function's scope
  * When a function call is made or a variable name encountered this must already exist
  (the function is searched in the list constructed in the 1st pass while the variable name should've
   been declared - assigned to - previously in the current scope)
+
+Typing rules
+============
+* Function names cannot be used as variable names
 
 Examples
 ========

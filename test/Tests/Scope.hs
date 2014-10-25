@@ -229,9 +229,13 @@ scopeTests = TestList [
 
  , "args visible in func body" ~: scopeTest "func main(argc, argv) ret argv[1] sffunc"
 
- , "name already used by a function" ~: scopeTestFail "func foo() ret 1 sffunc func main() foo=3 sffunc"
+ , "name already used by a function" ~: scopeTestFail "func foo() ret 1 sffunc func main() foo=3 sffunc" -- TODO: move this to type tests
 
  , "duplicate param names" ~: scopeTestFail "func main(a, a) foo=3 sffunc"
+
+ , "undefined function call whose definition is in a list" ~: scopeTestFail "func main() b[1]() sffunc"
+
+ , "function call whose definition is in a list" ~: scopeTest "func main() a={func() ret 1 sffunc} a[1]() sffunc"
 
  , "fizzbuzz program" ~:
     do c <- readFile "examples/fizzbuzz.epc"
