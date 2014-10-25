@@ -80,7 +80,7 @@ scopeTests = TestList [
 
  , "undefined variable in simple if's condition" ~: scopeTestFail "func main() daca x >= 1 atunci a=2 a sfdaca sffunc"
 
- , "defined variable in simple if's condition" ~: scopeTest "func main() x = 1 daca x != 1 atunci a=2 a sfdaca sffunc"
+ , "defined variable in simple if's condition" ~: scopeTest "func main() x = 1 daca x != 1 atunci x+2 !x x+2 sfdaca sffunc"
 
  , "valid func call in simple if's condition" ~: scopeTest "func foo() ret adevarat sffunc func main() daca foo() atunci ret 3 sfdaca sffunc"
 
@@ -101,7 +101,7 @@ scopeTests = TestList [
 
  , "undefined list" ~: scopeTestFail "func main() daca a[2] atunci ret 1 altfel ret 3 sfdaca sffunc"
 
- , "variable in list index" ~: scopeTest "func main() b=1 a[b]=2 ret a sffunc"
+ , "variable in list index" ~: scopeTest "func main() b=1 a[b]=b ret a sffunc"
 
  , "undefined variable in list index" ~: scopeTestFail "func main() b=1 a[c]=2 ret a sffunc"
 
@@ -121,15 +121,17 @@ scopeTests = TestList [
 
  , "empty for with empty body" ~: scopeTest "func main() pt ;; executa sfpt sffunc"
 
- , "empty for with var access in body" ~: scopeTest "func main() a=2 pt ;; executa a=a+1 sfpt sffunc"
+ , "empty for with var access in body" ~: scopeTest "func main() a=2 pt ;; executa a=a+1 sfpt ret a sffunc"
 
  , "empty for with undefined var access in body" ~: scopeTestFail "func main() pt ;; executa a=a+1 sfpt sffunc"
 
  , "undefined variable in list index used in for initial" ~: scopeTestFail "func main() pt a[b]=2 ;; executa sfpt sffunc"
 
+ , "defined variable in list index used in for initial and in body" ~: scopeTest "func main() pt a[1]=1;a[1]>1; executa ret a[1] sfpt sffunc"
+
  , "defined variable in for initial used in the body" ~: scopeTest "func main() pt a=2;; executa a sfpt sffunc"
 
- , "defined list index in for initial used in the body" ~: scopeTest "func main() a={1, 2} pt a[1]=2;; executa a[2] sfpt sffunc"
+ , "defined list index in for initial used in the body" ~: scopeTest "func main() a={1, 2} pt a[1]=2;; executa a[2] sfpt ret a sffunc"
 
  , "defined variable used in for condition" ~: scopeTest "func main() a=2 pt ;a>2; executa 1 sfpt sffunc"
 
@@ -137,21 +139,31 @@ scopeTests = TestList [
 
  , "undefined list index used in for condition" ~: scopeTestFail "func main() pt ;a[2]>2; executa 1 sfpt sffunc"
 
- , "defined list index used in for condition" ~: scopeTest "func main() a={1,2} pt ;a[2]>2; executa 1 sfpt sffunc"
+ , "defined list index used in for condition" ~: scopeTest "func main() a={1,2} b=5 pt ;a[2]>2; executa b=b+3 sfpt ret b sffunc"
 
- , "undefined variable in for condition" ~: scopeTestFail "func main() pt ;;a=a+1 executa sfpt sffunc"
+ , "undefined variable in for iter" ~: scopeTestFail "func main() pt ;;a=a+1 executa sfpt sffunc"
 
- , "defined variable (in a higher scope) in for condition" ~: scopeTest "func main() a=1 pt ;;a=a+1 executa sfpt sffunc"
+ , "defined variable (in a higher scope) in for iter" ~: scopeTest "func main() a=1 pt ;;a=a+1 executa a=a+1 sfpt ret a sffunc"
 
- , "defined variable in for inital and used in for condition and for body" ~: scopeTest "func main() pt a=1;a<42; executa a=a+1 sfpt sffunc"
+ , "defined variable (in a higher scope) in for iter ad condition" ~: scopeTest "func main() a=1 pt ;a<=5;a=a+1 executa a=a+1 sfpt ret a sffunc"
+
+ , "defined variable in for inital and used in for condition and for body" ~:
+    scopeTest "func main() b=42 pt a=1;a<42; executa a=a+1 sfpt ret b sffunc"
+
+ , "using already defined variable in for inital and in for condition and for body" ~:
+    scopeTest "func main() a=5 pt a=a;a<42; executa a=a+1 sfpt ret a sffunc"
 
  , "undefined variable in for condition" ~: scopeTestFail "func main() pt a=1;b<42; executa 1 sfpt sffunc"
 
- , "defined variable in for initial and used in for iter and for body" ~: scopeTest "func main() pt a=1;;a=a+1 executa a=a+0 sfpt sffunc"
+ , "defined variable in for initial and used in for iter and for body" ~:
+    scopeTest "func main() b=42 pt a=1;;a=a+1 executa a=a+0 sfpt ret 42 sffunc"
+
+ , "using already defined variable in for initial and in for iter and for body" ~:
+    scopeTest "func main() i=5 pt a=i;;a=a+1 executa a=a+0 sfpt ret i sffunc"
 
  , "defined a variable in for initial and using another one in for condition" ~: scopeTestFail "func main() pt b=1;;a=a+1 executa 1 sfpt sffunc"
 
- , "undefined variable used in for condition and in iter" ~: scopeTestFail "func main() pt ;a>2;a=a+1 executa sfpt sffunc"
+ , "undefined variable used in for condition and in iter" ~: scopeTestFail "func main() pt ;a>2;a=a+1 executa a=a+1 sfpt ret a sffunc"
 
  , "defined variable used in for condition and in iter" ~: scopeTest "func main() a=1 pt ;a<2;a=a+1 executa sfpt sffunc"
 
@@ -235,7 +247,7 @@ scopeTests = TestList [
 
  , "undefined function call whose definition is in a list" ~: scopeTestFail "func main() b[1]() sffunc"
 
- , "function call whose definition is in a list" ~: scopeTest "func main() a={func() ret 1 sffunc} a[1]() sffunc"
+ , "function call whose definition is in a list" ~: scopeTest "func main() a={func(x) ret x sffunc} b=0 a[0](b) {1, 2} a[0] a[b](3) sffunc"
 
  , "fizzbuzz program" ~:
     do c <- readFile "examples/fizzbuzz.epc"
