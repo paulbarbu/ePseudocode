@@ -89,7 +89,9 @@ l = l + {11} //append 11 to l
 l += {12, 13} //apend 12 and 13 to l (`{1, 42, 3, 4, 11}`)
 scrie(lung(l)) //outputs 7 (4 elements in the initial list + the appended 11 + the appended 12 and 13)
 
-l += 1 //runtime error, cannot use '+' on list and string
+{1,2,3} - (1+2) => {1,2}
+
+TODO: this is not valid: l += 1 //runtime error, cannot use '+' on list and string
 ```
 
 * String operations:
