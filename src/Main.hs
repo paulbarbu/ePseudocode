@@ -4,6 +4,7 @@ import System.Console.Haskeline
 
 import EPseudocode.Parser
 import EPseudocode.Scope
+import EPseudocode.Evaluator
 
 
 help :: String
@@ -22,7 +23,10 @@ runRepl = runInputT defaultSettings loop
                 Nothing -> return ()
                 Just "quit" -> return ()
                 Just input -> do
-                    outputStrLn $ runParser mainParser input
+                    case eParse mainParser input >>= eval . head of
+                        Left err -> outputStrLn err
+                        Right output -> outputStrLn $ show output
+
                     loop
 
 

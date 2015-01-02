@@ -6,7 +6,7 @@ test:
 	chromium dist/markup/hpc_index.html &
 
 lint:
-	hlint . --report
+	~/.cabal/bin/hlint . --report
 
 clean:
 	rm -rf .hpc

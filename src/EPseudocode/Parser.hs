@@ -138,7 +138,7 @@ runParser p input = case eParse p input of
   Right x -> show x
 
 
-eParse :: Parser Stmt -> String -> Either String [Stmt]
+eParse :: Parser Stmt -> String -> Error [Stmt]
 eParse p input = case parse (whiteSpace *> many1 p <* eof) "" input of
   Left err -> Left $ show err
   Right program -> Right program
