@@ -1,7 +1,7 @@
 module EPseudocode.Data
 where
 
--- TODO: this could be simplified I merge Expr with Stmt and make the difference in the parser
+import Data.IORef
 
 data Expr =
     -- literal values
@@ -40,7 +40,15 @@ data Stmt = Assign Expr Expr -- assignments (the left side is limited to variabl
     deriving (Show, Eq, Ord)
 
 
+--type Env = IORef [(String, IORef Expr)]
 type Env = [(String, Expr)]
 
 
 type Error = Either String
+
+-- Helpers
+
+type ListAction = Integer -> [Expr] -> Error (Env, Expr)
+type IndexingExpr = Expr
+type IndexingListExpr = [Expr]
+type IndexedList = [Expr]
