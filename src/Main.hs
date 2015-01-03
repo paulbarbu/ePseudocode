@@ -38,7 +38,7 @@ main :: IO ()
 main = do
     args <- getArgs
     case length args of
-        0 -> runRepl
+        0 -> runRepl >> putStrLn "Goodbye!"
         -- 1 -> readFile (head args) >>= \contents -> putStrLn $ runParser toplevelParser contents -- TODO: cleanly check if file exists
         1 -> do
             contents <- readFile (head args)

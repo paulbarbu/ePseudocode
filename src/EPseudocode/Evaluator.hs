@@ -1,5 +1,3 @@
-{-# LANGUAGE TupleSections #-}
-
 module EPseudocode.Evaluator (eval)
 where
 
@@ -9,9 +7,10 @@ import Control.Monad.Except
 
 import EPseudocode.Data
 import EPseudocode.Lexer
+import EPseudocode.Helpers
 
 eval :: Env -> Stmt -> Error (Env, Expr)
---TODO: everythign in the AST, both Expr and Stmt
+--TODO: everything in the AST, both Expr and Stmt
 eval env (E a@(Int _)) = return (env, a)
 eval env (E a@(Float _)) = return (env, a)
 eval env (E a@(String _)) = return (env, a)
@@ -21,7 +20,20 @@ eval env (E (List a)) = do
     return (env, List $ map (E . snd) x)
 eval env (Assign (Var name) s) = do
     (newEnv, val) <- eval env s
-    return ((name,val) : env, val) -- TODO: equal returns its value
+    return ((name,val) : newEnv, val) -- TODO: equal returns its value
+eval env (Assign (Index name e) s) = case lookup name env of
+    -- TODO: a[1][2][3][1+3]
+    Nothing -> throwError $ "Unbound variable name " ++ name
+    Just (List list) -> do
+        (newEnv, val) <- eval env s
+        (_, index) <- eval env . E $ head e
+        case index of
+            (Int i) ->
+                if fromIntegral i < length list && i >= 0 then
+                    return ((name, List $ replace (fromIntegral i) (E val) list):newEnv, val) -- TODO: equal returns its value
+                else
+                    throwError $ "Invalid list index: " ++ name ++ "[" ++ show i ++ "]"
+            _ -> throwError "List can be indexed only with Integer evaluating expressions"
 eval env (E (Var name)) = case lookup name env of
     Nothing -> throwError $ "Unbound variable name " ++ name
     Just val -> return (env, val)
