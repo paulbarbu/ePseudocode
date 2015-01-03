@@ -39,7 +39,7 @@ term = parens expr
   <|> liftM String stringLiteral
   <|> (reserved tTrue >> return (Bool True))
   <|> (reserved tFalse >> return (Bool False))
-  <|> liftM List (braces (commaSep (liftM E expr <|> funcDef)))
+  <|> liftM List (braces (commaSep (expr <|> funcDef)))
   <|> try (funcCall <?> "function call") -- FIXME: translate -- this occurs twice
   <|> try indexAccess
   <|> liftM Var identifier
@@ -47,7 +47,7 @@ term = parens expr
 
 
 toplevelParser :: Parser Stmt
-toplevelParser = funcDef <|> assignment funcExpr
+toplevelParser = liftM E funcDef <|> assignment funcExpr
 
 
 mainParser :: Parser Stmt
@@ -82,11 +82,11 @@ mainParser =
   <|>
   -- for
   do reserved tFor <?> tFor
-     initial <- liftM Just (assignment $ liftM E expr) <|> return Nothing
+     initial <- liftM Just (assignment expr) <|> return Nothing
      semi
      cond <- liftM Just expr <|> return Nothing
      semi
-     iteration <- liftM Just (assignment $ liftM E expr) <|> return Nothing
+     iteration <- liftM Just (assignment expr) <|> return Nothing
      reserved tDo <?> tDo
      stmts <- many mainParser
      reserved tEndFor <?> tEndFor
@@ -96,7 +96,7 @@ mainParser =
   do reserved tReturn <?> tReturn
      liftM Ret funcExpr -- TODO: cannot return a function from the main function
   <|>
-  (funcDef <?> "function definition")  -- FIXME: translate
+  (liftM E funcDef <?> "function definition")  -- FIXME: translate
   <|>
   -- assignment
   try (assignment funcExpr)
@@ -104,11 +104,11 @@ mainParser =
   liftM E expr -- TODO: is this the right thing? (because it allows stuff like: "func foo() 1 sffunc")
 
 
-funcExpr :: Parser Stmt
-funcExpr = funcDef <|> liftM E expr
+funcExpr :: Parser Expr
+funcExpr = funcDef <|> expr
 
 
-funcDef :: Parser Stmt
+funcDef :: Parser Expr
 funcDef = do reserved tFunc
              name <- identifier <|> return ""
              args <- parens (commaSep identifier) <?> "parameters list" -- FIXME: translate
@@ -119,10 +119,10 @@ funcDef = do reserved tFunc
 
 funcCall :: Parser Expr
 funcCall = do name <- try indexAccess <|> try (liftM Var identifier)
-              liftM (FuncCall name) (many1 . parens $ commaSep (liftM E expr <|> funcDef)) <?> "arguments list" -- FIXME: translate
+              liftM (FuncCall name) (many1 . parens $ commaSep (expr <|> funcDef)) <?> "arguments list" -- FIXME: translate
 
 
-assignment :: Parser Stmt -> Parser Stmt
+assignment :: Parser Expr -> Parser Stmt
 assignment rhsParser = do lval <- try indexAccess <|> liftM Var identifier
                           reservedOp "="
                           liftM (Assign lval) rhsParser

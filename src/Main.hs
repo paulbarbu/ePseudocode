@@ -3,7 +3,7 @@ import System.Environment
 import System.Console.Haskeline
 
 import EPseudocode.Parser
-import EPseudocode.Scope
+-- import EPseudocode.Scope
 import EPseudocode.Evaluator
 import EPseudocode.Data
 
@@ -23,8 +23,8 @@ runRepl = runInputT defaultSettings $ loop []
             case line of
                 Nothing -> return ()
                 Just "quit" -> return ()
-                Just input -> do
-                    case eParse mainParser input >>= (eval env) . head of
+                Just input ->
+                    case eParse mainParser input >>= eval env . head of
                     -- case eParse mainParser input >>= (eval env) . head of
                         Left err -> outputStrLn err >> loop env
                         Right (e, output) -> do
@@ -44,11 +44,12 @@ main = do
             contents <- readFile (head args)
             let prog = eParse toplevelParser contents
 
-            case prog of
-                Left err -> putStrLn $ "failed: " ++ err
-                Right p -> do let e = isValidScope p
-                              case e of
-                               Left err -> putStrLn $ "failed: " ++ err
-                               Right n -> putStrLn $ "ok: " ++ show n
+            -- TODO: finish this
+            --case prog of
+            --    Left err -> putStrLn $ "failed: " ++ err
+            --    Right p -> do let e = isValidScope p
+            --                  case e of
+            --                   Left err -> putStrLn $ "failed: " ++ err
+            --                   Right n -> putStrLn $ "ok: " ++ show n
             return ()
         _ -> putStrLn help

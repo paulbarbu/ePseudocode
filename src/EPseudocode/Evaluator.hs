@@ -9,6 +9,24 @@ import EPseudocode.Data
 import EPseudocode.Lexer
 import EPseudocode.Helpers
 
+
+applyToListIndex :: Env -> Expr -> (Integer -> [Expr] -> (Env, Expr)) -> Error (Env, Expr)
+applyToListIndex env (Index name (e:es)) action =
+    case lookup name env of
+        -- TODO: a[1][2][3][1+3]
+        Nothing -> throwError $ "Unbound variable name " ++ name
+        Just (List list) -> do
+            (_, index) <- eval env $ E e
+            case index of
+                (Int i) ->
+                    if fromIntegral i < length list && i >= 0 then
+                        return $ action i list
+                    else
+                        throwError $ "Invalid list index: " ++ name ++ "[" ++ show i ++ "]"
+                _ -> throwError "List can be indexed only with Integer evaluating expressions"
+
+
+
 eval :: Env -> Stmt -> Error (Env, Expr)
 --TODO: everything in the AST, both Expr and Stmt
 eval env (E a@(Int _)) = return (env, a)
@@ -16,29 +34,20 @@ eval env (E a@(Float _)) = return (env, a)
 eval env (E a@(String _)) = return (env, a)
 eval env (E a@(Bool _)) = return (env, a)
 eval env (E (List a)) = do
-    x <- mapM (eval env) a
-    return (env, List $ map (E . snd) x)
-eval env (Assign (Var name) s) = do
-    (newEnv, val) <- eval env s
-    return ((name,val) : newEnv, val) -- TODO: equal returns its value
-eval env (Assign (Index name e) s) = case lookup name env of
-    -- TODO: a[1][2][3][1+3]
-    Nothing -> throwError $ "Unbound variable name " ++ name
-    Just (List list) -> do
-        (newEnv, val) <- eval env s
-        (_, index) <- eval env . E $ head e
-        case index of
-            (Int i) ->
-                if fromIntegral i < length list && i >= 0 then
-                    return ((name, List $ replace (fromIntegral i) (E val) list):newEnv, val) -- TODO: equal returns its value
-                else
-                    throwError $ "Invalid list index: " ++ name ++ "[" ++ show i ++ "]"
-            _ -> throwError "List can be indexed only with Integer evaluating expressions"
+    x <- mapM (eval env . E) a
+    return (env, List $ map snd x)
 eval env (E (Var name)) = case lookup name env of
     Nothing -> throwError $ "Unbound variable name " ++ name
     Just val -> return (env, val)
+eval env (E index@(Index _ _)) = applyToListIndex env index (\i list -> (env, list !! fromIntegral i))
 eval env (E unExpr@(UnExpr _ _)) = evalUnExpr env unExpr >>= eval env . E
 eval env (E binExpr@BinExpr{}) = evalBinExpr env binExpr >>= eval env . E
+eval env (Assign (Var name) s) = do
+    (newEnv, val) <- eval env $ E s
+    return ((name,val) : newEnv, val) -- TODO: equal returns its value
+eval env (Assign index@(Index name _) s) = do
+    (newEnv, val) <- eval env $ E s
+    applyToListIndex env index (\i list -> ((name, List $ replace (fromIntegral i) val list):newEnv, val))
 
 
 evalBinExpr :: Env -> Expr -> Error Expr
@@ -55,52 +64,52 @@ evalBinExpr _ (BinExpr Mod (List _) _) = throwError "Cannot apply mod to a list"
 evalBinExpr _ (BinExpr Pow _ (List _)) = throwError "Cannot raise to a list power"
 evalBinExpr _ (BinExpr Pow (List _) _) = throwError "Cannot raise a list to power"
 evalBinExpr env (BinExpr Lt (List l) (List r)) = do
-    a <- mapM (eval env) l
-    b <- mapM (eval env) r
+    a <- mapM (eval env . E) l
+    b <- mapM (eval env . E) r
     return . Bool $ a < b
 evalBinExpr _ (BinExpr Lt _ (List _)) = throwError "Lists can be compared only to lists"
 evalBinExpr _ (BinExpr Lt (List _) _) = throwError "Lists can be compared only to lists"
 evalBinExpr env (BinExpr Le (List l) (List r)) = do
-    a <- mapM (eval env) l
-    b <- mapM (eval env) r
+    a <- mapM (eval env . E) l
+    b <- mapM (eval env . E) r
     return . Bool $ a <= b
 evalBinExpr _ (BinExpr Le _ (List _)) = throwError "Lists can be compared only to lists"
 evalBinExpr _ (BinExpr Le (List _) _) = throwError "Lists can be compared only to lists"
 evalBinExpr env (BinExpr Ge (List l) (List r)) = do
-    a <- mapM (eval env) l
-    b <- mapM (eval env) r
+    a <- mapM (eval env . E) l
+    b <- mapM (eval env . E) r
     return . Bool $ a >= b
 evalBinExpr _ (BinExpr Ge _ (List _)) = throwError "Lists can be compared only to lists"
 evalBinExpr _ (BinExpr Ge (List _) _) = throwError "Lists can be compared only to lists"
 evalBinExpr env (BinExpr Gt (List l) (List r)) = do
-    a <- mapM (eval env) l
-    b <- mapM (eval env) r
+    a <- mapM (eval env . E) l
+    b <- mapM (eval env . E) r
     return . Bool $ a > b
 evalBinExpr _ (BinExpr Gt _ (List _)) = throwError "Lists can be compared only to lists"
 evalBinExpr _ (BinExpr Gt (List _) _) = throwError "Lists can be compared only to lists"
 evalBinExpr env (BinExpr Neq (List l) (List r)) = do
-    a <- mapM (eval env) l
-    b <- mapM (eval env) r
+    a <- mapM (eval env . E) l
+    b <- mapM (eval env . E) r
     return . Bool $ a /= b
 evalBinExpr _ (BinExpr Neq _ (List _)) = throwError "Lists can be compared only to lists"
 evalBinExpr _ (BinExpr Neq (List _) _) = throwError "Lists can be compared only to lists"
 evalBinExpr env (BinExpr Eq (List l) (List r)) = do
-    a <- mapM (eval env) l
-    b <- mapM (eval env) r
+    a <- mapM (eval env . E) l
+    b <- mapM (eval env . E) r
     return . Bool $ a == b --TODO: this one compares the environment too
 evalBinExpr _ (BinExpr Eq _ (List _)) = throwError "Lists can be compared only to lists"
 evalBinExpr _ (BinExpr Eq (List _) _) = throwError "Lists can be compared only to lists"
 evalBinExpr env (BinExpr Plus l (List r)) = do
     (_, val) <- eval env $ E l --TODO: is it wise to ignore the environment here?
-    return . List $ E val : r
+    return . List $ val : r
 evalBinExpr env (BinExpr Plus (List l) r) = do
     (_, val) <- eval env $ E r --TODO: is it wise to ignore the environment here?
-    return . List $ l ++ [E val]
+    return . List $ l ++ [val]
 
 evalBinExpr _ (BinExpr Minus l (List r)) = throwError "Cannot subtract a list from a value"
 evalBinExpr env (BinExpr Minus (List l) r) = do
     (_, val) <- eval env (E r) --TODO: is it wise to ignore the environment here?
-    return . List $ filter (\x -> x /= E val) l
+    return . List $ filter (/= val) l
 
     -- Int with all
 evalBinExpr _ (BinExpr And (Int l) (Int r)) = throwError "And is invalid on Ints"
