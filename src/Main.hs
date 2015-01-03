@@ -5,6 +5,7 @@ import System.Console.Haskeline
 import EPseudocode.Parser
 import EPseudocode.Scope
 import EPseudocode.Evaluator
+import EPseudocode.Data
 
 
 help :: String
@@ -14,20 +15,23 @@ help = "TODO: One or zero arguments"
 
 -- TODO: multiline input
 runRepl :: IO ()
-runRepl = runInputT defaultSettings loop
+runRepl = runInputT defaultSettings $ loop []
     where
-        loop :: InputT IO ()
-        loop = do
+        loop :: Env -> InputT IO ()
+        loop env = do
             line <- getInputLine "epc> "
             case line of
                 Nothing -> return ()
                 Just "quit" -> return ()
                 Just input -> do
-                    case eParse mainParser input >>= eval . head of
-                        Left err -> outputStrLn err
-                        Right output -> outputStrLn $ show output
-
-                    loop
+                    case eParse mainParser input >>= (eval env) . head of
+                    -- case eParse mainParser input >>= (eval env) . head of
+                        Left err -> outputStrLn err >> loop env
+                        Right (e, output) -> do
+                            outputStrLn $ "env: " ++ show e
+                            x <- outputStrLn $ "ans: " ++ show output
+                            loop e
+                            return x
 
 
 main :: IO ()
