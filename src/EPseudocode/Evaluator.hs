@@ -3,16 +3,16 @@ module EPseudocode.Evaluator (eval)
 where
 
 import Data.List ((\\))
-
 import Control.Monad.Except
+import Debug.Trace
 
 import EPseudocode.Data
 import EPseudocode.Lexer
 import EPseudocode.Helpers
 
 
-applyToListIndex :: Env -> Expr -> Maybe Expr -> Error (Env, Expr)
-applyToListIndex env (Index name [e]) newVal =
+applyToNamedList :: Env -> Expr -> Maybe Expr -> Error (Env, Expr)
+applyToNamedList env (Index name [e]) newVal =
     case lookup name env of
         Nothing -> throwError $ "Unbound variable name " ++ name
         Just (List list) -> do
@@ -20,14 +20,13 @@ applyToListIndex env (Index name [e]) newVal =
             case index of
                 (Int i) ->
                     if fromIntegral i < length list && i >= 0 then
-                        case newVal of
-                            Nothing -> return (env, list !! fromIntegral i)
-                            Just v -> return ((name, List $ replace (fromIntegral i) v list):env, v)
+                        maybe (return (env, list !! fromIntegral i))
+                            (\v -> return ((name, List $ replace (fromIntegral i) v list):env, v))
+                            newVal
                     else
                         throwError $ invalidListIndex name i
-                _ -> throwError "List can be indexed only with Integer evaluating expressions"
-
-applyToListIndex env (Index name (e:es)) newVal =
+                otherwise -> throwError "List can be indexed only with Integer evaluating expressions"
+applyToNamedList env (Index name (e:es)) newVal =
     case lookup name env of
         Nothing -> throwError $ "Unbound variable name " ++ name
         Just (List list) -> do
@@ -36,45 +35,45 @@ applyToListIndex env (Index name (e:es)) newVal =
                 (Int i) ->
                     if fromIntegral i < length list && i >= 0 then
                         case list !! fromIntegral i of
-                            (List l) -> case newVal of
-                                Nothing -> liftM (env,) $ applyToList env es l Nothing
-                                Just v -> do
-                                    val <- applyToList env es l (Just v)
-                                    return ((name, List $ replace (fromIntegral i) val list):env, v)
+                            (List l) ->
+                                maybe (liftM (env,) $ applyToAnonList env es l Nothing)
+                                    (\v -> do val <- applyToAnonList env es l (Just v)
+                                              return ((name, List $ replace (fromIntegral i) val list):env, v))
+                                    newVal
                             otherwise -> throwError "Only Lists and Strings can be indexed"
 
                     else
                         throwError $ invalidListIndex name i
-                _ -> throwError "List can be indexed only with Integer evaluating expressions"
+                otherwise -> throwError "List can be indexed only with Integer evaluating expressions"
 
 
-applyToList :: Env -> IndexingListExpr -> IndexedList -> Maybe Expr -> Error Expr
-applyToList env [e] list newVal = do
+applyToAnonList :: Env -> IndexingListExpr -> IndexedList -> Maybe Expr -> Error Expr
+applyToAnonList env [e] list newVal = do
     (_, index) <- eval env $ E e
     case index of
         (Int i) ->
             if fromIntegral i < length list && i >= 0 then
-                case newVal of
-                    Nothing -> return $ list !! fromIntegral i
-                    Just v -> return . List $ replace (fromIntegral i) v list
+                maybe (return $ list !! fromIntegral i)
+                    (\v -> return . List $ replace (fromIntegral i) v list)
+                    newVal
             else
                 throwError $ invalidNestedListIndex i
-        _ -> throwError "List can be indexed only with Integer evaluating expressions"
-applyToList env (e:es) list newVal = do
+        otherwise -> throwError "List can be indexed only with Integer evaluating expressions"
+applyToAnonList env (e:es) list newVal = do
     (_, index) <- eval env $ E e
     case index of
         (Int i) ->
             if fromIntegral i < length list && i >= 0 then
                 case list !! fromIntegral i of
-                    (List l) -> case newVal of
-                        Nothing -> applyToList env es l Nothing
-                        Just v -> do
-                            val <- applyToList env es l (Just v)
-                            return $ List $ replace (fromIntegral i) val list
+                    (List l) ->
+                        maybe (applyToAnonList env es l Nothing)
+                            (\v -> do val <- applyToAnonList env es l (Just v)
+                                      return $ List $ replace (fromIntegral i) val list)
+                            newVal
                     otherwise -> throwError "Only Lists and Strings can be indexed"
             else
                 throwError $ invalidNestedListIndex i
-        _ -> throwError "List can be indexed only with Integer evaluating expressions"
+        otherwise -> throwError "List can be indexed only with Integer evaluating expressions"
 
 
 eval :: Env -> Stmt -> Error (Env, Expr)
@@ -86,10 +85,10 @@ eval env (E a@(Bool _)) = return (env, a)
 eval env (E (List a)) = do
     x <- mapM (eval env . E) a
     return (env, List $ map snd x)
-eval env (E (Var name)) = case lookup name env of
-    Nothing -> throwError $ "Unbound variable name " ++ name
-    Just val -> return (env, val)
-eval env (E index@(Index _ _)) = applyToListIndex env index Nothing
+eval env (E (Var name)) = maybe (throwError $ "Unbound variable name " ++ name)
+    (\val -> return (env, val))
+    $ lookup name env
+eval env (E index@(Index _ _)) = applyToNamedList env index Nothing
 eval env (E unExpr@(UnExpr _ _)) = evalUnExpr env unExpr >>= eval env . E
 eval env (E binExpr@BinExpr{}) = evalBinExpr env binExpr >>= eval env . E
 eval env (Assign (Var name) s) = do
@@ -97,7 +96,13 @@ eval env (Assign (Var name) s) = do
     return ((name,val) : newEnv, val)
 eval env (Assign index@(Index name _) s) = do --TODO: apply to string indexing, too
     (newEnv, val) <- eval env $ E s
-    applyToListIndex env index $ Just val
+    applyToNamedList env index $ Just val
+
+
+getEvaledExprList :: Env -> [Expr] -> Error [Expr]
+getEvaledExprList env l = do
+    a' <- mapM (eval env . E) l
+    return $ map snd a'
 
 
 evalBinExpr :: Env -> Expr -> Error Expr
@@ -114,38 +119,38 @@ evalBinExpr _ (BinExpr Mod (List _) _) = throwError "Cannot apply mod to a list"
 evalBinExpr _ (BinExpr Pow _ (List _)) = throwError "Cannot raise to a list power"
 evalBinExpr _ (BinExpr Pow (List _) _) = throwError "Cannot raise a list to power"
 evalBinExpr env (BinExpr Lt (List l) (List r)) = do
-    a <- mapM (eval env . E) l
-    b <- mapM (eval env . E) r
+    a <- getEvaledExprList env l
+    b <- getEvaledExprList env r
     return . Bool $ a < b
 evalBinExpr _ (BinExpr Lt _ (List _)) = throwError "Lists can be compared only to lists"
 evalBinExpr _ (BinExpr Lt (List _) _) = throwError "Lists can be compared only to lists"
 evalBinExpr env (BinExpr Le (List l) (List r)) = do
-    a <- mapM (eval env . E) l
-    b <- mapM (eval env . E) r
+    a <- getEvaledExprList env l
+    b <- getEvaledExprList env r
     return . Bool $ a <= b
 evalBinExpr _ (BinExpr Le _ (List _)) = throwError "Lists can be compared only to lists"
 evalBinExpr _ (BinExpr Le (List _) _) = throwError "Lists can be compared only to lists"
 evalBinExpr env (BinExpr Ge (List l) (List r)) = do
-    a <- mapM (eval env . E) l
-    b <- mapM (eval env . E) r
+    a <- getEvaledExprList env l
+    b <- getEvaledExprList env r
     return . Bool $ a >= b
 evalBinExpr _ (BinExpr Ge _ (List _)) = throwError "Lists can be compared only to lists"
 evalBinExpr _ (BinExpr Ge (List _) _) = throwError "Lists can be compared only to lists"
 evalBinExpr env (BinExpr Gt (List l) (List r)) = do
-    a <- mapM (eval env . E) l
-    b <- mapM (eval env . E) r
+    a <- getEvaledExprList env l
+    b <- getEvaledExprList env r
     return . Bool $ a > b
 evalBinExpr _ (BinExpr Gt _ (List _)) = throwError "Lists can be compared only to lists"
 evalBinExpr _ (BinExpr Gt (List _) _) = throwError "Lists can be compared only to lists"
 evalBinExpr env (BinExpr Neq (List l) (List r)) = do
-    a <- mapM (eval env . E) l
-    b <- mapM (eval env . E) r
+    a <- getEvaledExprList env l
+    b <- getEvaledExprList env r
     return . Bool $ a /= b
 evalBinExpr _ (BinExpr Neq _ (List _)) = throwError "Lists can be compared only to lists"
 evalBinExpr _ (BinExpr Neq (List _) _) = throwError "Lists can be compared only to lists"
 evalBinExpr env (BinExpr Eq (List l) (List r)) = do
-    a <- mapM (eval env . E) l
-    b <- mapM (eval env . E) r
+    a <- getEvaledExprList env l
+    b <- getEvaledExprList env r
     return . Bool $ a == b
 evalBinExpr _ (BinExpr Eq _ (List _)) = throwError "Lists can be compared only to lists"
 evalBinExpr _ (BinExpr Eq (List _) _) = throwError "Lists can be compared only to lists"
@@ -401,7 +406,7 @@ evalBinExpr _ (BinExpr Pow (Bool _) (Bool _)) = throwError "Cannot raise Bools" 
 evalBinExpr env (BinExpr op l r) = do
     (_, a) <- eval env $ E l
     (_, b) <- eval env $ E r
-    return $ BinExpr op a b
+    evalBinExpr env $ BinExpr op a b
 
 
 evalUnExpr :: Env-> Expr -> Error Expr
