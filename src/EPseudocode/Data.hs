@@ -22,7 +22,7 @@ data Expr =
     -- function calls, the Stmt is limited to expr or function definitions
     | FuncCall Expr [[Expr]] -- foo() = [[]], func_in_func()(2) = [[],[2]], func_in_list[1]() = [[]], a(1)() = [[1],[]]
     | FuncDef String [String] [Stmt] -- func name args body
-    deriving (Eq, Ord)
+    deriving (Show, Eq, Ord)
 
 data BinOp = And | Or | Plus | Minus | Mul | Div | Mod | Lt | Le | Gt | Ge | Neq | Eq | Pow
     deriving (Show, Eq, Ord)
@@ -52,10 +52,6 @@ type IndexingExpr = Expr
 type IndexingListExpr = [Expr]
 type IndexedList = [Expr]
 
-
--- Instances
-instance Show Expr where
-    show = showExpr
 
 showExpr :: Expr -> String
 showExpr (Int i) = show i

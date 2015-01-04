@@ -1,12 +1,11 @@
 import System.Environment
 
-import Data.List (intercalate)
 import System.Console.Haskeline
 
-import EPseudocode.Parser
--- import EPseudocode.Scope
-import EPseudocode.Evaluator
 import EPseudocode.Data
+import EPseudocode.Evaluator
+import EPseudocode.Parser
+-- TODO: import EPseudocode.Scope
 
 
 help :: String
@@ -23,15 +22,15 @@ runRepl = runInputT defaultSettings $ loop []
             line <- getInputLine "epc> "
             case line of
                 Nothing -> return ()
-                Just ".quit" -> return ()
-                Just ".env" -> do
+                Just ":quit" -> return ()
+                Just ":env" -> do
                     outputStrLn $ "env: " ++ show env
                     loop env
                 Just input ->
                     case eParse mainParser input >>= mapM (eval env) of
                         Left err -> outputStrLn err >> loop env
-                        Right res{-[(newEnv, output)]-} -> do
-                            x <- outputStrLn $ "ans:\n" ++ intercalate " " (map (show . snd) res)
+                        Right res -> do
+                            x <- outputStrLn $ unwords (map (showExpr . snd) res)
                             loop (fst . last $ res)
                             return x
 
