@@ -3,6 +3,7 @@ where
 
 import Data.List (intercalate)
 
+import EPseudocode.Lexer
 
 data Expr =
     -- literal values
@@ -58,5 +59,8 @@ instance Show Expr where
 
 showExpr :: Expr -> String
 showExpr (Int i) = show i
+showExpr (Float f) = show f
+showExpr (String s) = s
+showExpr (Bool b) = if b then tTrue else tFalse
 showExpr (List l) = "{" ++ intercalate ", " (map showExpr l) ++ "}"
 showExpr a = show a

@@ -1,5 +1,6 @@
 import System.Environment
 
+import Data.List (intercalate)
 import System.Console.Haskeline
 
 import EPseudocode.Parser
@@ -27,11 +28,11 @@ runRepl = runInputT defaultSettings $ loop []
                     outputStrLn $ "env: " ++ show env
                     loop env
                 Just input ->
-                    case eParse mainParser input >>= eval env . head of
+                    case eParse mainParser input >>= mapM (eval env) of
                         Left err -> outputStrLn err >> loop env
-                        Right (newEnv, output) -> do
-                            x <- outputStrLn $ "ans:\n" ++ show output
-                            loop newEnv
+                        Right res{-[(newEnv, output)]-} -> do
+                            x <- outputStrLn $ "ans:\n" ++ intercalate " " (map (show . snd) res)
+                            loop (fst . last $ res)
                             return x
 
 

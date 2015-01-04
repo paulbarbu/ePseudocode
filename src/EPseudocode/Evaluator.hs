@@ -9,7 +9,19 @@ import Debug.Trace
 import EPseudocode.Data
 import EPseudocode.Lexer
 import EPseudocode.Helpers
+{-
+TODO: plus pe liste
+epc> a={1, 2,3}
+ans:
+{1, 2, 3}
+epc> a+ 3
+ans:
+{1, 2, 3, 3}
+epc> a+ {4,5}
+ans:
+{{1, 2, 3}, 4, 5}
 
+-}
 
 applyToNamedList :: Env -> Expr -> Maybe Expr -> Error (Env, Expr)
 applyToNamedList env (Index name [e]) newVal =
