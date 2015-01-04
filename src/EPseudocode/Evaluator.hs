@@ -12,7 +12,7 @@ import EPseudocode.Helpers
 
 
 applyToListIndex :: Env -> Expr -> Maybe Expr -> Error (Env, Expr)
-applyToListIndex env (Index name (e:[])) newVal =
+applyToListIndex env (Index name [e]) newVal =
     case lookup name env of
         Nothing -> throwError $ "Unbound variable name " ++ name
         Just (List list) -> do
@@ -21,8 +21,8 @@ applyToListIndex env (Index name (e:[])) newVal =
                 (Int i) ->
                     if fromIntegral i < length list && i >= 0 then
                         case newVal of
-                            Nothing -> return $ (env, list !! fromIntegral i)
-                            Just v -> return $ ((name, List $ replace (fromIntegral i) v list):env, v)
+                            Nothing -> return (env, list !! fromIntegral i)
+                            Just v -> return ((name, List $ replace (fromIntegral i) v list):env, v)
                     else
                         throwError $ invalidListIndex name i
                 _ -> throwError "List can be indexed only with Integer evaluating expressions"
@@ -37,10 +37,10 @@ applyToListIndex env (Index name (e:es)) newVal =
                     if fromIntegral i < length list && i >= 0 then
                         case list !! fromIntegral i of
                             (List l) -> case newVal of
-                                Nothing -> applyToList env es l Nothing >>= return . (env,)
+                                Nothing -> liftM (env,) $ applyToList env es l Nothing
                                 Just v -> do
                                     val <- applyToList env es l (Just v)
-                                    return $ ((name, List $ replace (fromIntegral i) val list):env, v)
+                                    return ((name, List $ replace (fromIntegral i) val list):env, v)
                             otherwise -> throwError "Only Lists and Strings can be indexed"
 
                     else
@@ -49,14 +49,14 @@ applyToListIndex env (Index name (e:es)) newVal =
 
 
 applyToList :: Env -> IndexingListExpr -> IndexedList -> Maybe Expr -> Error Expr
-applyToList env (e:[]) list newVal = do
+applyToList env [e] list newVal = do
     (_, index) <- eval env $ E e
     case index of
         (Int i) ->
             if fromIntegral i < length list && i >= 0 then
                 case newVal of
                     Nothing -> return $ list !! fromIntegral i
-                    Just v -> return $ List $ replace (fromIntegral i) v list
+                    Just v -> return . List $ replace (fromIntegral i) v list
             else
                 throwError $ invalidNestedListIndex i
         _ -> throwError "List can be indexed only with Integer evaluating expressions"
@@ -146,22 +146,20 @@ evalBinExpr _ (BinExpr Neq (List _) _) = throwError "Lists can be compared only 
 evalBinExpr env (BinExpr Eq (List l) (List r)) = do
     a <- mapM (eval env . E) l
     b <- mapM (eval env . E) r
-    return . Bool $ a == b --TODO: this one compares the environment too
+    return . Bool $ a == b
 evalBinExpr _ (BinExpr Eq _ (List _)) = throwError "Lists can be compared only to lists"
 evalBinExpr _ (BinExpr Eq (List _) _) = throwError "Lists can be compared only to lists"
 evalBinExpr env (BinExpr Plus l (List r)) = do
-    (_, val) <- eval env $ E l --TODO: is it wise to ignore the environment here?
+    (_, val) <- eval env $ E l
     return . List $ val : r
 evalBinExpr env (BinExpr Plus (List l) r) = do
-    (_, val) <- eval env $ E r --TODO: is it wise to ignore the environment here?
+    (_, val) <- eval env $ E r
     return . List $ l ++ [val]
-
 evalBinExpr _ (BinExpr Minus l (List r)) = throwError "Cannot subtract a list from a value"
 evalBinExpr env (BinExpr Minus (List l) r) = do
-    (_, val) <- eval env (E r) --TODO: is it wise to ignore the environment here?
+    (_, val) <- eval env (E r)
     return . List $ filter (/= val) l
 
-    -- Int with all
 evalBinExpr _ (BinExpr And (Int l) (Int r)) = throwError "And is invalid on Ints"
 evalBinExpr _ (BinExpr And (Int l) (Float r)) = throwError "And is invalid on Int and Float"
 evalBinExpr _ (BinExpr And (Float l) (Int r)) = throwError "And is invalid on Float and Int"
@@ -169,20 +167,16 @@ evalBinExpr _ (BinExpr And (String l) (Int r)) = throwError "And is invalid on S
 evalBinExpr _ (BinExpr And (Int l) (String r)) = throwError "And is invalid on Int and String"
 evalBinExpr _ (BinExpr And (Bool _) (Int _)) = throwError "And is invalid on Bool and Int" -- FIXME: translate
 evalBinExpr _ (BinExpr And (Int _) (Bool _)) = throwError "And is invalid on Int and Bool" -- FIXME: translate
-    -- Float with all
 evalBinExpr _ (BinExpr And (Float l) (Float r)) = throwError "And is invalid on Floats"
 evalBinExpr _ (BinExpr And (String l) (Float r)) = throwError "And is invalid on String and Float"
 evalBinExpr _ (BinExpr And (Float l) (String r)) = throwError "And is invalid on Float and String"
 evalBinExpr _ (BinExpr And (Bool _) (Float _)) = throwError "And is invalid on Bool and Float" -- FIXME: translate
 evalBinExpr _ (BinExpr And (Float _) (Bool _)) = throwError "And is invalid on Float and Bool" -- FIXME: translate
-    -- String with all
 evalBinExpr _ (BinExpr And (String l) (String r)) = throwError "And is invalid on Strings"
 evalBinExpr _ (BinExpr And (Bool l) (String r)) = throwError "And is invalid on Bool and String"
 evalBinExpr _ (BinExpr And (String l) (Bool r)) = throwError "And is invalid on String and Bool"
-    -- Bool with all
 evalBinExpr _ (BinExpr And (Bool l) (Bool r)) = return . Bool $ l && r
 
-    -- Int with all
 evalBinExpr _ (BinExpr Or (Int l) (Int r)) = throwError "Or is invalid on Ints"
 evalBinExpr _ (BinExpr Or (Int l) (Float r)) = throwError "Or is invalid on Int and Float"
 evalBinExpr _ (BinExpr Or (Float l) (Int r)) = throwError "Or is invalid on Float and Int"
@@ -190,20 +184,16 @@ evalBinExpr _ (BinExpr Or (String l) (Int r)) = throwError "Or is invalid on Str
 evalBinExpr _ (BinExpr Or (Int l) (String r)) = throwError "Or is invalid on Int and String"
 evalBinExpr _ (BinExpr Or (Bool _) (Int _)) = throwError "Or is invalid on Bool and Int" -- FIXME: translate
 evalBinExpr _ (BinExpr Or (Int _) (Bool _)) = throwError "Or is invalid on Int and Bool" -- FIXME: translate
-    -- Float with all
 evalBinExpr _ (BinExpr Or (Float l) (Float r)) = throwError "Or is invalid on Floats"
 evalBinExpr _ (BinExpr Or (String l) (Float r)) = throwError "Or is invalid on String and Float"
 evalBinExpr _ (BinExpr Or (Float l) (String r)) = throwError "Or is invalid on Float and String"
 evalBinExpr _ (BinExpr Or (Bool _) (Float _)) = throwError "Or is invalid on Bool and Float" -- FIXME: translate
 evalBinExpr _ (BinExpr Or (Float _) (Bool _)) = throwError "Or is invalid on Float and Bool" -- FIXME: translate
-    -- String with all
 evalBinExpr _ (BinExpr Or (String l) (String r)) = throwError "Or is invalid on Strings"
 evalBinExpr _ (BinExpr Or (Bool l) (String r)) = throwError "Or is invalid on Bool and String"
 evalBinExpr _ (BinExpr Or (String l) (Bool r)) = throwError "Or is invalid on String and Bool"
-    -- Bool with all
 evalBinExpr _ (BinExpr Or (Bool l) (Bool r)) = return . Bool $ l || r
 
-    -- Int with all
 evalBinExpr _ (BinExpr Plus (Int l) (Int r)) = return . Int $ l + r
 evalBinExpr _ (BinExpr Plus (Int l) (Float r)) = return . Float $ fromIntegral l + r
 evalBinExpr _ (BinExpr Plus (Float l) (Int r)) = return . Float $ l + fromIntegral r
@@ -211,20 +201,16 @@ evalBinExpr _ (BinExpr Plus (String l) (Int r)) = return . String $ l ++ show r
 evalBinExpr _ (BinExpr Plus (Int l) (String r)) = return . String $ show l ++ r
 evalBinExpr _ (BinExpr Plus (Bool _) (Int _)) = throwError "Cannot add together Bool and Int" -- FIXME: translate
 evalBinExpr _ (BinExpr Plus (Int _) (Bool _)) = throwError "Cannot add together Int and Bool" -- FIXME: translate
-    -- Float with all
 evalBinExpr _ (BinExpr Plus (Float l) (Float r)) = return . Float $ l + r
 evalBinExpr _ (BinExpr Plus (String l) (Float r)) = return . String $ l ++ show r
 evalBinExpr _ (BinExpr Plus (Float l) (String r)) = return . String $ show l ++ r
 evalBinExpr _ (BinExpr Plus (Bool _) (Float _)) = throwError "Cannot add together Bool and Float" -- FIXME: translate
 evalBinExpr _ (BinExpr Plus (Float _) (Bool _)) = throwError "Cannot add together Float and Bool" -- FIXME: translate
-    -- String with all
 evalBinExpr _ (BinExpr Plus (String l) (String r)) = return . String $ l ++ r
 evalBinExpr _ (BinExpr Plus (Bool l) (String r)) = return . String $ if l then tTrue else tFalse ++ r
 evalBinExpr _ (BinExpr Plus (String l) (Bool r)) = return . String $ l ++ if r then tTrue else tFalse
-    -- Bool with all
 evalBinExpr _ (BinExpr Plus (Bool _) (Bool _)) = throwError "Cannot add together Bools" -- FIXME: translate
 
-    -- Int with all
 evalBinExpr _ (BinExpr Minus (Int l) (Int r)) = return . Int $ l - r
 evalBinExpr _ (BinExpr Minus (Int l) (Float r)) = return . Float $ fromIntegral l - r
 evalBinExpr _ (BinExpr Minus (Float l) (Int r)) = return . Float $ l - fromIntegral r
@@ -232,20 +218,16 @@ evalBinExpr _ (BinExpr Minus (String l) (Int r)) = throwError "Cannot subtract I
 evalBinExpr _ (BinExpr Minus (Int l) (String r)) = throwError "Cannot subtract String from Int" -- FIXME: translate
 evalBinExpr _ (BinExpr Minus (Bool _) (Int _)) = throwError "Cannot subtract Int from Bool" -- FIXME: translate
 evalBinExpr _ (BinExpr Minus (Int _) (Bool _)) = throwError "Cannot subtract Bool from Int" -- FIXME: translate
-    -- Float with all
 evalBinExpr _ (BinExpr Minus (Float l) (Float r)) = return . Float $ l - r
 evalBinExpr _ (BinExpr Minus (String l) (Float r)) = throwError "Cannot subtract Float from String" -- FIXME: translate
 evalBinExpr _ (BinExpr Minus (Float l) (String r)) = throwError "Cannot subtract String from Float" -- FIXME: translate
 evalBinExpr _ (BinExpr Minus (Bool _) (Float _)) = throwError "Cannot subtract Float from Bool" -- FIXME: translate
 evalBinExpr _ (BinExpr Minus (Float _) (Bool _)) = throwError "Cannot subtract Bool from Float" -- FIXME: translate
-    -- String with all
 evalBinExpr _ (BinExpr Minus (String l) (String r)) = return . String $ l \\ r
 evalBinExpr _ (BinExpr Minus (Bool l) (String r)) = throwError "Cannot subtract String from Bool"
 evalBinExpr _ (BinExpr Minus (String l) (Bool r)) = throwError "Cannot subtract Bool from String"
-    -- Bool with all
 evalBinExpr _ (BinExpr Minus (Bool _) (Bool _)) = throwError "Cannot subtract Bools" -- FIXME: translate
 
-    -- Int with all
 evalBinExpr _ (BinExpr Mul (Int l) (Int r)) = return . Int $ l * r
 evalBinExpr _ (BinExpr Mul (Int l) (Float r)) = return . Float $ fromIntegral l * r
 evalBinExpr _ (BinExpr Mul (Float l) (Int r)) = return . Float $ l * fromIntegral r
@@ -253,20 +235,16 @@ evalBinExpr _ (BinExpr Mul (String l) (Int r)) = throwError "Cannot multiply Str
 evalBinExpr _ (BinExpr Mul (Int l) (String r)) = throwError "Cannot multiply Int and String" -- FIXME: translate
 evalBinExpr _ (BinExpr Mul (Bool _) (Int _)) = throwError "Cannot multiply Bool and Int" -- FIXME: translate
 evalBinExpr _ (BinExpr Mul (Int _) (Bool _)) = throwError "Cannot multiply Int and Bool" -- FIXME: translate
-    -- Float with all
 evalBinExpr _ (BinExpr Mul (Float l) (Float r)) = return . Float $ l * r
 evalBinExpr _ (BinExpr Mul (String l) (Float r)) = throwError "Cannot multiply String and Float" -- FIXME: translate
 evalBinExpr _ (BinExpr Mul (Float l) (String r)) = throwError "Cannot multiply Float and String" -- FIXME: translate
 evalBinExpr _ (BinExpr Mul (Bool _) (Float _)) = throwError "Cannot multiply Bool and Float" -- FIXME: translate
 evalBinExpr _ (BinExpr Mul (Float _) (Bool _)) = throwError "Cannot multiply Float and Bool" -- FIXME: translate
-    -- String with all
 evalBinExpr _ (BinExpr Mul (String l) (String r)) = return . String $ l \\ r
 evalBinExpr _ (BinExpr Mul (Bool l) (String r)) = throwError "Cannot multiply Bool and String"
 evalBinExpr _ (BinExpr Mul (String l) (Bool r)) = throwError "Cannot multiply String and Bool"
-    -- Bool with all
 evalBinExpr _ (BinExpr Mul (Bool _) (Bool _)) = throwError "Cannot multiply Bools" -- FIXME: translate
 
--- Int with all
 evalBinExpr _ (BinExpr Div (Int l) (Int r)) = return . Float $ fromIntegral l / fromIntegral r
 evalBinExpr _ (BinExpr Div (Int l) (Float r)) = return . Float $ fromIntegral l / r
 evalBinExpr _ (BinExpr Div (Float l) (Int r)) = return . Float $ l / fromIntegral r
@@ -274,20 +252,16 @@ evalBinExpr _ (BinExpr Div (String l) (Int r)) = throwError "Cannot divide Strin
 evalBinExpr _ (BinExpr Div (Int l) (String r)) = throwError "Cannot divide Int by String" -- FIXME: translate
 evalBinExpr _ (BinExpr Div (Bool _) (Int _)) = throwError "Cannot divide Bool by Int" -- FIXME: translate
 evalBinExpr _ (BinExpr Div (Int _) (Bool _)) = throwError "Cannot divide Int by Bool" -- FIXME: translate
-    -- Float with all
 evalBinExpr _ (BinExpr Div (Float l) (Float r)) = return . Float $ l / r
 evalBinExpr _ (BinExpr Div (String l) (Float r)) = throwError "Cannot divide String by Float" -- FIXME: translate
 evalBinExpr _ (BinExpr Div (Float l) (String r)) = throwError "Cannot divide Float by String" -- FIXME: translate
 evalBinExpr _ (BinExpr Div (Bool _) (Float _)) = throwError "Cannot divide Bool by Float" -- FIXME: translate
 evalBinExpr _ (BinExpr Div (Float _) (Bool _)) = throwError "Cannot divide Float by Bool" -- FIXME: translate
-    -- String with all
 evalBinExpr _ (BinExpr Div (String l) (String r)) = throwError "Cannot divide Strings"
 evalBinExpr _ (BinExpr Div (Bool l) (String r)) = throwError "Cannot divide Bool by String"
 evalBinExpr _ (BinExpr Div (String l) (Bool r)) = throwError "Cannot divide String by Bool"
-    -- Bool with all
 evalBinExpr _ (BinExpr Div (Bool _) (Bool _)) = throwError "Cannot divide Bools" -- FIXME: translate
 
--- Int with all
 evalBinExpr _ (BinExpr Mod (Int l) (Int r)) = return . Int $ l `mod` r
 evalBinExpr _ (BinExpr Mod (Int l) (Float r)) = throwError "Modulo cannot be applied to Int and Float" -- FIXME: translate
 evalBinExpr _ (BinExpr Mod (Float l) (Int r)) = throwError "Modulo cannot be applied to Float and Int" -- FIXME: translate
@@ -295,20 +269,16 @@ evalBinExpr _ (BinExpr Mod (String l) (Int r)) = throwError "Modulo cannot be ap
 evalBinExpr _ (BinExpr Mod (Int l) (String r)) = throwError "Modulo cannot be applied to Int and String" -- FIXME: translate
 evalBinExpr _ (BinExpr Mod (Bool _) (Int _)) = throwError "Modulo cannot be applied to Bool and Int" -- FIXME: translate
 evalBinExpr _ (BinExpr Mod (Int _) (Bool _)) = throwError "Modulo cannot be applied to Int and Bool" -- FIXME: translate
-    -- Float with all
 evalBinExpr _ (BinExpr Mod (Float l) (Float r)) = throwError "Modulo cannot be applied to Floats" -- FIXME: translate
 evalBinExpr _ (BinExpr Mod (String l) (Float r)) = throwError "Modulo cannot be applied to String and Float" -- FIXME: translate
 evalBinExpr _ (BinExpr Mod (Float l) (String r)) = throwError "Modulo cannot be applied to Float and String" -- FIXME: translate
 evalBinExpr _ (BinExpr Mod (Bool _) (Float _)) = throwError "Modulo cannot be applied to Bool and Float" -- FIXME: translate
 evalBinExpr _ (BinExpr Mod (Float _) (Bool _)) = throwError "Modulo cannot be applied to Float and Bool" -- FIXME: translate
-    -- String with all
 evalBinExpr _ (BinExpr Mod (String l) (String r)) = throwError "Modulo cannot be applied to Strings"
 evalBinExpr _ (BinExpr Mod (Bool l) (String r)) = throwError "Modulo cannot be applied to Bool and String"
 evalBinExpr _ (BinExpr Mod (String l) (Bool r)) = throwError "Modulo cannot be applied to String and Bool"
-    -- Bool with all
 evalBinExpr _ (BinExpr Mod (Bool _) (Bool _)) = throwError "Modulo cannot be applied to Bools" -- FIXME: translate
 
- -- Int with all
 evalBinExpr _ (BinExpr Lt (Int l) (Int r)) = return . Bool $ l < r
 evalBinExpr _ (BinExpr Lt (Int l) (Float r)) = return . Bool $ fromInteger l < r
 evalBinExpr _ (BinExpr Lt (Float l) (Int r)) = return . Bool $ l < fromInteger r
@@ -316,20 +286,16 @@ evalBinExpr _ (BinExpr Lt (String l) (Int r)) = throwError "Cannot compare Strin
 evalBinExpr _ (BinExpr Lt (Int l) (String r)) = throwError "Cannot compare Int and String" -- FIXME: translate
 evalBinExpr _ (BinExpr Lt (Bool _) (Int _)) = throwError "Cannot compare Bool and Int" -- FIXME: translate
 evalBinExpr _ (BinExpr Lt (Int _) (Bool _)) = throwError "Cannot compare Int and Bool" -- FIXME: translate
-    -- Float with all
 evalBinExpr _ (BinExpr Lt (Float l) (Float r)) = return . Bool $ l < r
 evalBinExpr _ (BinExpr Lt (String l) (Float r)) = throwError "Cannot compare String and Float" -- FIXME: translate
 evalBinExpr _ (BinExpr Lt (Float l) (String r)) = throwError "Cannot compare Float and String" -- FIXME: translate
 evalBinExpr _ (BinExpr Lt (Bool _) (Float _)) = throwError "Cannot compare Bool and Float" -- FIXME: translate
 evalBinExpr _ (BinExpr Lt (Float _) (Bool _)) = throwError "Cannot compare Float and Bool" -- FIXME: translate
-    -- String with all
 evalBinExpr _ (BinExpr Lt (String l) (String r)) = return . Bool $ l < r
 evalBinExpr _ (BinExpr Lt (Bool l) (String r)) = throwError "Cannot compare Bool and String"
 evalBinExpr _ (BinExpr Lt (String l) (Bool r)) = throwError "Cannot compare String and Bool"
-    -- Bool with all
 evalBinExpr _ (BinExpr Lt (Bool _) (Bool _)) = throwError "Cannot compare Bools" -- FIXME: translate
 
- -- Int with all
 evalBinExpr _ (BinExpr Le (Int l) (Int r)) = return . Bool $ l <= r
 evalBinExpr _ (BinExpr Le (Int l) (Float r)) = return . Bool $ fromInteger l <= r
 evalBinExpr _ (BinExpr Le (Float l) (Int r)) = return . Bool $ l <= fromInteger r
@@ -337,20 +303,16 @@ evalBinExpr _ (BinExpr Le (String l) (Int r)) = throwError "Cannot compare Strin
 evalBinExpr _ (BinExpr Le (Int l) (String r)) = throwError "Cannot compare Int and String" -- FIXME: translate
 evalBinExpr _ (BinExpr Le (Bool _) (Int _)) = throwError "Cannot compare Bool and Int" -- FIXME: translate
 evalBinExpr _ (BinExpr Le (Int _) (Bool _)) = throwError "Cannot compare Int and Bool" -- FIXME: translate
-    -- Float with all
 evalBinExpr _ (BinExpr Le (Float l) (Float r)) = return . Bool $ l <= r
 evalBinExpr _ (BinExpr Le (String l) (Float r)) = throwError "Cannot compare String and Float" -- FIXME: translate
 evalBinExpr _ (BinExpr Le (Float l) (String r)) = throwError "Cannot compare Float and String" -- FIXME: translate
 evalBinExpr _ (BinExpr Le (Bool _) (Float _)) = throwError "Cannot compare Bool and Float" -- FIXME: translate
 evalBinExpr _ (BinExpr Le (Float _) (Bool _)) = throwError "Cannot compare Float and Bool" -- FIXME: translate
-    -- String with all
 evalBinExpr _ (BinExpr Le (String l) (String r)) = return . Bool $ l <= r
 evalBinExpr _ (BinExpr Le (Bool l) (String r)) = throwError "Cannot compare Bool and String"
 evalBinExpr _ (BinExpr Le (String l) (Bool r)) = throwError "Cannot compare String and Bool"
-    -- Bool with all
 evalBinExpr _ (BinExpr Le (Bool _) (Bool _)) = throwError "Cannot compare Bools" -- FIXME: translate
 
-    -- Int with all
 evalBinExpr _ (BinExpr Gt (Int l) (Int r)) = return . Bool $ l > r
 evalBinExpr _ (BinExpr Gt (Int l) (Float r)) = return . Bool $ fromInteger l > r
 evalBinExpr _ (BinExpr Gt (Float l) (Int r)) = return . Bool $ l > fromInteger r
@@ -358,20 +320,16 @@ evalBinExpr _ (BinExpr Gt (String l) (Int r)) = throwError "Cannot compare Strin
 evalBinExpr _ (BinExpr Gt (Int l) (String r)) = throwError "Cannot compare Int and String" -- FIXME: translate
 evalBinExpr _ (BinExpr Gt (Bool _) (Int _)) = throwError "Cannot compare Bool and Int" -- FIXME: translate
 evalBinExpr _ (BinExpr Gt (Int _) (Bool _)) = throwError "Cannot compare Int and Bool" -- FIXME: translate
-    -- Float with all
 evalBinExpr _ (BinExpr Gt (Float l) (Float r)) = return . Bool $ l > r
 evalBinExpr _ (BinExpr Gt (String l) (Float r)) = throwError "Cannot compare String and Float" -- FIXME: translate
 evalBinExpr _ (BinExpr Gt (Float l) (String r)) = throwError "Cannot compare Float and String" -- FIXME: translate
 evalBinExpr _ (BinExpr Gt (Bool _) (Float _)) = throwError "Cannot compare Bool and Float" -- FIXME: translate
 evalBinExpr _ (BinExpr Gt (Float _) (Bool _)) = throwError "Cannot compare Float and Bool" -- FIXME: translate
-    -- String with all
 evalBinExpr _ (BinExpr Gt (String l) (String r)) = return . Bool $ l > r
 evalBinExpr _ (BinExpr Gt (Bool l) (String r)) = throwError "Cannot compare Bool and String"
 evalBinExpr _ (BinExpr Gt (String l) (Bool r)) = throwError "Cannot compare String and Bool"
-    -- Bool with all
 evalBinExpr _ (BinExpr Gt (Bool _) (Bool _)) = throwError "Cannot compare Bools" -- FIXME: translate
 
-    -- Int with all
 evalBinExpr _ (BinExpr Ge (Int l) (Int r)) = return . Bool $ l >= r
 evalBinExpr _ (BinExpr Ge (Int l) (Float r)) = return . Bool $ fromInteger l >= r
 evalBinExpr _ (BinExpr Ge (Float l) (Int r)) = return . Bool $ l >= fromInteger r
@@ -379,20 +337,16 @@ evalBinExpr _ (BinExpr Ge (String l) (Int r)) = throwError "Cannot compare Strin
 evalBinExpr _ (BinExpr Ge (Int l) (String r)) = throwError "Cannot compare Int and String" -- FIXME: translate
 evalBinExpr _ (BinExpr Ge (Bool _) (Int _)) = throwError "Cannot compare Bool and Int" -- FIXME: translate
 evalBinExpr _ (BinExpr Ge (Int _) (Bool _)) = throwError "Cannot compare Int and Bool" -- FIXME: translate
-    -- Float with all
 evalBinExpr _ (BinExpr Ge (Float l) (Float r)) = return . Bool $ l >= r
 evalBinExpr _ (BinExpr Ge (String l) (Float r)) = throwError "Cannot compare String and Float" -- FIXME: translate
 evalBinExpr _ (BinExpr Ge (Float l) (String r)) = throwError "Cannot compare Float and String" -- FIXME: translate
 evalBinExpr _ (BinExpr Ge (Bool _) (Float _)) = throwError "Cannot compare Bool and Float" -- FIXME: translate
 evalBinExpr _ (BinExpr Ge (Float _) (Bool _)) = throwError "Cannot compare Float and Bool" -- FIXME: translate
-    -- String with all
 evalBinExpr _ (BinExpr Ge (String l) (String r)) = return . Bool $ l >= r
 evalBinExpr _ (BinExpr Ge (Bool l) (String r)) = throwError "Cannot compare Bool and String"
 evalBinExpr _ (BinExpr Ge (String l) (Bool r)) = throwError "Cannot compare String and Bool"
-    -- Bool with all
 evalBinExpr _ (BinExpr Ge (Bool _) (Bool _)) = throwError "Cannot compare Bools" -- FIXME: translate
 
-    -- Int with all
 evalBinExpr _ (BinExpr Neq (Int l) (Int r)) = return . Bool $ l /= r
 evalBinExpr _ (BinExpr Neq (Int l) (Float r)) = return . Bool $ fromInteger l /= r
 evalBinExpr _ (BinExpr Neq (Float l) (Int r)) = return . Bool $ l /= fromInteger r
@@ -400,20 +354,16 @@ evalBinExpr _ (BinExpr Neq (String l) (Int r)) = throwError "Cannot compare Stri
 evalBinExpr _ (BinExpr Neq (Int l) (String r)) = throwError "Cannot compare Int and String" -- FIXME: translate
 evalBinExpr _ (BinExpr Neq (Bool _) (Int _)) = throwError "Cannot compare Bool and Int" -- FIXME: translate
 evalBinExpr _ (BinExpr Neq (Int _) (Bool _)) = throwError "Cannot compare Int and Bool" -- FIXME: translate
-    -- Float with all
 evalBinExpr _ (BinExpr Neq (Float l) (Float r)) = return . Bool $ l /= r
 evalBinExpr _ (BinExpr Neq (String l) (Float r)) = throwError "Cannot compare String and Float" -- FIXME: translate
 evalBinExpr _ (BinExpr Neq (Float l) (String r)) = throwError "Cannot compare Float and String" -- FIXME: translate
 evalBinExpr _ (BinExpr Neq (Bool _) (Float _)) = throwError "Cannot compare Bool and Float" -- FIXME: translate
 evalBinExpr _ (BinExpr Neq (Float _) (Bool _)) = throwError "Cannot compare Float and Bool" -- FIXME: translate
-    -- String with all
 evalBinExpr _ (BinExpr Neq (String l) (String r)) = return . Bool $ l /= r
 evalBinExpr _ (BinExpr Neq (Bool l) (String r)) = throwError "Cannot compare Bool and String"
 evalBinExpr _ (BinExpr Neq (String l) (Bool r)) = throwError "Cannot compare String and Bool"
-    -- Bool with all
 evalBinExpr _ (BinExpr Neq (Bool l) (Bool r)) = return . Bool $ l /= r
 
-    -- Int with all
 evalBinExpr _ (BinExpr Eq (Int l) (Int r)) = return . Bool $ l == r
 evalBinExpr _ (BinExpr Eq (Int l) (Float r)) = return . Bool $ fromInteger l == r
 evalBinExpr _ (BinExpr Eq (Float l) (Int r)) = return . Bool $ l == fromInteger r
@@ -421,20 +371,16 @@ evalBinExpr _ (BinExpr Eq (String l) (Int r)) = throwError "Cannot compare Strin
 evalBinExpr _ (BinExpr Eq (Int l) (String r)) = throwError "Cannot compare Int and String" -- FIXME: translate
 evalBinExpr _ (BinExpr Eq (Bool _) (Int _)) = throwError "Cannot compare Bool and Int" -- FIXME: translate
 evalBinExpr _ (BinExpr Eq (Int _) (Bool _)) = throwError "Cannot compare Int and Bool" -- FIXME: translate
-    -- Float with all
 evalBinExpr _ (BinExpr Eq (Float l) (Float r)) = return . Bool $ l == r
 evalBinExpr _ (BinExpr Eq (String l) (Float r)) = throwError "Cannot compare String and Float" -- FIXME: translate
 evalBinExpr _ (BinExpr Eq (Float l) (String r)) = throwError "Cannot compare Float and String" -- FIXME: translate
 evalBinExpr _ (BinExpr Eq (Bool _) (Float _)) = throwError "Cannot compare Bool and Float" -- FIXME: translate
 evalBinExpr _ (BinExpr Eq (Float _) (Bool _)) = throwError "Cannot compare Float and Bool" -- FIXME: translate
-    -- String with all
 evalBinExpr _ (BinExpr Eq (String l) (String r)) = return . Bool $ l == r
 evalBinExpr _ (BinExpr Eq (Bool l) (String r)) = throwError "Cannot compare Bool and String"
 evalBinExpr _ (BinExpr Eq (String l) (Bool r)) = throwError "Cannot compare String and Bool"
-    -- Bool with all
 evalBinExpr _ (BinExpr Eq (Bool l) (Bool r)) = return . Bool $ l == r
 
-    -- Int with all
 evalBinExpr _ (BinExpr Pow (Int l) (Int r)) = return . Float $ fromInteger l ** fromInteger r
 evalBinExpr _ (BinExpr Pow (Int l) (Float r)) = return . Float $ fromInteger l ** r
 evalBinExpr _ (BinExpr Pow (Float l) (Int r)) = return . Float $ l ** fromInteger r
@@ -442,21 +388,18 @@ evalBinExpr _ (BinExpr Pow (String l) (Int r)) = throwError "Cannot raise String
 evalBinExpr _ (BinExpr Pow (Int l) (String r)) = throwError "Cannot raise Int and String" -- FIXME: translate
 evalBinExpr _ (BinExpr Pow (Bool _) (Int _)) = throwError "Cannot raise Bool and Int" -- FIXME: translate
 evalBinExpr _ (BinExpr Pow (Int _) (Bool _)) = throwError "Cannot raise Int and Bool" -- FIXME: translate
-    -- Float with all
 evalBinExpr _ (BinExpr Pow (Float l) (Float r)) = return . Float $ l ** r
 evalBinExpr _ (BinExpr Pow (String l) (Float r)) = throwError "Cannot raise String and Float" -- FIXME: translate
 evalBinExpr _ (BinExpr Pow (Float l) (String r)) = throwError "Cannot raise Float and String" -- FIXME: translate
 evalBinExpr _ (BinExpr Pow (Bool _) (Float _)) = throwError "Cannot raise Bool and Float" -- FIXME: translate
 evalBinExpr _ (BinExpr Pow (Float _) (Bool _)) = throwError "Cannot raise Float and Bool" -- FIXME: translate
-    -- String with all
 evalBinExpr _ (BinExpr Pow (String l) (String r)) = throwError "Cannot raise Strings"
 evalBinExpr _ (BinExpr Pow (Bool l) (String r)) = throwError "Cannot raise Bool and String"
 evalBinExpr _ (BinExpr Pow (String l) (Bool r)) = throwError "Cannot raise String and Bool"
-    -- Bool with all
 evalBinExpr _ (BinExpr Pow (Bool _) (Bool _)) = throwError "Cannot raise Bools" -- FIXME: translate
 
 evalBinExpr env (BinExpr op l r) = do
-    (_, a) <- eval env $ E l --TODO: is it ok to ignore the environment here?
+    (_, a) <- eval env $ E l
     (_, b) <- eval env $ E r
     return $ BinExpr op a b
 
@@ -471,7 +414,6 @@ evalUnExpr _ (UnExpr Not (String _)) = throwError "String cannot be negated"
 evalUnExpr _ (UnExpr _ (Bool a)) = return . Bool $ not a
 evalUnExpr _ (UnExpr UnMinus (List a)) = return . List $ reverse a
 evalUnExpr _ (UnExpr Not (List _)) = throwError "List cannot be negated"
-evalUnExpr env (UnExpr op (Var a)) = throwError "TODO: Not implemented yet"
 evalUnExpr env (UnExpr op a) =  do
-    (_, val) <- eval env $ E a --TODO: env is ignored
+    (_, val) <- eval env $ E a
     evalUnExpr env $ UnExpr op val

@@ -58,5 +58,5 @@ instance Show Expr where
 
 showExpr :: Expr -> String
 showExpr (Int i) = show i
-showExpr (List l) = "{" ++ (intercalate ", " $ map (showExpr) l)  ++ "}"
+showExpr (List l) = "{" ++ intercalate ", " (map showExpr l) ++ "}"
 showExpr a = show a

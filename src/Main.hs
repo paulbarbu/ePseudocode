@@ -28,7 +28,6 @@ runRepl = runInputT defaultSettings $ loop []
                     loop env
                 Just input ->
                     case eParse mainParser input >>= eval env . head of
-                    -- case eParse mainParser input >>= (eval env) . head of
                         Left err -> outputStrLn err >> loop env
                         Right (newEnv, output) -> do
                             x <- outputStrLn $ "ans:\n" ++ show output
