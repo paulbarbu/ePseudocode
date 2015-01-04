@@ -72,7 +72,6 @@ TODO: ...
 
 For more see the `examples` directory.
 
-TODO: compile in itself
 TODO: raytracer: http://fabiensanglard.net/rayTracing_back_of_business_card/
 
 * List operations:

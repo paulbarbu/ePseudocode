@@ -15,14 +15,3 @@ invalidListIndex listName index = "Invalid list index: " ++ listName ++ "[" ++ s
 
 invalidNestedListIndex :: Integer -> String
 invalidNestedListIndex index = "Invalid nested list index: " ++ show index
-
-
-indexList :: (Integer -> String) -> IndexingExpr -> IndexedList -> ListAction -> Error (Env, Expr)
-indexList invalidIndexErr index list action =
-    case index of
-        (Int i) ->
-            if fromIntegral i < length list && i >= 0 then
-                action i list
-            else
-                throwError $ invalidIndexErr i
-        _ -> throwError "List can be indexed only with Integer evaluating expressions"

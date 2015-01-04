@@ -1,3 +1,4 @@
+{-# LANGUAGE TupleSections #-}
 module EPseudocode.Evaluator (eval)
 where
 
@@ -9,36 +10,71 @@ import EPseudocode.Data
 import EPseudocode.Lexer
 import EPseudocode.Helpers
 
---TODO: use IORefs to properly implement a={1, 2, {3, 4}} a[2][0] = 5
 
-applyToListIndex :: Env -> Expr -> ListAction -> Error (Env, Expr)
-applyToListIndex env (Index name (e:[])) action =
+applyToListIndex :: Env -> Expr -> Maybe Expr -> Error (Env, Expr)
+applyToListIndex env (Index name (e:[])) newVal =
     case lookup name env of
         Nothing -> throwError $ "Unbound variable name " ++ name
         Just (List list) -> do
             (_, index) <- eval env $ E e
-            indexList (invalidListIndex name) index list action
-applyToListIndex env (Index name (e:es)) action =
+            case index of
+                (Int i) ->
+                    if fromIntegral i < length list && i >= 0 then
+                        case newVal of
+                            Nothing -> return $ (env, list !! fromIntegral i)
+                            Just v -> return $ ((name, List $ replace (fromIntegral i) v list):env, v)
+                    else
+                        throwError $ invalidListIndex name i
+                _ -> throwError "List can be indexed only with Integer evaluating expressions"
+
+applyToListIndex env (Index name (e:es)) newVal =
     case lookup name env of
         Nothing -> throwError $ "Unbound variable name " ++ name
         Just (List list) -> do
             (_, index) <- eval env $ E e
-            indexList (invalidListIndex name) index list (\i list ->
+            case index of
+                (Int i) ->
+                    if fromIntegral i < length list && i >= 0 then
+                        case list !! fromIntegral i of
+                            (List l) -> case newVal of
+                                Nothing -> applyToList env es l Nothing >>= return . (env,)
+                                Just v -> do
+                                    val <- applyToList env es l (Just v)
+                                    return $ ((name, List $ replace (fromIntegral i) val list):env, v)
+                            otherwise -> throwError "Only Lists and Strings can be indexed"
+
+                    else
+                        throwError $ invalidListIndex name i
+                _ -> throwError "List can be indexed only with Integer evaluating expressions"
+
+
+applyToList :: Env -> IndexingListExpr -> IndexedList -> Maybe Expr -> Error Expr
+applyToList env (e:[]) list newVal = do
+    (_, index) <- eval env $ E e
+    case index of
+        (Int i) ->
+            if fromIntegral i < length list && i >= 0 then
+                case newVal of
+                    Nothing -> return $ list !! fromIntegral i
+                    Just v -> return $ List $ replace (fromIntegral i) v list
+            else
+                throwError $ invalidNestedListIndex i
+        _ -> throwError "List can be indexed only with Integer evaluating expressions"
+applyToList env (e:es) list newVal = do
+    (_, index) <- eval env $ E e
+    case index of
+        (Int i) ->
+            if fromIntegral i < length list && i >= 0 then
                 case list !! fromIntegral i of
-                    (List l) -> applyToList env es l action
-                    otherwise -> throwError "Only Lists and Strings can be indexed")
-
-
-applyToList :: Env -> IndexingListExpr -> IndexedList -> ListAction -> Error (Env, Expr)
-applyToList env (e:[]) list action = do
-    (_, index) <- eval env $ E e
-    indexList invalidNestedListIndex index list action
-applyToList env (e:es) list action = do
-    (_, index) <- eval env $ E e
-    indexList invalidNestedListIndex index list (\i list ->
-        case list !! fromIntegral i of
-            (List l) -> applyToList env es l action
-            otherwise -> throwError "Only Lists and Strings can be indexed")
+                    (List l) -> case newVal of
+                        Nothing -> applyToList env es l Nothing
+                        Just v -> do
+                            val <- applyToList env es l (Just v)
+                            return $ List $ replace (fromIntegral i) val list
+                    otherwise -> throwError "Only Lists and Strings can be indexed"
+            else
+                throwError $ invalidNestedListIndex i
+        _ -> throwError "List can be indexed only with Integer evaluating expressions"
 
 
 eval :: Env -> Stmt -> Error (Env, Expr)
@@ -53,15 +89,15 @@ eval env (E (List a)) = do
 eval env (E (Var name)) = case lookup name env of
     Nothing -> throwError $ "Unbound variable name " ++ name
     Just val -> return (env, val)
-eval env (E index@(Index _ _)) = applyToListIndex env index (\i list -> return $ (env, list !! fromIntegral i))
+eval env (E index@(Index _ _)) = applyToListIndex env index Nothing
 eval env (E unExpr@(UnExpr _ _)) = evalUnExpr env unExpr >>= eval env . E
 eval env (E binExpr@BinExpr{}) = evalBinExpr env binExpr >>= eval env . E
 eval env (Assign (Var name) s) = do
     (newEnv, val) <- eval env $ E s
-    return ((name,val) : newEnv, val) -- TODO: equal returns its value
+    return ((name,val) : newEnv, val)
 eval env (Assign index@(Index name _) s) = do --TODO: apply to string indexing, too
     (newEnv, val) <- eval env $ E s
-    applyToListIndex env index (\i list -> return $ ((name, List $ replace (fromIntegral i) val list):newEnv, val))
+    applyToListIndex env index $ Just val
 
 
 evalBinExpr :: Env -> Expr -> Error Expr

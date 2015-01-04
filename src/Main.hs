@@ -22,15 +22,17 @@ runRepl = runInputT defaultSettings $ loop []
             line <- getInputLine "epc> "
             case line of
                 Nothing -> return ()
-                Just "quit" -> return ()
+                Just ".quit" -> return ()
+                Just ".env" -> do
+                    outputStrLn $ "env: " ++ show env
+                    loop env
                 Just input ->
                     case eParse mainParser input >>= eval env . head of
                     -- case eParse mainParser input >>= (eval env) . head of
                         Left err -> outputStrLn err >> loop env
-                        Right (e, output) -> do
-                            outputStrLn $ "env: " ++ show e
-                            x <- outputStrLn $ "ans: " ++ show output
-                            loop e
+                        Right (newEnv, output) -> do
+                            x <- outputStrLn $ "ans:\n" ++ show output
+                            loop newEnv
                             return x
 
 
