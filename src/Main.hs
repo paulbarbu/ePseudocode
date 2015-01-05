@@ -27,11 +27,11 @@ runRepl = runInputT defaultSettings $ loop []
                     outputStrLn $ "env: " ++ show env
                     loop env
                 Just input ->
-                    case eParse mainParser input >>= mapM (eval env) of
+                    case interpret input env of
                         Left err -> outputStrLn err >> loop env
                         Right res -> do
-                            x <- outputStrLn $ unwords (map (showExpr . snd) res)
-                            loop (fst . last $ res)
+                            x <- outputStrLn . showExpr . snd $ res
+                            loop $ fst res
                             return x
 
 

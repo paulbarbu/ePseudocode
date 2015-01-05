@@ -1,14 +1,16 @@
 {-# LANGUAGE TupleSections #-}
-module EPseudocode.Evaluator (eval)
+module EPseudocode.Evaluator (interpret)
 where
 
-import Data.List ((\\))
 import Control.Monad.Except
+import Data.Foldable (foldlM)
+import Data.List ((\\))
 import Debug.Trace
 
 import EPseudocode.Data
 import EPseudocode.Lexer
 import EPseudocode.Helpers
+import EPseudocode.Parser
 {-
 TODO: plus pe liste
 epc> a={1, 2,3}
@@ -22,6 +24,10 @@ ans:
 {{1, 2, 3}, 4, 5}
 
 -}
+
+interpret :: String -> Env -> Error (Env, Expr)
+interpret input env = eParse mainParser input >>= foldlM (\(e, exr) stmt -> eval e stmt) (env, Int 42)
+
 
 applyToNamedList :: Env -> Expr -> Maybe Expr -> Error (Env, Expr)
 applyToNamedList env (Index name [e]) newVal =

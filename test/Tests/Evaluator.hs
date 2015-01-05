@@ -8,14 +8,13 @@ import Test.HUnit
 import EPseudocode.Data
 import EPseudocode.Evaluator
 import EPseudocode.Lexer
-import EPseudocode.Parser
 
 evalTest :: String -> String
-evalTest input = case eParse mainParser input >>= mapM (eval []) of
+evalTest input = case interpret input [] of
     Left err -> err
-    Right res -> unwords (map (showExpr . snd) res)
+    Right res -> showExpr . snd $ res
 
-evalFail input needle = case eParse mainParser input >>= mapM (eval []) of
+evalFail input needle = case interpret input [] of
     Left err -> needle `isInfixOf` err @? "eval failed (" ++ err ++ "), but could not find needle: " ++ needle
     Right _ -> False @? "eval succeeded"
 
@@ -23,12 +22,11 @@ evaluatorTests = TestList [
    "int in, int out" ~:
     "1" ~=? evalTest "1"
 
- , "false in folse out" ~:
+ , "false in false out" ~:
     tFalse ~=? evalTest tFalse
 
--- TODO: do not eval these individually"
  , "list comparisons, with vars" ~:
-    tFalse ~=? evalTest "a={1,2} b={2,3} a<b"
+    tTrue ~=? evalTest "a={1,2} b={2,3} a<b"
 
  , "nested list index access" ~:
     "{1, {{5, 6}, 3}, 4}" ~=? evalTest "a={1, {2, 3}, 4} a[1][0] = {5,6} a"

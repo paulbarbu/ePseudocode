@@ -1,10 +1,6 @@
 module EPseudocode.Helpers
 where
 
-import Control.Monad.Except
-
-import EPseudocode.Data
-
 --TODO: tests
 
 replace :: Int -> a -> [a] -> [a]
