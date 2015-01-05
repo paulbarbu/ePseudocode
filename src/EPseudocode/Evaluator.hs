@@ -25,9 +25,13 @@ ans:
 
 -}
 
-interpret :: String -> Env -> Error (Env, Expr)
-interpret input env = eParse mainParser input >>= foldlM (\(e, exr) stmt -> eval e stmt) (env, Int 42)
 
+--TODO: the (Int 42) Expr could be replaced by an Apophasis type that is not displayed and when matched against, throws an error because a Stmt was used in an Expr
+interpret :: Env -> String -> Error (Env, Expr)
+interpret env input = eParse mainParser input >>= foldlM (\(e, exr) stmt -> eval e stmt) (env, Int 42)
+
+interpret' :: Env -> [Stmt] -> Error (Env, Expr)
+interpret' env stmts = foldlM (\(e, exr) stmt -> eval e stmt) (env, Int 42) stmts
 
 applyToNamedList :: Env -> Expr -> Maybe Expr -> Error (Env, Expr)
 applyToNamedList env (Index name [e]) newVal =
@@ -115,6 +119,10 @@ eval env (Assign (Var name) s) = do
 eval env (Assign index@(Index name _) s) = do --TODO: apply to string indexing, too
     (newEnv, val) <- eval env $ E s
     applyToNamedList env index $ Just val
+eval env (SimpleIf expr stmts) = case eval env (E expr) of
+    Left err -> throwError err
+    Right (newEnv, (Bool val)) -> if val then interpret' newEnv stmts else return (newEnv, Bool False) -- TODO: do I really want ifs to return stuff?
+    otherwise -> throwError "An If's condition should evaluate to Bool"
 
 
 getEvaledExprList :: Env -> [Expr] -> Error [Expr]

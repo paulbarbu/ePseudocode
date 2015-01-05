@@ -27,7 +27,7 @@ runRepl = runInputT defaultSettings $ loop []
                     outputStrLn $ "env: " ++ show env
                     loop env
                 Just input ->
-                    case interpret input env of
+                    case interpret env input of
                         Left err -> outputStrLn err >> loop env
                         Right res -> do
                             x <- outputStrLn . showExpr . snd $ res

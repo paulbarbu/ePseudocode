@@ -10,11 +10,11 @@ import EPseudocode.Evaluator
 import EPseudocode.Lexer
 
 evalTest :: String -> String
-evalTest input = case interpret input [] of
+evalTest input = case interpret [] input of
     Left err -> err
     Right res -> showExpr . snd $ res
 
-evalFail input needle = case interpret input [] of
+evalFail input needle = case interpret [] input of
     Left err -> needle `isInfixOf` err @? "eval failed (" ++ err ++ "), but could not find needle: " ++ needle
     Right _ -> False @? "eval succeeded"
 
@@ -47,4 +47,17 @@ evaluatorTests = TestList [
 
  , "assign fals" ~:
     "fals" ~=? evalTest "a=fals"
+
+ , "non-bool condition" ~: evalFail "daca 1 atunci 1 sfdaca" "Bool"
+
+    --TODO: this shouldn't be possible, fix in parser?
+ , "empty simpleif" ~: evalFail "daca adevarat atunci sfdaca" "asd"
+
+ , "mod in if" ~:
+    "3" ~=? evalTest "daca 4%2 == 0 atunci 7%4 sfdaca"
+
+--TODO: do I really want ifs to return the last value?
+ , "mod in if" ~:
+    tFalse ~=? evalTest "daca fals atunci -1 sfdaca"
+
  ]
