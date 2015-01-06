@@ -22,6 +22,7 @@ data Expr =
     -- function calls, the Stmt is limited to expr or function definitions
     | FuncCall Expr [[Expr]] -- foo() = [[]], func_in_func()(2) = [[],[2]], func_in_list[1]() = [[]], a(1)() = [[1],[]]
     | FuncDef String [String] [Stmt] -- func name args body
+    | Void
     deriving (Show, Eq, Ord)
 
 data BinOp = And | Or | Plus | Minus | Mul | Div | Mod | Lt | Le | Gt | Ge | Neq | Eq | Pow
@@ -59,4 +60,5 @@ showExpr (Float f) = show f
 showExpr (String s) = s
 showExpr (Bool b) = if b then tTrue else tFalse
 showExpr (List l) = "{" ++ intercalate ", " (map showExpr l) ++ "}"
+showExpr (Void) = ""
 showExpr a = show a

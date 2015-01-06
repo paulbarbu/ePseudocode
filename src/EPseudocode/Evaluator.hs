@@ -26,12 +26,11 @@ ans:
 -}
 
 
---TODO: the (Int 42) Expr could be replaced by an Apophasis type that is not displayed and when matched against, throws an error because a Stmt was used in an Expr
 interpret :: Env -> String -> Error (Env, Expr)
-interpret env input = eParse mainParser input >>= foldlM (\(e, exr) stmt -> eval e stmt) (env, Int 42)
+interpret env input = eParse mainParser input >>= foldlM (\(e, exr) stmt -> eval e stmt) (env, undefined)
 
 interpret' :: Env -> [Stmt] -> Error (Env, Expr)
-interpret' env stmts = foldlM (\(e, exr) stmt -> eval e stmt) (env, Int 42) stmts
+interpret' env stmts = foldlM (\(e, exr) stmt -> eval e stmt) (env, undefined) stmts
 
 applyToNamedList :: Env -> Expr -> Maybe Expr -> Error (Env, Expr)
 applyToNamedList env (Index name [e]) newVal =
@@ -100,6 +99,7 @@ applyToAnonList env (e:es) list newVal = do
 
 eval :: Env -> Stmt -> Error (Env, Expr)
 --TODO: everything in the AST, both Expr and Stmt
+eval env (E Void) = throwError "Cannot evaluate Void. Statement used in expression?"
 eval env (E a@(Int _)) = return (env, a)
 eval env (E a@(Float _)) = return (env, a)
 eval env (E a@(String _)) = return (env, a)
@@ -121,7 +121,9 @@ eval env (Assign index@(Index name _) s) = do --TODO: apply to string indexing, 
     applyToNamedList env index $ Just val
 eval env (SimpleIf expr stmts) = case eval env (E expr) of
     Left err -> throwError err
-    Right (newEnv, (Bool val)) -> if val then interpret' newEnv stmts else return (newEnv, Bool False) -- TODO: do I really want ifs to return stuff?
+    Right (newEnv, (Bool val)) -> if val
+        then liftM fst (interpret' newEnv stmts) >>= (\e -> return (e, Void))
+        else return (newEnv, Void)
     otherwise -> throwError "An If's condition should evaluate to Bool"
 
 
