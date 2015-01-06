@@ -29,8 +29,10 @@ ans:
 interpret :: Env -> String -> Error (Env, Expr)
 interpret env input = eParse mainParser input >>= foldlM (\(e, exr) stmt -> eval e stmt) (env, undefined)
 
+
 interpret' :: Env -> [Stmt] -> Error (Env, Expr)
 interpret' env stmts = foldlM (\(e, exr) stmt -> eval e stmt) (env, undefined) stmts
+
 
 applyToNamedList :: Env -> Expr -> Maybe Expr -> Error (Env, Expr)
 applyToNamedList env (Index name [e]) newVal =
@@ -122,9 +124,19 @@ eval env (Assign index@(Index name _) s) = do --TODO: apply to string indexing, 
 eval env (SimpleIf expr stmts) = case eval env (E expr) of
     Left err -> throwError err
     Right (newEnv, (Bool val)) -> if val
-        then liftM fst (interpret' newEnv stmts) >>= (\e -> return (e, Void))
+        then evalStmtBody newEnv stmts
         else return (newEnv, Void)
     otherwise -> throwError "An If's condition should evaluate to Bool"
+eval env (CompleteIf expr trueStmts falseStmts) = case eval env (E expr) of
+    Left err -> throwError err
+    Right (newEnv, (Bool val)) -> if val
+        then evalStmtBody newEnv trueStmts
+        else evalStmtBody newEnv falseStmts
+    otherwise -> throwError "An If's condition should evaluate to Bool"
+
+
+evalStmtBody :: Env -> [Stmt] -> Error (Env, Expr)
+evalStmtBody env stmts = liftM fst (interpret' env stmts) >>= (\e -> return (e, Void))
 
 
 getEvaledExprList :: Env -> [Expr] -> Error [Expr]

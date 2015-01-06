@@ -22,8 +22,9 @@ data Expr =
     -- function calls, the Stmt is limited to expr or function definitions
     | FuncCall Expr [[Expr]] -- foo() = [[]], func_in_func()(2) = [[],[2]], func_in_list[1]() = [[]], a(1)() = [[1],[]]
     | FuncDef String [String] [Stmt] -- func name args body
-    | Void
+    | Void -- should not be evaluated, just a placeholder for "none" or apophasis
     deriving (Show, Eq, Ord)
+
 
 data BinOp = And | Or | Plus | Minus | Mul | Div | Mod | Lt | Le | Gt | Ge | Neq | Eq | Pow
     deriving (Show, Eq, Ord)
@@ -47,6 +48,7 @@ type Env = [(String, Expr)]
 
 
 type Error = Either String
+
 
 -- Helpers
 type IndexingExpr = Expr
