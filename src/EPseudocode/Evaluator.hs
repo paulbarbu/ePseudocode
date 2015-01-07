@@ -121,18 +121,28 @@ eval env (Assign (Var name) s) = do
 eval env (Assign index@(Index name _) s) = do --TODO: apply to string indexing, too
     (newEnv, val) <- eval env $ E s
     applyToNamedList env index $ Just val
-eval env (SimpleIf expr stmts) = case eval env (E expr) of
+eval env (SimpleIf cond stmts) = case eval env (E cond) of
     Left err -> throwError err
     Right (newEnv, (Bool val)) -> if val
         then evalStmtBody newEnv stmts
         else return (newEnv, Void)
     otherwise -> throwError "An If's condition should evaluate to Bool"
-eval env (CompleteIf expr trueStmts falseStmts) = case eval env (E expr) of
+eval env (CompleteIf cond trueStmts falseStmts) = case eval env (E cond) of
     Left err -> throwError err
     Right (newEnv, (Bool val)) -> if val
         then evalStmtBody newEnv trueStmts
         else evalStmtBody newEnv falseStmts
     otherwise -> throwError "An If's condition should evaluate to Bool"
+eval env (While cond stmts) = repeatWhile env cond stmts
+
+
+repeatWhile :: Env -> Expr -> [Stmt] -> Error (Env, Expr)
+repeatWhile env cond stmts = case eval env (E cond) of
+    Left err -> throwError err
+    Right (newEnv, (Bool val)) -> if val
+        then liftM fst (evalStmtBody newEnv stmts) >>= (\e -> repeatWhile e cond stmts)
+        else return (newEnv, Void)
+    otherwise -> throwError "A loop's condition should evaluate to Bool"
 
 
 evalStmtBody :: Env -> [Stmt] -> Error (Env, Expr)
