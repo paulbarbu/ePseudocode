@@ -47,7 +47,7 @@ evaluatorTests = TestList [
  , "div with var" ~:
     "0.25" ~=? evalTest "a=1 b=4 a/b"
 
- , "fals and fals" ~: evalFail "fals and fals" "Unbound"
+ , "fals and fals, unbound \"and\"" ~: evalFail "fals and fals" "Unbound"
 
  , "assign fals" ~:
     "fals" ~=? evalTest "a=fals"
@@ -144,4 +144,90 @@ evaluatorTests = TestList [
  , "not list error" ~: evalFail "!{1, 2}" "List cannot be negated"
 
  , "not string error" ~: evalFail "!\"abc\"" "String cannot be negated"
+
+ , "error in simple if cond" ~: evalFail "daca {}>2 atunci 1 sfdaca" "Lists can be compared only to lists"
+
+ , "error in complete if cond" ~: evalFail "daca {}>2 atunci 1 altfel 2 sfdaca" "Lists can be compared only to lists"
+
+ , "non-bool cond in complete if" ~: evalFail "daca {} atunci 1 altfel 2 sfdaca" "An If's condition should evaluate to Bool"
+
+ , "{} si 1" ~: evalFail "{} si 1" "Cannot apply and to a list"
+
+ , "1 si {}" ~: evalFail "1 si {}" "Cannot apply and to a list"
+
+ , "1 sau {}" ~: evalFail "1 sau {}" "Cannot apply or to a list"
+
+ , "{} sau 1" ~: evalFail "{} sau 1" "Cannot apply or to a list"
+
+ , "1 * {}" ~: evalFail "1 * {}" "Cannot multiply a list"
+
+ , "{} * 1" ~: evalFail "{} * 1" "Cannot multiply to a list"
+
+ , "1 / {}" ~: evalFail "1 / {}" "Cannot divide to a list"
+
+ , "{} / 1" ~: evalFail "{} / 1" "Cannot divide a list"
+
+ , "1 % {}" ~: evalFail "1 % {}" "Cannot apply mod to a list"
+
+ , "{} % 1" ~: evalFail "{} % 1" "Cannot apply mod to a list"
+
+ , "1 ** {}" ~: evalFail "1 ** {}" "Cannot raise to a list power"
+
+ , "{} ** 1" ~: evalFail "{} ** 1" "Cannot raise a list to power"
+
+ , "{} < 1" ~: evalFail "{} < 1" "Lists can be compared only to lists"
+
+ , "1 < {}" ~: evalFail "1 < {}" "Lists can be compared only to lists"
+
+ , "{} <= 1" ~: evalFail "{} <= 1" "Lists can be compared only to lists"
+
+ , "1 <= {}" ~: evalFail "1 <= {}" "Lists can be compared only to lists"
+
+ , "{} > 1" ~: evalFail "{} > 1" "Lists can be compared only to lists"
+
+ , "1 > {}" ~: evalFail "1 > {}" "Lists can be compared only to lists"
+
+ , "{} >= 1" ~: evalFail "{} >= 1" "Lists can be compared only to lists"
+
+ , "1 >= {}" ~: evalFail "1 >= {}" "Lists can be compared only to lists"
+
+ , "{} == 1" ~: evalFail "{} == 1" "Lists can be compared only to lists"
+
+ , "1 == {}" ~: evalFail "1 == {}" "Lists can be compared only to lists"
+
+ , "{} != 1" ~: evalFail "{} != 1" "Lists can be compared only to lists"
+
+ , "1 != {}" ~: evalFail "1 != {}" "Lists can be compared only to lists"
+
+ , "1 - {}" ~: evalFail "1 - {}" "Cannot subtract a list from a value"
+
+ , "1 si 1" ~: evalFail "1 si 1" "And is invalid on Ints"
+
+ , "1 si 1.2" ~: evalFail "1 si 1.2" "And is invalid on Int and Float"
+
+ , "1.2 si 1" ~: evalFail "1.2 si 1" "And is invalid on Float and Int"
+
+ , "\"abc\" si 1" ~: evalFail "\"abc\" si 1" "And is invalid on String and Int"
+
+ , "1 si \"abc\"" ~: evalFail "1 si \"abc\"" "And is invalid on Int and String"
+
+ , "fals si 1" ~: evalFail "fals si 1" "And is invalid on Bool and Int"
+
+ , "1 si fals" ~: evalFail "1 si fals" "And is invalid on Int and Bool"
+
+ , "1.1 si 1.1" ~: evalFail "1.1 si 1.1" "And is invalid on Floats"
+
+ , "\"abc\" si 1.1" ~: evalFail "\"abc\" si 1.1" "And is invalid on String and Float"
+
+ , "1.1 si \"abc\"" ~: evalFail "1.1 si \"abc\"" "And is invalid on Float and String"
+
+ , "fals si 11.1" ~: evalFail "fals si 11.1" "And is invalid on Bool and Float"
+
+ , "1.1 si fals" ~: evalFail "1.1 si fals" "And is invalid on Float and Bool"
+
+ , "\"abc\" si \"abc\"" ~: evalFail "\"abc\" si \"abc\"" "And is invalid on Strings"
+
+ , "fals si \"abc\"" ~: evalFail "fals si \"abc\"" "And is invalid on Bool and String"
+
+ , "\"abc\" si fals" ~: evalFail "\"abc\" si fals" "And is invalid on String and Bool"
  ]
