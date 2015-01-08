@@ -16,7 +16,7 @@ dataTests = TestList [
  , "float" ~:
     "42.42" ~=? showExpr (Float 42.42)
  , "string" ~:
-    "foobar" ~=? showExpr (String "foobar")
+    "\"foobar\"" ~=? showExpr (String "foobar")
  , "bool true" ~:
     tTrue ~=? showExpr (Bool True)
  , "bool false" ~:

@@ -29,7 +29,7 @@ evaluatorTests = TestList [
     tTrue ~=? evalTest "a={1,2} b={2,3} a<b"
 
  , "nested list 2nd level index modification" ~:
-    "{1, {{5, 6}, 3}, 4}" ~=? evalTest "a={1, {2, 3}, 4} a[1][0] = {5,6} a"
+    "{1, {{5, 6}, 3}, 4}" ~=? evalTest "b=0 a={1, {2, 3}, 4} a[b+1][b] = {5,6} a"
 
  , "invalid nested list index access" ~: evalFail "a={1, {{5, 6}, 3}, 4} a[1][-1]" "Invalid nested list index: -1"
 
@@ -76,7 +76,7 @@ evaluatorTests = TestList [
     "" ~=? evalTest "daca fals atunci altfel 52 sfdaca"
 
  , "2**10 in while" ~:
-    "adevarat" ~=? evalTest "b={10, 1} cattimp b[0] > 0 executa b[0]=b[0]-1 b[1]=b[1]*2 sfcattimp 2**10 == b[1] si 0 == b[0]"
+    "adevarat" ~=? evalTest "a=0 b={10, 1} cattimp b[a] > 0 executa b[0]=b[0]-1 b[1]=b[1]*2 sfcattimp 2**10 == b[1] si 0 == b[0]"
 
  , "false while condition" ~:
    "" ~=? evalTest "cattimp fals executa sfcattimp"
@@ -108,13 +108,19 @@ evaluatorTests = TestList [
  , "non-integer nested index access, but the error is at first index" ~: evalFail "a={1,2} a[0.1][4]" "List can be indexed only with Integer evaluating expressions"
 
  , "nested list 3rd level index modification" ~:
-    "{1, {2, {{5, 6}, 5}}, 4}" ~=? evalTest "a={1, {2, {3, 5}}, 4} a[1][1][0] = {5,6} a"
+    "{1, {2, {{5, 6}, 5}}, 4}" ~=? evalTest "b=1 a={1, {2, {3, 5}}, 4} a[1][b][0] = {5,6} a"
 
- , "nested list 3rd level index modification" ~:
+ , "nested list 2nd level index access with variable" ~:
+    "3" ~=? evalTest "b=1 a={1, {2, {3, 5}}, 4} a[1][b][0]"
+
+ , "nested list 3rd level index access with variables" ~:
+    "3" ~=? evalTest "b=0 a={1, {{3, 5}}, 4} a[1][b][b]"
+
+ , "nested list 2nd level index access" ~:
     "3" ~=? evalTest "a={1, {2, 3}, 4} a[1][1]"
 
  , "string" ~:
-    "abc" ~=? evalTest "a=\"foobar\" \"abc\""
+    "\"abc\"" ~=? evalTest "a=\"foobar\" \"abc\""
 
  , "not false == true" ~:
     "adevarat" ~=? evalTest "!fals == adevarat"
@@ -132,7 +138,7 @@ evaluatorTests = TestList [
     "-4.2" ~=? evalTest "-4.2"
 
  , "string reverse" ~:
-    "cba" ~=? evalTest "-\"abc\""
+    "\"cba\"" ~=? evalTest "-\"abc\""
 
  , "list reverse" ~:
     "{3, 2, 1}" ~=? evalTest "-{1, 2, 3}"
@@ -232,5 +238,155 @@ evaluatorTests = TestList [
  , "\"abc\" si fals" ~: evalFail "\"abc\" si fals" "And is invalid on String and Bool"
 
  , "for 1;1;1" ~:
-    "5" ~=? evalTest "pt a=0;a<5;a=a+1 executa sfpt a"
+    "5" ~=? evalTest "b=-1 pt a=b+1;a<5;a=a+1 executa sfpt a"
+
+ , "for 0;1;1" ~:
+    "5" ~=? evalTest "a=0 pt ;a<5;a=a+1 executa sfpt a"
+
+ , "for 0;1;0" ~:
+    "5" ~=? evalTest "a=0 pt ;a<5; executa a=a+1 sfpt a"
+
+ , "for 1;1;0" ~:
+    "5" ~=? evalTest "pt a=0;a<5; executa a=a+1 sfpt a"
+
+ , "for error condition" ~: evalFail "pt a=0;a<adevarat; executa a=a+1 sfpt a" "Cannot compare Int and Bool"
+
+ , "lists lt" ~:
+    "adevarat" ~=? evalTest "a=1 b=2 {{a,2},4} < {{b,3},5}"
+
+ , "lists le" ~:
+    "adevarat" ~=? evalTest "a=1 b=2 {a,b, 42} <= {b,4}"
+
+ , "lists gt" ~:
+    "fals" ~=? evalTest "a=1 b=2 {a,3} > {b,4}"
+
+ , "lists ge" ~:
+    "adevarat" ~=? evalTest "a=7 b=2 {a,2} >= {b,4}"
+
+ , "lists eq" ~:
+    "fals" ~=? evalTest "a=7 b=2 {a,2} == {b,4}"
+
+ , "lists neq" ~:
+    "adevarat" ~=? evalTest "a=7 b=3 {a,2} != {b,4}"
+
+ , "remove all elements from list, with variables" ~:
+    "{3, 3}" ~=? evalTest "a=7 b=3 {a, a, 3, b, 7} - a"
+
+ , "remove all elements from list, no variables" ~:
+    "{7, 7}" ~=? evalTest "{3,3,3,7,3,7}-3"
+
+ , "simple if with env" ~:
+    "41.2" ~=? evalTest "a=42.2 daca a==a atunci a=a-1 sfdaca a"
+
+ , "false simple if with env" ~:
+    "42" ~=? evalTest "a=42 daca a!=a atunci a=a-1 sfdaca a"
+
+ , "complete if with env" ~:
+    "43" ~=? evalTest "a=42 daca a!=a atunci a=a-1 altfel a=a+1 sfdaca a"
+
+ , "float with env" ~:
+    "43.2" ~=? evalTest "a=43.2 b=-(-a)"
+
+ , "list concatenation" ~:
+    "{1, 2, 3, 4}" ~=? evalTest "a=4 b=2 {1,b} + {3,a}"
+
+ , "item prepend to list" ~:
+    "{1.1, 2, 3, 4}" ~=? evalTest "a=1.1 a + {2, 3,4}"
+
+ , "item append to list" ~:
+    "{1, 2, 3, \"4\"}" ~=? evalTest "b=\"4\" {1,2,3} + b"
+
+ , "int ** float" ~:
+    "adevarat" ~=? evalTest "3**4.2 < 101 si 3**4.2 > 100"
+
+ , "float ** int" ~:
+    "adevarat" ~=? evalTest "4.2**3 < 75 si 4.2**3 > 74"
+
+ , "str ** int" ~: evalFail "\"abc\" ** 3" "Cannot raise String and Int"
+
+ , "int ** str" ~: evalFail "3 ** \"abc\"" "Cannot raise Int and String"
+
+ , "bool ** int" ~: evalFail "fals ** 3" "Cannot raise Bool and Int"
+
+ , "int ** bool" ~: evalFail "3 ** fals" "Cannot raise Int and Bool"
+
+ , "float ** float" ~:
+    "adevarat" ~=? evalTest "3.3**3.3 > 51 si 3.3**3.3 < 52"
+
+ , "str ** float" ~: evalFail "\"abc\" ** 4.3" "Cannot raise String and Float"
+
+ , "float ** str" ~: evalFail "4.3 ** \"abc\"" "Cannot raise Float and String"
+
+ , "bool ** float" ~: evalFail "fals ** 4.3" "Cannot raise Bool and Float"
+
+ , "float ** bool" ~: evalFail "4.3 ** fals" "Cannot raise Float and Bool"
+
+ , "str ** str" ~: evalFail "\"foo\" ** \"abc\"" "Cannot raise Strings"
+
+ , "bool ** str" ~: evalFail "fals ** \"abc\"" "Cannot raise Bool and String"
+
+ , "str ** bool" ~: evalFail "\"abc\" ** fals" "Cannot raise String and Bool"
+
+ , "bool ** bool" ~: evalFail "fals ** adevarat" "Cannot raise Bools"
+
+ , "int == float" ~:
+    "adevarat" ~=? evalTest "1 == 1.0"
+
+ , "str == str" ~:
+    "adevarat" ~=? evalTest "\"abc\" == \"abc\""
+
+ , "str == int" ~: evalFail "\"abc\" == 4" "Cannot compare String and Int"
+
+ , "int == str" ~: evalFail "4 == \"abc\"" "Cannot compare Int and String"
+
+ , "bool == int" ~: evalFail "fals == 4" "Cannot compare Bool and Int"
+
+ , "int == bool" ~: evalFail "4 == fals" "Cannot compare Int and Bool"
+
+ , "str == float" ~: evalFail "\"abc\" == 4.2" "Cannot compare String and Float"
+
+ , "float == str" ~: evalFail "4.2 == \"abc\"" "Cannot compare Float and String"
+
+ , "bool == float" ~: evalFail "fals == 4.2" "Cannot compare Bool and Float"
+
+ , "float == bool" ~: evalFail "4.2 == fals" "Cannot compare Float and Bool"
+
+ , "bool == str" ~: evalFail "fals == \"abc\"" "Cannot compare Bool and String"
+
+ , "str == bool" ~: evalFail "\"abc\" == fals" "Cannot compare String and Bool"
+
+ , "int != float" ~:
+    "adevarat" ~=? evalTest "1 != 1.2"
+
+ , "float != int" ~:
+    "adevarat" ~=? evalTest "1.2 != 1"
+
+ , "float != float" ~:
+    "adevarat" ~=? evalTest "1.5 != 1.2"
+
+ , "str != str" ~:
+    "fals" ~=? evalTest "\"foo\" != \"foo\""
+
+ , "bool != bool" ~:
+    "adevarat" ~=? evalTest "fals != adevarat"
+
+ , "str != int" ~: evalFail "\"abc\" != 4" "Cannot compare String and Int"
+
+ , "int != str" ~: evalFail "4 != \"abc\"" "Cannot compare Int and String"
+
+ , "bool != int" ~: evalFail "fals != 4" "Cannot compare Bool and Int"
+
+ , "int != bool" ~: evalFail "4 != fals" "Cannot compare Int and Bool"
+
+ , "str != float" ~: evalFail "\"abc\" != 4.2" "Cannot compare String and Float"
+
+ , "float != str" ~: evalFail "4.2 != \"abc\"" "Cannot compare Float and String"
+
+ , "bool != float" ~: evalFail "fals != 4.2" "Cannot compare Bool and Float"
+
+ , "float != bool" ~: evalFail "4.2 != fals" "Cannot compare Float and Bool"
+
+ , "bool != str" ~: evalFail "fals != \"abc\"" "Cannot compare Bool and String"
+
+ , "str != bool" ~: evalFail "\"abc\" != fals" "Cannot compare String and Bool"
  ]

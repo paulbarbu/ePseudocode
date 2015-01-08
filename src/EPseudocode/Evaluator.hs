@@ -12,22 +12,6 @@ import EPseudocode.Lexer
 import EPseudocode.Helpers
 import EPseudocode.Parser
 
-{-
-TODO: plus pe liste
-epc> a={1, 2,3}
-ans:
-{1, 2, 3}
-epc> a+ 3
-ans:
-{1, 2, 3, 3}
-epc> a+ {4,5}
-ans:
-{{1, 2, 3}, 4, 5}
-
-TODO:
-think if I need to introduce a new scope in the body of the if, while and for - 1st idea: no
--}
-
 
 interpret :: Env -> String -> Error (Env, Expr)
 interpret env input = eParse mainParser input >>= foldlM (\(e, exr) stmt -> eval e stmt) (env, undefined)
@@ -218,6 +202,10 @@ evalBinExpr env (BinExpr Eq (List l) (List r)) = do
     return . Bool $ a == b
 evalBinExpr _ (BinExpr Eq _ (List _)) = throwError "Lists can be compared only to lists"
 evalBinExpr _ (BinExpr Eq (List _) _) = throwError "Lists can be compared only to lists"
+evalBinExpr env (BinExpr Plus (List l) (List r)) = do
+    a <- getEvaledExprList env l
+    b <- getEvaledExprList env r
+    return . List $ a ++ b
 evalBinExpr env (BinExpr Plus l (List r)) = do
     (_, val) <- eval env $ E l
     return . List $ val : r
@@ -227,7 +215,8 @@ evalBinExpr env (BinExpr Plus (List l) r) = do
 evalBinExpr _ (BinExpr Minus l (List r)) = throwError "Cannot subtract a list from a value"
 evalBinExpr env (BinExpr Minus (List l) r) = do
     (_, val) <- eval env (E r)
-    return . List $ filter (/= val) l
+    lst <- getEvaledExprList env l
+    return . List $ filter (/= val) lst
 
 evalBinExpr _ (BinExpr And (Int l) (Int r)) = throwError "And is invalid on Ints"
 evalBinExpr _ (BinExpr And (Int l) (Float r)) = throwError "And is invalid on Int and Float"
