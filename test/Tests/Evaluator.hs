@@ -230,4 +230,7 @@ evaluatorTests = TestList [
  , "fals si \"abc\"" ~: evalFail "fals si \"abc\"" "And is invalid on Bool and String"
 
  , "\"abc\" si fals" ~: evalFail "\"abc\" si fals" "And is invalid on String and Bool"
+
+ , "for 1;1;1" ~:
+    "5" ~=? evalTest "pt a=0;a<5;a=a+1 executa sfpt a"
  ]

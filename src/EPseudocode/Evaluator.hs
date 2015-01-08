@@ -11,6 +11,7 @@ import EPseudocode.Data
 import EPseudocode.Lexer
 import EPseudocode.Helpers
 import EPseudocode.Parser
+
 {-
 TODO: plus pe liste
 epc> a={1, 2,3}
@@ -23,6 +24,8 @@ epc> a+ {4,5}
 ans:
 {{1, 2, 3}, 4, 5}
 
+TODO:
+think if I need to introduce a new scope in the body of the if, while and for - 1st idea: no
 -}
 
 
@@ -123,23 +126,34 @@ eval env (Assign index@(Index name _) s) = do --TODO: apply to string indexing, 
     applyToNamedList env index $ Just val
 eval env (SimpleIf cond stmts) = case eval env (E cond) of
     Left err -> throwError err
-    Right (newEnv, (Bool val)) -> if val
+    Right (newEnv, Bool val) -> if val
         then evalStmtBody newEnv stmts
         else return (newEnv, Void)
     otherwise -> throwError "An If's condition should evaluate to Bool"
 eval env (CompleteIf cond trueStmts falseStmts) = case eval env (E cond) of
     Left err -> throwError err
-    Right (newEnv, (Bool val)) -> if val
-        then evalStmtBody newEnv trueStmts
-        else evalStmtBody newEnv falseStmts
+    Right (newEnv, Bool val) -> evalStmtBody newEnv (if val then trueStmts else falseStmts)
     otherwise -> throwError "An If's condition should evaluate to Bool"
 eval env (While cond stmts) = repeatWhile env cond stmts
+eval env (For initial cond it stmts) =
+    case initial of
+        Nothing -> repeatForBody env cond it stmts
+        Just a -> eval env a >>= (\(e, _) -> repeatForBody e cond it stmts)
+    where
+        repeatForBody env cond it stmts = do
+            let stmts' = stmts ++ (case it of
+                                    Nothing -> []
+                                    Just s -> [s])
+            case cond of
+                Nothing -> repeatWhile env (Bool True) stmts'
+                Just a -> repeatWhile env a stmts'
+
 
 
 repeatWhile :: Env -> Expr -> [Stmt] -> Error (Env, Expr)
 repeatWhile env cond stmts = case eval env (E cond) of
     Left err -> throwError err
-    Right (newEnv, (Bool val)) -> if val
+    Right (newEnv, Bool val) -> if val
         then liftM fst (evalStmtBody newEnv stmts) >>= (\e -> repeatWhile e cond stmts)
         else return (newEnv, Void)
     otherwise -> throwError "A loop's condition should evaluate to Bool"
