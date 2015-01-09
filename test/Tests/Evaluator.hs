@@ -47,7 +47,7 @@ evaluatorTests = TestList [
  , "div with var" ~:
     "0.25" ~=? evalTest "a=1 b=4 a/b"
 
- , "fals and fals, unbound \"and\"" ~: evalFail "fals and fals" "Unbound"
+ , "fals and fals, unbound \"and\"" ~: evalFail "fals and fals" "Unbound variable name and"
 
  , "assign fals" ~:
     "fals" ~=? evalTest "a=fals"
@@ -83,9 +83,9 @@ evaluatorTests = TestList [
 
  , "non-bool while condition" ~: evalFail "cattimp 42 executa sfcattimp" "A loop's condition should evaluate to Bool"
 
- , "unbound index access" ~: evalFail "a[1]" "Unbound variable name"
+ , "unbound index access" ~: evalFail "a[1]" "Unbound variable name a"
 
- , "unbound nested index access" ~: evalFail "a[0][1]" "Unbound variable name"
+ , "unbound nested index access" ~: evalFail "a[0][1]" "Unbound variable name a"
 
  , "non-integer index access" ~: evalFail "a={1,2} a[adevarat]" "List can be indexed only with Integer evaluating expressions"
 
@@ -93,15 +93,15 @@ evaluatorTests = TestList [
 
  , "non-integer 2nd level nested index access" ~: evalFail "a={{1,{2}}} a[0][1][4.2]" "List can be indexed only with Integer evaluating expressions"
 
- , "invalid 2nd level nested index access" ~: evalFail "a={{1,{2}}} a[0][1][1]" "Invalid nested list index"
+ , "invalid 2nd level nested index access" ~: evalFail "a={{1,{2}}} a[0][1][1]" "Invalid nested list index: 1"
 
  , "non-list 2nd level nested index access" ~: evalFail "a={{1,{2}}} a[0][1][0][0]" "Only Lists and Strings can be indexed"
 
  , "non-list nested index access" ~: evalFail "a={1} a[0][1]" "Only Lists and Strings can be indexed"
 
- , "invalid nested index access" ~: evalFail "a={{1}} a[5][-1]" "Invalid list index"
+ , "invalid nested index access" ~: evalFail "a={{1}} a[5][-1]" "Invalid list index: a[5]"
 
- , "invalid 2nd level nested index access" ~: evalFail "a={{1}} a[0][-1][0]" "Invalid nested list index"
+ , "invalid 2nd level nested index access" ~: evalFail "a={{1}} a[0][-1][0]" "Invalid nested list index: -1"
 
  , "non-integer 2nd level nested index access" ~: evalFail "a={{1}} a[0][4.2][0]" "List can be indexed only with Integer evaluating expressions"
 
@@ -746,4 +746,37 @@ evaluatorTests = TestList [
 
  , "float + int" ~:
     "4.3" ~=? evalTest "2.3 + 2"
-  ]
+
+ , "string index" ~:
+    "\"c\"" ~=? evalTest "a=\"abc\" a[2]"
+
+ , "string index inside list" ~:
+    "\"c\"" ~=? evalTest "a={\"abc\"} a[0][2]"
+
+ , "string index modification" ~:
+    "\"abd\"" ~=? evalTest "a=\"abc\" a[2]=\"d\" a"
+
+ , "string index modification in nested list" ~:
+    "{1, {3, \"abd\"}, 2}" ~=? evalTest "a={1,{3,\"abc\"},2} a[1][1][2]=\"d\" a"
+
+ , "string modification in nested list" ~:
+    "{1, {3, \"d\"}, 2}" ~=? evalTest "a={1,{3,\"abc\"},2} a[1][1]=\"d\" a"
+
+ , "string index in nested list" ~:
+    "\"c\"" ~=? evalTest "a={1,{3,\"abc\"},2} a[1][1][2]"
+
+ , "string index inside list modification" ~:
+    "{\"abd\"}" ~=? evalTest "a={\"abc\"} a[0][2]=\"d\" a"
+
+ , "invalid string index" ~: evalFail "a=\"abc\" a[-1]" "Invalid string index: a[-1]"
+
+ , "invalid nested string index" ~: evalFail "a={\"abc\"} a[0][-1]" "Invalid nested string index: -1"
+
+ , "invalid variable index" ~: evalFail "a=1 a[0]" "Only Lists and Strings can be indexed"
+
+ , "index in char" ~: evalFail "a=\"abc\" a[0][0]" "Multiple indexing can be applied only to Lists"
+
+ , "non-integer string index" ~: evalFail "a=\"abc\" a[4.2]" "Strings can be indexed only with Integer evaluating expressions"
+
+ , "non-integer nested string index" ~: evalFail "a={\"abc\"} a[0][4.2]" "Strings can be indexed only with Integer evaluating expressions"
+ ]

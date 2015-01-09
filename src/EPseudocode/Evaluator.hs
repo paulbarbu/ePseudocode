@@ -36,6 +36,18 @@ applyToNamedList env (Index name [e]) newVal =
                     else
                         throwError $ invalidListIndex name i
                 otherwise -> throwError "List can be indexed only with Integer evaluating expressions"
+        Just (String str) -> do
+            (_, index) <- eval env $ E e
+            case index of
+                (Int i) ->
+                    if fromIntegral i < length str && i >= 0 then
+                        maybe (return (env, String [str !! fromIntegral i]))
+                            (\(String v) -> return ((name, String $ replaceString (fromIntegral i) v str):env, String v))
+                            newVal
+                    else
+                        throwError $ invalidStrIndex name i
+                otherwise -> throwError "Strings can be indexed only with Integer evaluating expressions"
+        otherwise -> throwError "Only Lists and Strings can be indexed"
 applyToNamedList env (Index name (e:es)) newVal =
     case lookup name env of
         Nothing -> throwError $ "Unbound variable name " ++ name
@@ -50,11 +62,31 @@ applyToNamedList env (Index name (e:es)) newVal =
                                     (\v -> do val <- applyToAnonList env es l (Just v)
                                               return ((name, List $ replace (fromIntegral i) val list):env, v))
                                     newVal
+                            (String str) ->
+                                maybe (liftM (env,) $ applyToAnonString env es str Nothing)
+                                    (\v -> do val <- applyToAnonString env es str (Just v)
+                                              return ((name, List $ replace (fromIntegral i) val list):env, v))
+                                    newVal
                             otherwise -> throwError "Only Lists and Strings can be indexed"
 
                     else
                         throwError $ invalidListIndex name i
                 otherwise -> throwError "List can be indexed only with Integer evaluating expressions"
+        otherwise -> throwError "Multiple indexing can be applied only to Lists"
+
+
+applyToAnonString :: Env -> IndexingListExpr -> String -> Maybe Expr -> Error Expr
+applyToAnonString env [e] str newVal = do
+    (_, index) <- eval env $ E e
+    case index of
+        (Int i) ->
+            if fromIntegral i < length str && i >= 0 then
+                maybe (return $ String [str !! fromIntegral i])
+                    (\(String v) -> return . String $ replaceString (fromIntegral i) v str)
+                    newVal
+            else
+                throwError $ invalidNestedStrIndex i
+        otherwise -> throwError "Strings can be indexed only with Integer evaluating expressions"
 
 
 applyToAnonList :: Env -> IndexingListExpr -> IndexedList -> Maybe Expr -> Error Expr
@@ -78,6 +110,11 @@ applyToAnonList env (e:es) list newVal = do
                     (List l) ->
                         maybe (applyToAnonList env es l Nothing)
                             (\v -> do val <- applyToAnonList env es l (Just v)
+                                      return $ List $ replace (fromIntegral i) val list)
+                            newVal
+                    (String str) ->
+                        maybe (applyToAnonString env es str Nothing)
+                            (\v -> do val <- applyToAnonString env es str (Just v)
                                       return $ List $ replace (fromIntegral i) val list)
                             newVal
                     otherwise -> throwError "Only Lists and Strings can be indexed"
@@ -105,7 +142,7 @@ eval env (E binExpr@BinExpr{}) = evalBinExpr env binExpr >>= eval env . E
 eval env (Assign (Var name) s) = do
     (newEnv, val) <- eval env $ E s
     return ((name,val) : newEnv, val)
-eval env (Assign index@(Index name _) s) = do --TODO: apply to string indexing, too
+eval env (Assign index@(Index name _) s) = do
     (newEnv, val) <- eval env $ E s
     applyToNamedList env index $ Just val
 eval env (SimpleIf cond stmts) = case eval env (E cond) of
