@@ -389,4 +389,361 @@ evaluatorTests = TestList [
  , "bool != str" ~: evalFail "fals != \"abc\"" "Cannot compare Bool and String"
 
  , "str != bool" ~: evalFail "\"abc\" != fals" "Cannot compare String and Bool"
- ]
+
+ , "1 sau 1" ~: evalFail "1 sau 1" "Or is invalid on Ints"
+
+ , "1 sau 1.2" ~: evalFail "1 sau 1.2" "Or is invalid on Int and Float"
+
+ , "1.2 sau 1" ~: evalFail "1.2 sau 1" "Or is invalid on Float and Int"
+
+ , "\"abc\" sau 1" ~: evalFail "\"abc\" sau 1" "Or is invalid on String and Int"
+
+ , "1 sau \"abc\"" ~: evalFail "1 sau \"abc\"" "Or is invalid on Int and String"
+
+ , "fals sau 1" ~: evalFail "fals sau 1" "Or is invalid on Bool and Int"
+
+ , "1 sau fals" ~: evalFail "1 sau fals" "Or is invalid on Int and Bool"
+
+ , "1.1 sau 1.1" ~: evalFail "1.1 sau 1.1" "Or is invalid on Floats"
+
+ , "\"abc\" sau 1.1" ~: evalFail "\"abc\" sau 1.1" "Or is invalid on String and Float"
+
+ , "1.1 sau \"abc\"" ~: evalFail "1.1 sau \"abc\"" "Or is invalid on Float and String"
+
+ , "fals sau 11.1" ~: evalFail "fals sau 11.1" "Or is invalid on Bool and Float"
+
+ , "1.1 sau fals" ~: evalFail "1.1 sau fals" "Or is invalid on Float and Bool"
+
+ , "\"abc\" sau \"abc\"" ~: evalFail "\"abc\" sau \"abc\"" "Or is invalid on Strings"
+
+ , "fals sau \"abc\"" ~: evalFail "fals sau \"abc\"" "Or is invalid on Bool and String"
+
+ , "\"abc\" sau fals" ~: evalFail "\"abc\" sau fals" "Or is invalid on String and Bool"
+
+ , "bool or bool" ~:
+  "adevarat" ~=? evalTest "fals sau adevarat"
+
+ , "str >= int" ~: evalFail "\"abc\" >= 4" "Cannot compare String and Int"
+
+ , "int >= str" ~: evalFail "4 >= \"abc\"" "Cannot compare Int and String"
+
+ , "bool >= int" ~: evalFail "fals >= 4" "Cannot compare Bool and Int"
+
+ , "int >= bool" ~: evalFail "4 >= fals" "Cannot compare Int and Bool"
+
+ , "str >= float" ~: evalFail "\"abc\" >= 4.2" "Cannot compare String and Float"
+
+ , "float >= str" ~: evalFail "4.2 >= \"abc\"" "Cannot compare Float and String"
+
+ , "bool >= float" ~: evalFail "fals >= 4.2" "Cannot compare Bool and Float"
+
+ , "float >= bool" ~: evalFail "4.2 >= fals" "Cannot compare Float and Bool"
+
+ , "bool >= str" ~: evalFail "fals >= \"abc\"" "Cannot compare Bool and String"
+
+ , "str >= bool" ~: evalFail "\"abc\" >= fals" "Cannot compare String and Bool"
+
+ , "bool >= bool" ~: evalFail "adevarat >= fals" "Cannot compare Bools"
+
+ , "int >= int" ~:
+    "adevarat" ~=? evalTest "1 >= 1"
+
+ , "int >= float" ~:
+    "adevarat" ~=? evalTest "1 >= 1.0"
+
+ , "float >= int" ~:
+    "adevarat" ~=? evalTest "1.0 >= 1"
+
+ , "float >= float" ~:
+    "adevarat" ~=? evalTest "1.5 >= 1.5"
+
+ , "str >= str" ~:
+    "adevarat" ~=? evalTest "\"ana are mere\" >= \"ana are mere\""
+
+ , "str > int" ~: evalFail "\"abc\" > 4" "Cannot compare String and Int"
+
+ , "int > str" ~: evalFail "4 > \"abc\"" "Cannot compare Int and String"
+
+ , "bool > int" ~: evalFail "fals > 4" "Cannot compare Bool and Int"
+
+ , "int > bool" ~: evalFail "4 > fals" "Cannot compare Int and Bool"
+
+ , "str > float" ~: evalFail "\"abc\" > 4.2" "Cannot compare String and Float"
+
+ , "float > str" ~: evalFail "4.2 > \"abc\"" "Cannot compare Float and String"
+
+ , "bool > float" ~: evalFail "fals > 4.2" "Cannot compare Bool and Float"
+
+ , "float > bool" ~: evalFail "4.2 > fals" "Cannot compare Float and Bool"
+
+ , "bool > str" ~: evalFail "fals > \"abc\"" "Cannot compare Bool and String"
+
+ , "str > bool" ~: evalFail "\"abc\" > fals" "Cannot compare String and Bool"
+
+ , "bool > bool" ~: evalFail "adevarat > fals" "Cannot compare Bools"
+
+ , "int > int" ~:
+    "adevarat" ~=? evalTest "1 > 0"
+
+ , "int > float" ~:
+    "adevarat" ~=? evalTest "1 > 0.5"
+
+ , "float > int" ~:
+    "adevarat" ~=? evalTest "1.5 > 1"
+
+ , "float > float" ~:
+    "adevarat" ~=? evalTest "1.5 > 1.3"
+
+ , "str > str" ~:
+    "fals" ~=? evalTest "\"ana are mere\" > \"ana are pere\""
+
+ , "str <= int" ~: evalFail "\"abc\" <= 4" "Cannot compare String and Int"
+
+ , "int <= str" ~: evalFail "4 <= \"abc\"" "Cannot compare Int and String"
+
+ , "bool <= int" ~: evalFail "fals <= 4" "Cannot compare Bool and Int"
+
+ , "int <= bool" ~: evalFail "4 <= fals" "Cannot compare Int and Bool"
+
+ , "str <= float" ~: evalFail "\"abc\" <= 4.2" "Cannot compare String and Float"
+
+ , "float <= str" ~: evalFail "4.2 <= \"abc\"" "Cannot compare Float and String"
+
+ , "bool <= float" ~: evalFail "fals <= 4.2" "Cannot compare Bool and Float"
+
+ , "float <= bool" ~: evalFail "4.2 <= fals" "Cannot compare Float and Bool"
+
+ , "bool <= str" ~: evalFail "fals <= \"abc\"" "Cannot compare Bool and String"
+
+ , "str <= bool" ~: evalFail "\"abc\" <= fals" "Cannot compare String and Bool"
+
+ , "bool <= bool" ~: evalFail "adevarat <= fals" "Cannot compare Bools"
+
+ , "int <= int" ~:
+    "adevarat" ~=? evalTest "1 <= 1"
+
+ , "int <= float" ~:
+    "adevarat" ~=? evalTest "1 <= 1.0"
+
+ , "float <= int" ~:
+    "adevarat" ~=? evalTest "1.0 <= 1"
+
+ , "float <= float" ~:
+    "adevarat" ~=? evalTest "1.3 <= 1.3"
+
+ , "str <= str" ~:
+    "adevarat" ~=? evalTest "\"ana are mere\" <= \"ana are mere\""
+
+ , "str < int" ~: evalFail "\"abc\" < 4" "Cannot compare String and Int"
+
+ , "int < str" ~: evalFail "4 < \"abc\"" "Cannot compare Int and String"
+
+ , "bool < int" ~: evalFail "fals < 4" "Cannot compare Bool and Int"
+
+ , "int < bool" ~: evalFail "4 < fals" "Cannot compare Int and Bool"
+
+ , "str < float" ~: evalFail "\"abc\" < 4.2" "Cannot compare String and Float"
+
+ , "float < str" ~: evalFail "4.2 < \"abc\"" "Cannot compare Float and String"
+
+ , "bool < float" ~: evalFail "fals < 4.2" "Cannot compare Bool and Float"
+
+ , "float < bool" ~: evalFail "4.2 < fals" "Cannot compare Float and Bool"
+
+ , "bool < str" ~: evalFail "fals < \"abc\"" "Cannot compare Bool and String"
+
+ , "str < bool" ~: evalFail "\"abc\" < fals" "Cannot compare String and Bool"
+
+ , "bool < bool" ~: evalFail "adevarat < fals" "Cannot compare Bools"
+
+ , "int < int" ~:
+    "adevarat" ~=? evalTest "1 < 23"
+
+ , "int < float" ~:
+    "adevarat" ~=? evalTest "1 < 1.4"
+
+ , "float < int" ~:
+    "adevarat" ~=? evalTest "1.0 < 3"
+
+ , "float < float" ~:
+    "adevarat" ~=? evalTest "1.3 < 1.4"
+
+ , "str < str" ~:
+    "adevarat" ~=? evalTest "\"ana are mere\" < \"ana are pere\""
+
+ , "str % int" ~: evalFail "\"abc\" % 4" "Modulo cannot be applied to String and Int"
+
+ , "int % str" ~: evalFail "4 % \"abc\"" "Modulo cannot be applied to Int and String"
+
+ , "bool % int" ~: evalFail "fals % 4" "Modulo cannot be applied to Bool and Int"
+
+ , "int % bool" ~: evalFail "4 % fals" "Modulo cannot be applied to Int and Bool"
+
+ , "str % float" ~: evalFail "\"abc\" % 4.2" "Modulo cannot be applied to String and Float"
+
+ , "float % str" ~: evalFail "4.2 % \"abc\"" "Modulo cannot be applied to Float and String"
+
+ , "bool % float" ~: evalFail "fals % 4.2" "Modulo cannot be applied to Bool and Float"
+
+ , "float % bool" ~: evalFail "4.2 % fals" "Modulo cannot be applied to Float and Bool"
+
+ , "bool % str" ~: evalFail "fals % \"abc\"" "Modulo cannot be applied to Bool and String"
+
+ , "str % bool" ~: evalFail "\"abc\" % fals" "Modulo cannot be applied to String and Bool"
+
+ , "bool % bool" ~: evalFail "adevarat % fals" "Modulo cannot be applied to Bools"
+
+ , "float % float" ~: evalFail "2.3 % 2.4" "Modulo cannot be applied to Floats"
+
+ , "str % str" ~: evalFail "\"abc\" % \"cba\"" "Modulo cannot be applied to Strings"
+
+ , "int % float" ~: evalFail "2 % 2.4" "Modulo cannot be applied to Int and Float"
+
+ , "float % int" ~: evalFail "2.3 % 2" "Modulo cannot be applied to Float and Int"
+
+ , "str / int" ~: evalFail "\"abc\" / 4" "Cannot divide String by Int"
+
+ , "int / str" ~: evalFail "4 / \"abc\"" "Cannot divide Int by String"
+
+ , "bool / int" ~: evalFail "fals / 4" "Cannot divide Bool by Int"
+
+ , "int / bool" ~: evalFail "4 / fals" "Cannot divide Int by Bool"
+
+ , "str / float" ~: evalFail "\"abc\" / 4.2" "Cannot divide String by Float"
+
+ , "float / str" ~: evalFail "4.2 / \"abc\"" "Cannot divide Float by String"
+
+ , "bool / float" ~: evalFail "fals / 4.2" "Cannot divide Bool by Float"
+
+ , "float / bool" ~: evalFail "4.2 / fals" "Cannot divide Float by Bool"
+
+ , "bool / str" ~: evalFail "fals / \"abc\"" "Cannot divide Bool by String"
+
+ , "str / bool" ~: evalFail "\"abc\" / fals" "Cannot divide String by Bool"
+
+ , "bool / bool" ~: evalFail "adevarat / fals" "Cannot divide Bools"
+
+ , "float / float" ~:
+    "adevarat" ~=? evalTest "2.3 / 2.4 > 0.95 si 2.3 / 2.4 < 0.96"
+
+ , "str / str" ~: evalFail "\"abc\" / \"cba\"" "Cannot divide Strings"
+
+ , "int / float" ~:
+    "adevarat" ~=? evalTest "2 / 2.4 > 0.83 si 2/2.4 < 0.84"
+
+ , "float / int" ~:
+    "1.15" ~=? evalTest "2.3 / 2"
+
+ , "str * int" ~: evalFail "\"abc\" * 4" "Cannot multiply String and Int"
+
+ , "int * str" ~: evalFail "4 * \"abc\"" "Cannot multiply Int and String"
+
+ , "bool * int" ~: evalFail "fals * 4" "Cannot multiply Bool and Int"
+
+ , "int * bool" ~: evalFail "4 * fals" "Cannot multiply Int and Bool"
+
+ , "str * float" ~: evalFail "\"abc\" * 4.2" "Cannot multiply String and Float"
+
+ , "float * str" ~: evalFail "4.2 * \"abc\"" "Cannot multiply Float and String"
+
+ , "bool * float" ~: evalFail "fals * 4.2" "Cannot multiply Bool and Float"
+
+ , "float * bool" ~: evalFail "4.2 * fals" "Cannot multiply Float and Bool"
+
+ , "bool * str" ~: evalFail "fals * \"abc\"" "Cannot multiply Bool and String"
+
+ , "str * bool" ~: evalFail "\"abc\" * fals" "Cannot multiply String and Bool"
+
+ , "bool * bool" ~: evalFail "adevarat * fals" "Cannot multiply Bools"
+
+ , "float * float" ~:
+    "5.52" ~=? evalTest "2.3 * 2.4"
+
+ , "str * str" ~: evalFail "\"abc\" * \"cba\"" "Cannot multiply Strings"
+
+ , "int * float" ~:
+    "4.8" ~=? evalTest "2 * 2.4"
+
+ , "float * int" ~:
+    "4.6" ~=? evalTest "2.3 * 2"
+
+ , "str - int" ~: evalFail "\"abc\" - 4" "Cannot subtract Int from String"
+
+ , "int - str" ~: evalFail "4 - \"abc\"" "Cannot subtract String from Int"
+
+ , "bool - int" ~: evalFail "fals - 4" "Cannot subtract Int from Bool"
+
+ , "int - bool" ~: evalFail "4 - fals" "Cannot subtract Bool from Int"
+
+ , "str - float" ~: evalFail "\"abc\" - 4.2" "Cannot subtract Float from String"
+
+ , "float - str" ~: evalFail "4.2 - \"abc\"" "Cannot subtract String from Float"
+
+ , "bool - float" ~: evalFail "fals - 4.2" "Cannot subtract Float from Bool"
+
+ , "float - bool" ~: evalFail "4.2 - fals" "Cannot subtract Bool from Float"
+
+ , "bool - str" ~: evalFail "fals - \"abc\"" "Cannot subtract String from Bool"
+
+ , "str - bool" ~: evalFail "\"abc\" - fals" "Cannot subtract Bool from String"
+
+ , "bool - bool" ~: evalFail "adevarat - fals" "Cannot subtract Bools"
+
+ , "float - float" ~:
+    "adevarat" ~=? evalTest "2.3 - 2.4 < 0 si 2.3 - 2.4 > -0.5"
+
+ , "str - str" ~:
+    "\"bca\"" ~=? evalTest "\"bcabca\" - \"abc\""
+
+ , "int - float" ~:
+    "adevarat" ~=? evalTest "2 - 2.4 < 0 si 2 - 2.4 > -0.5"
+
+ , "float - int" ~:
+    "adevarat" ~=? evalTest "2.3 - 2 > 0.2 si 2.3 - 2 < 0.4"
+
+ , "str + int" ~:
+    "\"abc4\"" ~=? evalTest "\"abc\" + 4"
+
+ , "int + str" ~:
+    "\"4abc\"" ~=? evalTest "4 + \"abc\""
+
+ , "bool + int" ~: evalFail "fals + 4" "Cannot add together Bool and Int"
+
+ , "int + bool" ~: evalFail "4 + fals" "Cannot add together Int and Bool"
+
+ , "str + float" ~:
+    "\"abc4.2\"" ~=? evalTest "\"abc\" + 4.2"
+
+ , "float + str" ~:
+    "\"4.2abc\"" ~=? evalTest "4.2 + \"abc\""
+
+ , "bool + float" ~: evalFail "fals + 4.2" "Cannot add together Bool and Float"
+
+ , "float + bool" ~: evalFail "4.2 + fals" "Cannot add together Float and Bool"
+
+ , "bool + str" ~:
+    "\"adevaratabc\"" ~=? evalTest "adevarat + \"abc\""
+
+ , "bool_false + str" ~:
+    "\"falsabc\"" ~=? evalTest "fals + \"abc\""
+
+ , "str + bool" ~:
+    "\"abcfals\"" ~=? evalTest "\"abc\" + fals"
+
+ , "str + bool_true" ~:
+    "\"abcadevarat\"" ~=? evalTest "\"abc\" + adevarat"
+
+ , "bool + bool" ~: evalFail "adevarat + fals" "Cannot add together Bools"
+
+ , "float + float" ~:
+    "adevarat" ~=? evalTest "2.3 + 2.4 > 4.6 si 2.3+2.4<4.8"
+
+ , "str + str" ~:
+    "\"abccba\"" ~=? evalTest "\"abc\" + \"cba\""
+
+ , "int + float" ~:
+    "4.4" ~=? evalTest "2 + 2.4"
+
+ , "float + int" ~:
+    "4.3" ~=? evalTest "2.3 + 2"
+  ]

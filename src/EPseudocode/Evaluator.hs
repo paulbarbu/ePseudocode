@@ -265,7 +265,7 @@ evalBinExpr _ (BinExpr Plus (Float l) (String r)) = return . String $ show l ++ 
 evalBinExpr _ (BinExpr Plus (Bool _) (Float _)) = throwError "Cannot add together Bool and Float" -- FIXME: translate
 evalBinExpr _ (BinExpr Plus (Float _) (Bool _)) = throwError "Cannot add together Float and Bool" -- FIXME: translate
 evalBinExpr _ (BinExpr Plus (String l) (String r)) = return . String $ l ++ r
-evalBinExpr _ (BinExpr Plus (Bool l) (String r)) = return . String $ if l then tTrue else tFalse ++ r
+evalBinExpr _ (BinExpr Plus (Bool l) (String r)) = return . String $ (if l then tTrue else tFalse) ++ r
 evalBinExpr _ (BinExpr Plus (String l) (Bool r)) = return . String $ l ++ if r then tTrue else tFalse
 evalBinExpr _ (BinExpr Plus (Bool _) (Bool _)) = throwError "Cannot add together Bools" -- FIXME: translate
 
@@ -298,7 +298,7 @@ evalBinExpr _ (BinExpr Mul (String l) (Float r)) = throwError "Cannot multiply S
 evalBinExpr _ (BinExpr Mul (Float l) (String r)) = throwError "Cannot multiply Float and String" -- FIXME: translate
 evalBinExpr _ (BinExpr Mul (Bool _) (Float _)) = throwError "Cannot multiply Bool and Float" -- FIXME: translate
 evalBinExpr _ (BinExpr Mul (Float _) (Bool _)) = throwError "Cannot multiply Float and Bool" -- FIXME: translate
-evalBinExpr _ (BinExpr Mul (String l) (String r)) = return . String $ l \\ r
+evalBinExpr _ (BinExpr Mul (String l) (String r)) = throwError "Cannot multiply Strings"
 evalBinExpr _ (BinExpr Mul (Bool l) (String r)) = throwError "Cannot multiply Bool and String"
 evalBinExpr _ (BinExpr Mul (String l) (Bool r)) = throwError "Cannot multiply String and Bool"
 evalBinExpr _ (BinExpr Mul (Bool _) (Bool _)) = throwError "Cannot multiply Bools" -- FIXME: translate

@@ -241,7 +241,7 @@ scopeTests = TestList [
 
  , "args visible in func body" ~: scopeTest "func main(argc, argv) ret argv[1] sffunc"
 
- , "name already used by a function" ~: scopeTestFail "func foo() ret 1 sffunc func main() foo=3 sffunc" -- TODO: move this to type tests
+ , "name already used by a function" ~: scopeTestFail "func foo() ret 1 sffunc func main() foo=3 sffunc" -- FIXME: move this to type tests
 
  , "duplicate param names" ~: scopeTestFail "func main(a, a) foo=3 sffunc"
 
