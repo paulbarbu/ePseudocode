@@ -22,14 +22,9 @@ TODO: Bitwise operators
 TODO: LC3 backend
 TODO: x86 backend
 TODO: FFI and C libraries (interop?)
-TODO: codeblocks, vim, kdevelop, visualstudio, eclipse? syntax highlighting
-TODO: tail call optimization?
+TODO: syntax highlighting
 
-TODO: bound, uniplate library
-TODO: ivory language
 TODO: apply, curry
-
-TODO: coursera
 
 TODO: short-circuit the sau and si operators: "adevarat si ret 42"
 
@@ -40,11 +35,11 @@ Not supported: variadic functions
 * Case sensitive
 * Influenced by C (a feature because one of the reasons it exists is to provide a lower learning curve, next step being C)
 * If no `main` function is defined then all code in a file is executed as if it was in a `main` function
-* Variables are declared on the spot, calid names start with "_" or with letters and continue with leters and numbers
+* Variables are declared on the spot, valid names start with "_" or with letters and continue with leters and numbers
 * Operators: `=`, `+`, `-`, `*`, `/`, `%`, `==`, `!=`, `<` , `>`, `<=`, `>=`, `!`, `sau` (or), `si` (and), TODO
-* Keywords (English translation in parens): `cattimp` (while), `sfcattimp` (end while), `pt` (for), `sfpt` (end for),
+* Keywords (English translation in parens): `cattimp` (while), `executa` (do), `sfcattimp` (end while), `pt` (for), `sfpt` (end for),
     `func` (start function), `sffunc` (end function), `ret` (return), `daca` (if), `atunci` (then), `altfel` (else), `sfdaca` (end if),
-    `adevarat` (true), `fals` (false), TODO
+    `adevarat` (true), `fals` (false), `stop` (break)
 * Builtins: `lung` (length), `TODO` (to_upper), `TODO` (to_lower), `TODO`, (to_int('c'))
 * Hexadecimal and octal notation: "0xABC", "0o17"
 
@@ -68,7 +63,7 @@ Typing rules
 Examples
 ========
 
-TODO: ...
+TODO: fix these when the language is stable
 
 For more see the `examples` directory.
 
