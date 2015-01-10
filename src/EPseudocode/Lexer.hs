@@ -2,7 +2,7 @@
 
 module EPseudocode.Lexer (parens, braces, identifier, reservedOp, reserved, whiteSpace, integer, float, stringLiteral, commaSep,
   semi, brackets,
-  tAnd, tOr, tTrue, tFalse, tReturn, tIf, tThen, tElse, tEndIf, tWhile, tEndWhile, tFor, tEndFor, tDo, tFunc, tEndFunc)
+  tAnd, tOr, tTrue, tFalse, tReturn, tIf, tThen, tElse, tEndIf, tWhile, tEndWhile, tFor, tEndFor, tDo, tFunc, tEndFunc, tBreak)
 where
 
 import Text.ParserCombinators.Parsec
@@ -26,6 +26,7 @@ tEndFor = "sfpt"
 tDo = "executa"
 tFunc = "func"
 tEndFunc = "sffunc"
+tBreak = "stop"
 
 
 epcTokens  = emptyDef {
@@ -39,7 +40,7 @@ epcTokens  = emptyDef {
   --, opStart = opLetter emptyDef
   , opLetter = oneOf "=*"
   --, reservedOpNames = ["!", "<", "=", ">", ">=", "<=", "==", "!=", "+", "-", "/", "%", "*", "**"]
-  , reservedNames = [tOr, tAnd, tTrue, tFalse, tReturn, tIf, tThen, tElse, tEndIf, tWhile, tDo, tEndWhile, tFor, tEndFor, tFunc, tEndFunc]
+  , reservedNames = [tOr, tAnd, tTrue, tFalse, tReturn, tIf, tThen, tElse, tEndIf, tWhile, tDo, tEndWhile, tFor, tEndFor, tFunc, tEndFunc, tBreak]
 }
 
 

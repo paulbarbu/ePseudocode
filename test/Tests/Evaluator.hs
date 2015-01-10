@@ -779,4 +779,22 @@ evaluatorTests = TestList [
  , "non-integer string index" ~: evalFail "a=\"abc\" a[4.2]" "Strings can be indexed only with Integer evaluating expressions"
 
  , "non-integer nested string index" ~: evalFail "a={\"abc\"} a[0][4.2]" "Strings can be indexed only with Integer evaluating expressions"
+
+ , "inf while" ~:
+    "" ~=? evalTest "a=0 cattimp adevarat executa daca a>5 atunci stop altfel a=a+1 sfdaca sfcattimp"
+
+ , "inf for" ~:
+    "0" ~=? evalTest "pt a=0;; executa stop a=100 sfpt a"
+
+ , "inf nested for" ~:
+    "5" ~=? evalTest "pt a=0;a<5;a=a+1 executa pt ;; executa stop a=100 sfpt sfpt a"
+
+ , "inf while, finite while" ~:
+    "5" ~=? evalTest "a=0 cattimp adevarat executa daca a>5 atunci stop altfel a=a+1 sfdaca sfcattimp a=1 cattimp a<5 executa a=a+1 sfcattimp a"
+
+ , "inf for, finite for" ~:
+    "5" ~=? evalTest "pt ;; executa stop sfpt pt a=0; a<5; a=a+1 executa sfpt a"
+
+ , "inf while, no variable modification after stop" ~:
+    "0" ~=? evalTest "a=0 cattimp adevarat executa stop a=100 sfcattimp a"
  ]

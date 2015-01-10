@@ -40,6 +40,7 @@ data Stmt = Assign Expr Expr -- assignments (the left side is limited to variabl
     | While Expr [Stmt] -- while condition then statements
     | For (Maybe Stmt) (Maybe Expr) (Maybe Stmt) [Stmt] -- for initial, condition, iteration then statements (the initial and the iteration are limited to assignments)
     | Ret Expr -- return statement (only expression or function call/def)
+    | Break
     | E Expr
     deriving (Show, Eq, Ord)
 

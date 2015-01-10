@@ -15,7 +15,7 @@ help = "TODO: One or zero arguments"
 
 -- TODO: multiline input
 runRepl :: IO ()
-runRepl = runInputT defaultSettings $ loop []
+runRepl = runInputT defaultSettings $ loop [(":stopiteration:", Bool False)]
     where
         loop :: Env -> InputT IO ()
         loop env = do

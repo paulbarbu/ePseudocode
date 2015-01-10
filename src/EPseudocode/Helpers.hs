@@ -1,6 +1,7 @@
 module EPseudocode.Helpers
 where
 
+import EPseudocode.Data
 
 replace :: Int -> a -> [a] -> [a]
 replace i val list = a ++ [val] ++ b where (a, _:b) = splitAt i list
@@ -21,3 +22,8 @@ invalidNestedListIndex index = "Invalid nested list index: " ++ show index
 
 invalidNestedStrIndex :: Integer -> String
 invalidNestedStrIndex index = "Invalid nested string index: " ++ show index
+
+continueIteration :: Env -> Bool
+continueIteration env = case lookup ":stopiteration:" env of
+    Just (Bool v) -> not v
+    otherwise -> True

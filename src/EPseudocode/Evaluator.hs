@@ -14,11 +14,16 @@ import EPseudocode.Parser
 
 
 interpret :: Env -> String -> Error (Env, Expr)
-interpret env input = eParse mainParser input >>= foldlM (\(e, exr) stmt -> eval e stmt) (env, undefined)
+interpret env input = eParse mainParser input >>= interpret' env
 
 
 interpret' :: Env -> [Stmt] -> Error (Env, Expr)
-interpret' env stmts = foldlM (\(e, exr) stmt -> eval e stmt) (env, undefined) stmts
+interpret' env stmts = foldlM runUntilBreak (env, undefined) stmts
+    where
+    runUntilBreak :: (Env, Expr) -> Stmt -> Error (Env, Expr)
+    runUntilBreak (e, expr) stmt = case stmt of
+        (Break) -> return ((":stopiteration:", Bool True):env, Void)
+        otherwise -> if continueIteration e then eval e stmt else return (e, Void)
 
 
 applyToNamedList :: Env -> Expr -> Maybe Expr -> Error (Env, Expr)
@@ -170,13 +175,12 @@ eval env (For initial cond it stmts) =
                 Just a -> repeatWhile env a stmts'
 
 
-
 repeatWhile :: Env -> Expr -> [Stmt] -> Error (Env, Expr)
 repeatWhile env cond stmts = case eval env (E cond) of
     Left err -> throwError err
-    Right (newEnv, Bool val) -> if val
+    Right (newEnv, Bool val) -> if val && continueIteration env
         then liftM fst (evalStmtBody newEnv stmts) >>= (\e -> repeatWhile e cond stmts)
-        else return (newEnv, Void)
+        else return ((":stopiteration:",Bool False):newEnv, Void)
     otherwise -> throwError "A loop's condition should evaluate to Bool"
 
 
