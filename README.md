@@ -12,14 +12,35 @@ compiler/parser since I didn't focus on translating strings from parsec)
 
 Description
 ===========
+TODO: lambdas (done), floating point, strings (done), lists (done), functions - capture environment(done), io, stdlib (math, string, list & vector operations), files
+TODO: turing complete
+TODO: debugger
+TODO: scientific notation
+TODO: unicode support
+TODO: list slicing
+TODO: Bitwise operators
+TODO: LC3 backend
+TODO: x86 backend
+TODO: FFI and C libraries (interop?)
+TODO: syntax highlighting
+
+TODO: apply, curry
+
+TODO: short-circuit the sau and si operators: "adevarat si ret 42"
+
+TODO: do not assign to function name inside function OR create separate variable
+
+Not supported: variadic functions
+
 * Case sensitive
 * Influenced by C (a feature because one of the reasons it exists is to provide a lower learning curve, next step being C)
+* If no `main` function is defined then all code in a file is executed as if it was in a `main` function
 * Variables are declared on the spot, valid names start with "_" or with letters and continue with leters and numbers
-* Operators (English translation in parens): `=`, `+`, `-`, `*`, `/`, `%`, `==`, `!=`, `<` , `>`, `<=`, `>=`, `!`, `sau` (or), `si` (and)
-* Keywords (English translation in parens): `cattimp` (while), `sfcattimp` (end while), `pt` (for), `sfpt` (end for),
+* Operators: `=`, `+`, `-`, `*`, `/`, `%`, `==`, `!=`, `<` , `>`, `<=`, `>=`, `!`, `sau` (or), `si` (and), TODO
+* Keywords (English translation in parens): `cattimp` (while), `executa` (do), `sfcattimp` (end while), `pt` (for), `sfpt` (end for),
     `func` (start function), `sffunc` (end function), `ret` (return), `daca` (if), `atunci` (then), `altfel` (else), `sfdaca` (end if),
-    `adevarat` (true), `fals` (false)
-* Builtins: `lung` (length), `litere_mari` (to_upper), `litere_mici` (to_lower)
+    `adevarat` (true), `fals` (false), `stop` (break)
+* Builtins: `lung` (length), `TODO` (to_upper), `TODO` (to_lower), `TODO`, (to_int('c'))
 * Hexadecimal and octal notation: "0xABC", "0o17"
 
 Scoping rules
@@ -38,7 +59,11 @@ Typing rules
 Examples
 ========
 
+TODO: fix these when the language is stable
+
 For more see the `examples` directory.
+
+TODO: raytracer: http://fabiensanglard.net/rayTracing_back_of_business_card/
 
 * List operations:
 ```
@@ -54,7 +79,9 @@ l = l + {11} //append 11 to l
 l += {12, 13} //apend 12 and 13 to l (`{1, 42, 3, 4, 11}`)
 scrie(lung(l)) //outputs 7 (4 elements in the initial list + the appended 11 + the appended 12 and 13)
 
-l += 1 //runtime error, cannot use '+' on list and string
+{1,2,3} - (1+2) => {1,2}
+
+TODO: this is not valid: l += 1 //runtime error, cannot use '+' on list and string
 ```
 
 * String operations:
@@ -90,7 +117,7 @@ when a block contains a single statement.
 
 License (BSD3)
 ==============
-Copyright (c) 2014, Barbu Paul - Gheorghe
+Copyright (c) 2014-2015, Barbu Paul - Gheorghe
 
 All rights reserved.
 Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
