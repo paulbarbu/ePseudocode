@@ -831,4 +831,28 @@ evaluatorTests = TestList [
  , "ret after if in func" ~:
     "3" ~=? evalTest "func foo(n) daca n == 0 atunci ret adevarat altfel ret n-1 sfdaca sffunc foo(4)"
 
+ , "call a number" ~: evalFail "a=1 a()" "Only functions are callable"
+
+ , "different number of args" ~: evalFail "func a() ret 2 sffunc a(1)" "Trying to pass 1 args to a function that takes 0"
+
+ , "func name that has a param with the same name" ~:
+    "42" ~=? evalTest "func a(a) ret a sffunc a(42)"
+
+ , "function in list" ~:
+    "42" ~=? evalTest "a={1, func (a) ret a[1]-1 sffunc, 3} a[1]({42,43})"
+
+ , "lambda assigned to variable" ~:
+    "42" ~=? evalTest "a=func(b) ret 3*b sffunc a(14)"
+
+ , "simple callback" ~:
+    "42" ~=? evalTest "func a(callback) ret callback(39) sffunc a(func(x) ret x+3 sffunc)"
+
+ , "func as retval" ~:
+    "42" ~=? evalTest "func a(callback) ret callback(39) sffunc a(func(x) ret x+3 sffunc)"
+
+ , "simple closure called directly" ~:
+    "5"  ~=? evalTest "func a(x) ret func (b) ret x+b sffunc sffunc a(3)(2)"
+
+ , "simple closure called through variable" ~:
+    "5"  ~=? evalTest "func a(x) ret func (b) ret x+b sffunc sffunc b=a(3) b(2)"
  ]

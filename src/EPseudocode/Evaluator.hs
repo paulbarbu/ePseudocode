@@ -176,35 +176,31 @@ eval env (For initial cond it stmts) =
                 Nothing -> repeatWhile env (Bool True) stmts'
                 Just a -> repeatWhile env a stmts'
 eval env (E f@(FuncDef name _ _)) = case name of
-    "" -> return (env, Void) --TODO: what do I do in case of lambdas?
-    otherwise -> return ((name, f):env, Void)
-eval env (E f@(FuncCall nameExpr args)) = eval env (E nameExpr) >>= \(e, f) ->
+    "" -> return (env, f)
+    _ -> return ((name, f):env, Void)
+eval env (E (FuncCall nameExpr args)) = eval env (E nameExpr) >>= \(e, f) ->
     case f of
         FuncDef _ _ _ -> applyFunc e f args >>= return . (e,)
         _ -> throwError "Only functions are callable"
 
 
--- TODO: assign function to variable (lambda)
--- TODO: pass function around...
--- TODO: test the ()()()
 applyFunc :: Env -> Expr -> [[Expr]] -> Error Expr
-applyFunc env (FuncDef name argNames body) [args] = getEvaledExprList env args >>=
+applyFunc env (FuncDef _ argNames body) [args] = getEvaledExprList env args >>=
     argsToEnv argNames >>= \e ->
     evalFuncBody (e++env) body
-applyFunc env (FuncDef name argNames body) (args:t) = do
+applyFunc _ (FuncDef _ _ _) (_:_) = do
     trace "()()()()() not yet implemented" $ return Void
     return Void
-applyFunc _ _ _ = undefined
 
 
 evalFuncBody :: Env -> [Stmt] -> Error Expr
-evalFuncBody env (Ret expr:stmts) = eval env (E expr) >>= \(_, val) -> return val
+evalFuncBody env (Ret expr:_) = eval env (E expr) >>= \(_, val) -> return val
 evalFuncBody env [stmt] = eval env stmt >>= \(e, val) -> case lookup ":ret:" e of
     Nothing -> return val
-    Just val -> return val
-evalFuncBody env (stmt:stmts) = eval env stmt >>= \(e, val) -> case lookup ":ret:" e of
+    Just v -> return v
+evalFuncBody env (stmt:stmts) = eval env stmt >>= \(e, _) -> case lookup ":ret:" e of
     Nothing -> evalFuncBody e stmts
-    Just val -> return val
+    Just v -> return v
 
 
 argsToEnv :: [String] -> [Expr] -> Error Env
