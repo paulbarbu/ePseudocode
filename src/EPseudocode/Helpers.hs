@@ -26,4 +26,4 @@ invalidNestedStrIndex index = "Invalid nested string index: " ++ show index
 continueIteration :: Env -> Bool
 continueIteration env = case lookup ":stopiteration:" env of
     Just (Bool v) -> not v
-    otherwise -> True
+    _ -> True
