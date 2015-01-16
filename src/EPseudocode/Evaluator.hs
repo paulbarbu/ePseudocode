@@ -130,6 +130,7 @@ applyToAnonList env (e:es) list newVal = do
 
 eval :: Env -> Stmt -> Error (Env, Expr)
 --TODO: everything in the AST, both Expr and Stmt
+eval env Break = return (env, Void)
 eval env (E Void) = throwError "Cannot evaluate Void. Statement used in expression?"
 eval env (E a@(Int _)) = return (env, a)
 eval env (E a@(Float _)) = return (env, a)
@@ -144,6 +145,7 @@ eval env (E (Var name)) = maybe (throwError $ "Unbound variable name " ++ name)
 eval env (E index@(Index _ _)) = applyToNamedList env index Nothing
 eval env (E unExpr@(UnExpr _ _)) = evalUnExpr env unExpr >>= eval env . E
 eval env (E binExpr@BinExpr{}) = evalBinExpr env binExpr >>= eval env . E
+eval env (Ret expr) = eval env (E expr) >>= \(e, val) -> return ((":ret:", val):e, val) -- I can do this since Ret may appear only inside functions and the environment is not propagated outside the functions
 eval env (Assign (Var name) s) = do
     (newEnv, val) <- eval env $ E s
     return ((name,val) : newEnv, val)
@@ -173,6 +175,42 @@ eval env (For initial cond it stmts) =
             case cond of
                 Nothing -> repeatWhile env (Bool True) stmts'
                 Just a -> repeatWhile env a stmts'
+eval env (E f@(FuncDef name _ _)) = case name of
+    "" -> return (env, Void) --TODO: what do I do in case of lambdas?
+    otherwise -> return ((name, f):env, Void)
+eval env (E f@(FuncCall nameExpr args)) = eval env (E nameExpr) >>= \(e, f) ->
+    case f of
+        FuncDef _ _ _ -> applyFunc e f args >>= return . (e,)
+        _ -> throwError "Only functions are callable"
+
+
+-- TODO: assign function to variable (lambda)
+-- TODO: pass function around...
+-- TODO: test the ()()()
+applyFunc :: Env -> Expr -> [[Expr]] -> Error Expr
+applyFunc env (FuncDef name argNames body) [args] = getEvaledExprList env args >>=
+    argsToEnv argNames >>= \e ->
+    evalFuncBody (e++env) body
+applyFunc env (FuncDef name argNames body) (args:t) = do
+    trace "()()()()() not yet implemented" $ return Void
+    return Void
+applyFunc _ _ _ = undefined
+
+
+evalFuncBody :: Env -> [Stmt] -> Error Expr
+evalFuncBody env (Ret expr:stmts) = eval env (E expr) >>= \(_, val) -> return val
+evalFuncBody env [stmt] = eval env stmt >>= \(e, val) -> case lookup ":ret:" e of
+    Nothing -> return val
+    Just val -> return val
+evalFuncBody env (stmt:stmts) = eval env stmt >>= \(e, val) -> case lookup ":ret:" e of
+    Nothing -> evalFuncBody e stmts
+    Just val -> return val
+
+
+argsToEnv :: [String] -> [Expr] -> Error Env
+argsToEnv argNames args = if length argNames == length args
+    then return $ [(name, arg) | name <- argNames, arg <- args]
+    else throwError $ "Trying to pass " ++ show (length args) ++ " args to a function that takes " ++ show (length argNames)
 
 
 repeatWhile :: Env -> Expr -> [Stmt] -> Error (Env, Expr)

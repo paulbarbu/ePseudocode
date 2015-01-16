@@ -797,4 +797,38 @@ evaluatorTests = TestList [
 
  , "inf while, no variable modification after stop" ~:
     "0" ~=? evalTest "a=0 cattimp adevarat executa stop a=100 sfcattimp a"
+
+ , "stop has no effect in function body" ~:
+    "1" ~=? evalTest "func a() stop 1 sffunc a()"
+
+ , "basic function call" ~:
+    "1" ~=? evalTest "func a() 1 sffunc a()"
+
+ , "basic function call with an arg" ~:
+    "2" ~=? evalTest "func a(b) b sffunc b=3 a(2)"
+
+ , "stop has no effect in if" ~:
+    "42" ~=? evalTest "a=1 daca 1==1 atunci stop a=42 sfdaca a"
+
+ , "basic ret" ~:
+    "2" ~=? evalTest "func b() ret 2 ret 3 sffunc b()"
+
+ , "no access to undefined var" ~:
+    "5" ~=? evalTest "a=1 func b() a=4 ret a sffunc b()+a"
+
+ , "func call as ret value" ~:
+    "5" ~=? evalTest "func a() ret b()+1 sffunc func b() ret 4 sffunc a()"
+
+ , "mutual recursion" ~:
+    "adevarat" ~=? evalTest "func is_even(n) daca n == 0 atunci ret adevarat altfel ret is_odd(n-1) sfdaca sffunc func is_odd(n) daca n == 0 atunci ret fals altfel ret is_even(n-1) sfdaca sffunc is_even(4)"
+
+ , "simple func call with changing arg" ~:
+    "4" ~=? evalTest "func foo(n) ret a(n-1) sffunc func a(n) ret n*2 sffunc foo(3)"
+
+ , "ret goes out of the function" ~:
+    "adevarat" ~=? evalTest "func foo(n) daca n == 4 atunci ret adevarat sfdaca ret n-1 sffunc foo(4)"
+
+ , "ret after if in func" ~:
+    "3" ~=? evalTest "func foo(n) daca n == 0 atunci ret adevarat altfel ret n-1 sfdaca sffunc foo(4)"
+
  ]
