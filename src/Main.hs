@@ -1,3 +1,4 @@
+import System.Directory
 import System.Environment
 
 import System.Console.Haskeline
@@ -5,7 +6,6 @@ import System.Console.Haskeline
 import EPseudocode.Data
 import EPseudocode.Evaluator
 import EPseudocode.Parser
--- TODO: import EPseudocode.Scope
 
 
 help :: String
@@ -35,22 +35,26 @@ runRepl = runInputT defaultSettings $ loop [(":stopiteration:", Bool False)]
                             return x
 
 
+runFile :: String -> IO ()
+runFile filePath = do
+    contents <- readFile filePath
+    case eParse toplevelParser contents  of
+        Left err -> putStrLn $ "failed: " ++ err
+        Right p -> case interpretProgram [(":stopiteration:", Bool False)] p of
+                      Left err -> putStrLn $ "failed: " ++ err
+                      Right _ -> putStrLn $ "ok"
+    return ()
+
+
 main :: IO ()
 main = do
     args <- getArgs
     case length args of
         0 -> runRepl >> putStrLn "Goodbye!"
-        -- 1 -> readFile (head args) >>= \contents -> putStrLn $ runParser toplevelParser contents -- TODO: cleanly check if file exists
         1 -> do
-            contents <- readFile (head args)
-            let prog = eParse toplevelParser contents
-
-            -- TODO: finish this
-            --case prog of
-            --    Left err -> putStrLn $ "failed: " ++ err
-            --    Right p -> do let e = isValidScope p
-            --                  case e of
-            --                   Left err -> putStrLn $ "failed: " ++ err
-            --                   Right n -> putStrLn $ "ok: " ++ show n
-            return ()
+                let filePath = head args
+                fileExists <- doesFileExist filePath
+                if fileExists
+                    then runFile filePath
+                    else putStrLn $ "File " ++ filePath ++ " doesn't exist"
         _ -> putStrLn help

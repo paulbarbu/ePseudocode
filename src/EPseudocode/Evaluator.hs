@@ -1,5 +1,5 @@
 {-# LANGUAGE TupleSections #-}
-module EPseudocode.Evaluator (interpret)
+module EPseudocode.Evaluator (interpret, interpretProgram)
 where
 
 import Control.Monad.Except
@@ -11,6 +11,21 @@ import EPseudocode.Data
 import EPseudocode.Lexer
 import EPseudocode.Helpers
 import EPseudocode.Parser
+
+
+{-
+ * TODO: clean the Env, it should not be cluttered when I reassign a variable in a loop
+ * TODO: find a better way to implement :stopiteration: and :ret:
+ * TODO: check what happens when I define two functions with the same name in the same scope
+         -> there should be an error
+ * TODO: when I add builtins, take care to verify if there are name clashes
+ * TODO: I/O
+ * TODO: function definition inside function definition
+-}
+
+-- TODO: pass argc and argv
+interpretProgram :: Env -> [Stmt] -> Error ()
+interpretProgram env program = interpret' env (program ++ [E (FuncCall (Var "main") [])]) >> return ()
 
 
 interpret :: Env -> String -> Error (Env, Expr)
@@ -129,7 +144,6 @@ applyToAnonList env (e:es) list newVal = do
 
 
 eval :: Env -> Stmt -> Error (Env, Expr)
---TODO: everything in the AST, both Expr and Stmt
 eval env Break = return (env, Void)
 eval _ (E Void) = throwError "Cannot evaluate Void. Statement used in expression?"
 eval env (E a@(Int _)) = return (env, a)
@@ -180,11 +194,13 @@ eval env (E f@(FuncDef name _ _)) = case name of
     _ -> return ((name, f):env, Void)
 eval env (E (FuncCall nameExpr args)) = eval env (E nameExpr) >>= \(e, f) ->
     case f of
-        FuncDef _ _ _ -> applyFunc e f args >>= return . (e,)
+        FuncDef _ _ _ -> do
+            applyFunc e f args >>= return . (e,)
         _ -> throwError "Only functions are callable"
 
 
 applyFunc :: Env -> Expr -> [[Expr]] -> Error Expr
+applyFunc env (FuncDef _ argNames body) [] = evalFuncBody (env) body
 applyFunc env (FuncDef _ argNames body) [args] = getEvaledExprList env args >>=
     argsToEnv argNames >>= \e ->
     evalFuncBody (e++env) body
