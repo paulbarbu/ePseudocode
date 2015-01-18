@@ -202,7 +202,7 @@ eval env (E (FuncCall nameExpr args)) = eval env (E nameExpr) >>= \(e, f) ->
 
 
 applyFunc :: Env -> Expr -> [[Expr]] -> Error Expr
-applyFunc env (FuncDef _ argNames body) [] = evalFuncBody (env) body
+applyFunc env (FuncDef _ _ body) [] = evalFuncBody (env) body
 applyFunc env (FuncDef _ argNames body) [args] = getEvaledExprList env args >>=
     argsToEnv argNames >>= \e ->
     evalFuncBody (e++env) body
