@@ -1,0 +1,15 @@
+func a()
+    ret 42
+sffunc
+
+func b()
+    ret 1
+sffunc
+
+func a()
+    ret 43
+sffunc
+
+func main()
+    a()
+sffunc
