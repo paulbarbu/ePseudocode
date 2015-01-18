@@ -27,3 +27,11 @@ continueIteration :: Env -> Bool
 continueIteration env = case lookup ":stopiteration:" env of
     Just (Bool v) -> not v
     _ -> True
+
+
+mainHasArgs :: [Stmt] -> Bool
+mainHasArgs [] = False
+mainHasArgs (stmt:stmts) = case stmt of
+    E (FuncDef "main" (_:_) _) -> True
+    E (FuncDef "main" [] _) -> False
+    _ -> mainHasArgs stmts

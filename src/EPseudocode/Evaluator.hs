@@ -16,16 +16,17 @@ import EPseudocode.Parser
 {-
  * TODO: clean the Env, it should not be cluttered when I reassign a variable in a loop
  * TODO: find a better way to implement :stopiteration: and :ret:
- * TODO: check what happens when I define two functions with the same name in the same scope
-         -> there should be an error
+
+ * TODO: add tests for main with and without arguments
+
  * TODO: when I add builtins, take care to verify if there are name clashes
  * TODO: I/O
- * TODO: function definition inside function definition
 -}
 
--- TODO: pass argc and argv
-interpretProgram :: Env -> [Stmt] -> Error ()
-interpretProgram env program = interpret' env (program ++ [E (FuncCall (Var "main") [])]) >> return ()
+interpretProgram :: Env -> [Stmt] -> [String] -> Error ()
+interpretProgram env program argv = if mainHasArgs program
+    then interpret' env (program ++ [E (FuncCall (Var "main") [map String argv])]) >> return ()
+    else interpret' env (program ++ [E (FuncCall (Var "main") [])]) >> return ()
 
 
 interpret :: Env -> String -> Error (Env, Expr)
