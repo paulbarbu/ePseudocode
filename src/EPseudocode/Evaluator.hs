@@ -189,9 +189,10 @@ eval env (For initial cond it stmts) =
             case bodyCond of
                 Nothing -> repeatWhile bodyEnv (Bool True) stmts'
                 Just a -> repeatWhile bodyEnv a stmts'
-eval env (E f@(FuncDef name _ _)) = case name of
-    "" -> return (env, f)
-    _ -> return ((name, f):env, Void)
+eval env (E f@(FuncDef "" _ _)) = return (env, f)
+eval env (E f@(FuncDef name _ _)) = case lookup name env of
+    Nothing -> return ((name, f):env, Void)
+    Just _ -> throwError $ "The function name \"" ++ name ++ "\" shadows another name in the current scope"
 eval env (E (FuncCall nameExpr args)) = eval env (E nameExpr) >>= \(e, f) ->
     case f of
         FuncDef _ _ _ -> do

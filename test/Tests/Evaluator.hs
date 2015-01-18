@@ -855,4 +855,9 @@ evaluatorTests = TestList [
 
  , "simple closure called through variable" ~:
     "5"  ~=? evalTest "func a(x) ret func (b) ret x+b sffunc sffunc b=a(3) b(2)"
+
+ , "func def inside func def" ~:
+    "42" ~=? evalTest "func a() func b() ret 42 sffunc ret b() sffunc a()"
+
+ , "doubly defined function" ~: evalFail "func a() ret 1 sffunc func a() ret 42 sffunc" "The function name \"a\" shadows another name in the current scope"
  ]
