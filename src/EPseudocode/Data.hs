@@ -1,6 +1,8 @@
 module EPseudocode.Data
 where
 
+import Text.Show.Functions()
+
 import Data.List (intercalate)
 
 import EPseudocode.Lexer
@@ -23,15 +25,16 @@ data Expr =
     | FuncCall Expr [[Expr]] -- foo() = [[]], func_in_func()(2) = [[],[2]], func_in_list[1]() = [[]], a(1)() = [[1],[]]
     | FuncDef String [String] [Stmt] -- func name args body
     | Void -- should not be evaluated, just a placeholder for "none" or apophasis
-    deriving (Show, Eq, Ord)
+    | PrimitiveIOFunc ([[Expr]] -> Error Expr)
+    deriving (Show)
 
 
 data BinOp = And | Or | Plus | Minus | Mul | Div | Mod | Lt | Le | Gt | Ge | Neq | Eq | Pow
-    deriving (Show, Eq, Ord)
+    deriving (Show)
 
 
 data UnOp = Not | UnMinus
-    deriving (Show, Eq, Ord)
+    deriving (Show)
 
 
 data Stmt = Assign Expr Expr -- assignments (the left side is limited to variable or list index and the right side is limited here to expression or function (call/def) similarly to Ret)
@@ -42,7 +45,7 @@ data Stmt = Assign Expr Expr -- assignments (the left side is limited to variabl
     | Ret Expr -- return statement (only expression or function call/def)
     | Break
     | E Expr
-    deriving (Show, Eq, Ord)
+    deriving (Show)
 
 
 type Env = [(String, Expr)]

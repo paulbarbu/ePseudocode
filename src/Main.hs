@@ -3,6 +3,7 @@ import System.Environment
 
 import System.Console.Haskeline
 
+import EPseudocode.Builtins
 import EPseudocode.Data
 import EPseudocode.Evaluator
 import EPseudocode.Parser
@@ -18,7 +19,7 @@ help = "ePseudocode, A small programming language (with pseudocode appearance) i
 
 -- TODO: multiline input
 runRepl :: IO ()
-runRepl = runInputT defaultSettings $ loop [(":stopiteration:", Bool False)]
+runRepl = runInputT defaultSettings $ loop builtinEnv
     where
         loop :: Env -> InputT IO ()
         loop env = do
@@ -43,7 +44,7 @@ runFile filePath argv = do
     contents <- readFile filePath
     case eParse toplevelParser contents  of
         Left err -> putStrLn $ "failed: " ++ err
-        Right p -> case interpretProgram [(":stopiteration:", Bool False)] p argv of
+        Right p -> case interpretProgram builtinEnv p argv of
                       Left err -> putStrLn $ "failed: " ++ err
                       Right _ -> putStrLn $ "ok"
     return ()

@@ -5,16 +5,17 @@ import Data.List (isInfixOf)
 
 import Test.HUnit
 
+import EPseudocode.Builtins
 import EPseudocode.Data
 import EPseudocode.Evaluator
 import EPseudocode.Lexer
 
 evalTest :: String -> String
-evalTest input = case interpret [] input of
+evalTest input = case interpret builtinEnv input of
     Left err -> err
     Right res -> showExpr . snd $ res
 
-evalFail input needle = case interpret [] input of
+evalFail input needle = case interpret builtinEnv input of
     Left err -> needle `isInfixOf` err @? "eval failed (" ++ err ++ "), but could not find needle: " ++ needle
     Right _ -> False @? "eval succeeded"
 
@@ -25,8 +26,23 @@ evaluatorTests = TestList [
  , "false in false out" ~:
     tFalse ~=? evalTest tFalse
 
- , "list comparisons, with vars" ~:
+ , "lists lt, with vars" ~:
     tTrue ~=? evalTest "a={1,2} b={2,3} a<b"
+
+ , "lists le, with vars" ~:
+    tTrue ~=? evalTest "a={1,2} b={2,3} a<=b"
+
+ , "lists gt, with vars" ~:
+    tTrue ~=? evalTest "a={5,4} b={2,3} a>b"
+
+ , "lists ge, with vars" ~:
+    tTrue ~=? evalTest "a={5,4} b={2,3} a>=b"
+
+ , "lists neq, with vars" ~:
+    tTrue ~=? evalTest "a={5,4} b={2,3} a!=b"
+
+ , "lists eq, with vars" ~:
+   tTrue ~=? evalTest "a={2,3} b={2,3} a==b"
 
  , "nested list 2nd level index modification" ~:
     "{1, {{5, 6}, 3}, 4}" ~=? evalTest "b=0 a={1, {2, 3}, 4} a[b+1][b] = {5,6} a"
@@ -261,7 +277,7 @@ evaluatorTests = TestList [
     "fals" ~=? evalTest "a=1 b=2 {a,3} > {b,4}"
 
  , "lists ge" ~:
-    "adevarat" ~=? evalTest "a=7 b=2 {a,2} >= {b,4}"
+    "adevarat" ~=? evalTest "a=7 b=2 {a,5} >= {b,4}"
 
  , "lists eq" ~:
     "fals" ~=? evalTest "a=7 b=2 {a,2} == {b,4}"

@@ -19,7 +19,6 @@ import EPseudocode.Parser
 
  * TODO: add tests for main with and without arguments
 
- * TODO: when I add builtins, take care to verify if there are name clashes
  * TODO: I/O
 -}
 
@@ -198,6 +197,7 @@ eval env (E (FuncCall nameExpr args)) = eval env (E nameExpr) >>= \(e, f) ->
     case f of
         FuncDef _ _ _ -> do
             applyFunc e f args >>= return . (e,)
+        PrimitiveIOFunc primitive -> primitive args >> return (e, Void)
         _ -> throwError "Only functions are callable"
 
 
@@ -262,37 +262,37 @@ evalBinExpr _ (BinExpr Pow (List _) _) = throwError "Cannot raise a list to powe
 evalBinExpr env (BinExpr Lt (List l) (List r)) = do
     a <- getEvaledExprList env l
     b <- getEvaledExprList env r
-    return . Bool $ a < b
+    (liftM and . sequence $ zipWith (lt env) a b) >>= return . Bool
 evalBinExpr _ (BinExpr Lt _ (List _)) = throwError "Lists can be compared only to lists"
 evalBinExpr _ (BinExpr Lt (List _) _) = throwError "Lists can be compared only to lists"
 evalBinExpr env (BinExpr Le (List l) (List r)) = do
     a <- getEvaledExprList env l
     b <- getEvaledExprList env r
-    return . Bool $ a <= b
+    (liftM and . sequence $ zipWith (le env) a b) >>= return . Bool
 evalBinExpr _ (BinExpr Le _ (List _)) = throwError "Lists can be compared only to lists"
 evalBinExpr _ (BinExpr Le (List _) _) = throwError "Lists can be compared only to lists"
 evalBinExpr env (BinExpr Ge (List l) (List r)) = do
     a <- getEvaledExprList env l
     b <- getEvaledExprList env r
-    return . Bool $ a >= b
+    (liftM and . sequence $ zipWith (ge env) a b) >>= return . Bool
 evalBinExpr _ (BinExpr Ge _ (List _)) = throwError "Lists can be compared only to lists"
 evalBinExpr _ (BinExpr Ge (List _) _) = throwError "Lists can be compared only to lists"
 evalBinExpr env (BinExpr Gt (List l) (List r)) = do
     a <- getEvaledExprList env l
     b <- getEvaledExprList env r
-    return . Bool $ a > b
+    (liftM and . sequence $ zipWith (gt env) a b) >>= return . Bool
 evalBinExpr _ (BinExpr Gt _ (List _)) = throwError "Lists can be compared only to lists"
 evalBinExpr _ (BinExpr Gt (List _) _) = throwError "Lists can be compared only to lists"
 evalBinExpr env (BinExpr Neq (List l) (List r)) = do
     a <- getEvaledExprList env l
     b <- getEvaledExprList env r
-    return . Bool $ a /= b
+    (liftM and . sequence $ zipWith (neq env) a b) >>= return . Bool
 evalBinExpr _ (BinExpr Neq _ (List _)) = throwError "Lists can be compared only to lists"
 evalBinExpr _ (BinExpr Neq (List _) _) = throwError "Lists can be compared only to lists"
 evalBinExpr env (BinExpr Eq (List l) (List r)) = do
     a <- getEvaledExprList env l
     b <- getEvaledExprList env r
-    return . Bool $ a == b
+    (liftM and . sequence $ zipWith (eq env) a b) >>= return . Bool
 evalBinExpr _ (BinExpr Eq _ (List _)) = throwError "Lists can be compared only to lists"
 evalBinExpr _ (BinExpr Eq (List _) _) = throwError "Lists can be compared only to lists"
 evalBinExpr env (BinExpr Plus (List l) (List r)) = do
@@ -309,7 +309,7 @@ evalBinExpr _ (BinExpr Minus _ (List _)) = throwError "Cannot subtract a list fr
 evalBinExpr env (BinExpr Minus (List l) r) = do
     (_, val) <- eval env (E r)
     lst <- getEvaledExprList env l
-    return . List $ filter (/= val) lst
+    filterM (neq env val) lst >>= return . List
 
 evalBinExpr _ (BinExpr And (Int _) (Int _)) = throwError "And is invalid on Ints"
 evalBinExpr _ (BinExpr And (Int _) (Float _)) = throwError "And is invalid on Int and Float"
@@ -430,108 +430,6 @@ evalBinExpr _ (BinExpr Mod (Bool _) (String _)) = throwError "Modulo cannot be a
 evalBinExpr _ (BinExpr Mod (String _) (Bool _)) = throwError "Modulo cannot be applied to String and Bool"
 evalBinExpr _ (BinExpr Mod (Bool _) (Bool _)) = throwError "Modulo cannot be applied to Bools" -- FIXME: translate
 
-evalBinExpr _ (BinExpr Lt (Int l) (Int r)) = return . Bool $ l < r
-evalBinExpr _ (BinExpr Lt (Int l) (Float r)) = return . Bool $ fromInteger l < r
-evalBinExpr _ (BinExpr Lt (Float l) (Int r)) = return . Bool $ l < fromInteger r
-evalBinExpr _ (BinExpr Lt (String _) (Int _)) = throwError "Cannot compare String and Int" -- FIXME: translate
-evalBinExpr _ (BinExpr Lt (Int _) (String _)) = throwError "Cannot compare Int and String" -- FIXME: translate
-evalBinExpr _ (BinExpr Lt (Bool _) (Int _)) = throwError "Cannot compare Bool and Int" -- FIXME: translate
-evalBinExpr _ (BinExpr Lt (Int _) (Bool _)) = throwError "Cannot compare Int and Bool" -- FIXME: translate
-evalBinExpr _ (BinExpr Lt (Float l) (Float r)) = return . Bool $ l < r
-evalBinExpr _ (BinExpr Lt (String _) (Float _)) = throwError "Cannot compare String and Float" -- FIXME: translate
-evalBinExpr _ (BinExpr Lt (Float _) (String _)) = throwError "Cannot compare Float and String" -- FIXME: translate
-evalBinExpr _ (BinExpr Lt (Bool _) (Float _)) = throwError "Cannot compare Bool and Float" -- FIXME: translate
-evalBinExpr _ (BinExpr Lt (Float _) (Bool _)) = throwError "Cannot compare Float and Bool" -- FIXME: translate
-evalBinExpr _ (BinExpr Lt (String l) (String r)) = return . Bool $ l < r
-evalBinExpr _ (BinExpr Lt (Bool _) (String _)) = throwError "Cannot compare Bool and String"
-evalBinExpr _ (BinExpr Lt (String _) (Bool _)) = throwError "Cannot compare String and Bool"
-evalBinExpr _ (BinExpr Lt (Bool _) (Bool _)) = throwError "Cannot compare Bools" -- FIXME: translate
-
-evalBinExpr _ (BinExpr Le (Int l) (Int r)) = return . Bool $ l <= r
-evalBinExpr _ (BinExpr Le (Int l) (Float r)) = return . Bool $ fromInteger l <= r
-evalBinExpr _ (BinExpr Le (Float l) (Int r)) = return . Bool $ l <= fromInteger r
-evalBinExpr _ (BinExpr Le (String _) (Int _)) = throwError "Cannot compare String and Int" -- FIXME: translate
-evalBinExpr _ (BinExpr Le (Int _) (String _)) = throwError "Cannot compare Int and String" -- FIXME: translate
-evalBinExpr _ (BinExpr Le (Bool _) (Int _)) = throwError "Cannot compare Bool and Int" -- FIXME: translate
-evalBinExpr _ (BinExpr Le (Int _) (Bool _)) = throwError "Cannot compare Int and Bool" -- FIXME: translate
-evalBinExpr _ (BinExpr Le (Float l) (Float r)) = return . Bool $ l <= r
-evalBinExpr _ (BinExpr Le (String _) (Float _)) = throwError "Cannot compare String and Float" -- FIXME: translate
-evalBinExpr _ (BinExpr Le (Float _) (String _)) = throwError "Cannot compare Float and String" -- FIXME: translate
-evalBinExpr _ (BinExpr Le (Bool _) (Float _)) = throwError "Cannot compare Bool and Float" -- FIXME: translate
-evalBinExpr _ (BinExpr Le (Float _) (Bool _)) = throwError "Cannot compare Float and Bool" -- FIXME: translate
-evalBinExpr _ (BinExpr Le (String l) (String r)) = return . Bool $ l <= r
-evalBinExpr _ (BinExpr Le (Bool _) (String _)) = throwError "Cannot compare Bool and String"
-evalBinExpr _ (BinExpr Le (String _) (Bool _)) = throwError "Cannot compare String and Bool"
-evalBinExpr _ (BinExpr Le (Bool _) (Bool _)) = throwError "Cannot compare Bools" -- FIXME: translate
-
-evalBinExpr _ (BinExpr Gt (Int l) (Int r)) = return . Bool $ l > r
-evalBinExpr _ (BinExpr Gt (Int l) (Float r)) = return . Bool $ fromInteger l > r
-evalBinExpr _ (BinExpr Gt (Float l) (Int r)) = return . Bool $ l > fromInteger r
-evalBinExpr _ (BinExpr Gt (String _) (Int _)) = throwError "Cannot compare String and Int" -- FIXME: translate
-evalBinExpr _ (BinExpr Gt (Int _) (String _)) = throwError "Cannot compare Int and String" -- FIXME: translate
-evalBinExpr _ (BinExpr Gt (Bool _) (Int _)) = throwError "Cannot compare Bool and Int" -- FIXME: translate
-evalBinExpr _ (BinExpr Gt (Int _) (Bool _)) = throwError "Cannot compare Int and Bool" -- FIXME: translate
-evalBinExpr _ (BinExpr Gt (Float l) (Float r)) = return . Bool $ l > r
-evalBinExpr _ (BinExpr Gt (String _) (Float _)) = throwError "Cannot compare String and Float" -- FIXME: translate
-evalBinExpr _ (BinExpr Gt (Float _) (String _)) = throwError "Cannot compare Float and String" -- FIXME: translate
-evalBinExpr _ (BinExpr Gt (Bool _) (Float _)) = throwError "Cannot compare Bool and Float" -- FIXME: translate
-evalBinExpr _ (BinExpr Gt (Float _) (Bool _)) = throwError "Cannot compare Float and Bool" -- FIXME: translate
-evalBinExpr _ (BinExpr Gt (String l) (String r)) = return . Bool $ l > r
-evalBinExpr _ (BinExpr Gt (Bool _) (String _)) = throwError "Cannot compare Bool and String"
-evalBinExpr _ (BinExpr Gt (String _) (Bool _)) = throwError "Cannot compare String and Bool"
-evalBinExpr _ (BinExpr Gt (Bool _) (Bool _)) = throwError "Cannot compare Bools" -- FIXME: translate
-
-evalBinExpr _ (BinExpr Ge (Int l) (Int r)) = return . Bool $ l >= r
-evalBinExpr _ (BinExpr Ge (Int l) (Float r)) = return . Bool $ fromInteger l >= r
-evalBinExpr _ (BinExpr Ge (Float l) (Int r)) = return . Bool $ l >= fromInteger r
-evalBinExpr _ (BinExpr Ge (String _) (Int _)) = throwError "Cannot compare String and Int" -- FIXME: translate
-evalBinExpr _ (BinExpr Ge (Int _) (String _)) = throwError "Cannot compare Int and String" -- FIXME: translate
-evalBinExpr _ (BinExpr Ge (Bool _) (Int _)) = throwError "Cannot compare Bool and Int" -- FIXME: translate
-evalBinExpr _ (BinExpr Ge (Int _) (Bool _)) = throwError "Cannot compare Int and Bool" -- FIXME: translate
-evalBinExpr _ (BinExpr Ge (Float l) (Float r)) = return . Bool $ l >= r
-evalBinExpr _ (BinExpr Ge (String _) (Float _)) = throwError "Cannot compare String and Float" -- FIXME: translate
-evalBinExpr _ (BinExpr Ge (Float _) (String _)) = throwError "Cannot compare Float and String" -- FIXME: translate
-evalBinExpr _ (BinExpr Ge (Bool _) (Float _)) = throwError "Cannot compare Bool and Float" -- FIXME: translate
-evalBinExpr _ (BinExpr Ge (Float _) (Bool _)) = throwError "Cannot compare Float and Bool" -- FIXME: translate
-evalBinExpr _ (BinExpr Ge (String l) (String r)) = return . Bool $ l >= r
-evalBinExpr _ (BinExpr Ge (Bool _) (String _)) = throwError "Cannot compare Bool and String"
-evalBinExpr _ (BinExpr Ge (String _) (Bool _)) = throwError "Cannot compare String and Bool"
-evalBinExpr _ (BinExpr Ge (Bool _) (Bool _)) = throwError "Cannot compare Bools" -- FIXME: translate
-
-evalBinExpr _ (BinExpr Neq (Int l) (Int r)) = return . Bool $ l /= r
-evalBinExpr _ (BinExpr Neq (Int l) (Float r)) = return . Bool $ fromInteger l /= r
-evalBinExpr _ (BinExpr Neq (Float l) (Int r)) = return . Bool $ l /= fromInteger r
-evalBinExpr _ (BinExpr Neq (String _) (Int _)) = throwError "Cannot compare String and Int" -- FIXME: translate
-evalBinExpr _ (BinExpr Neq (Int _) (String _)) = throwError "Cannot compare Int and String" -- FIXME: translate
-evalBinExpr _ (BinExpr Neq (Bool _) (Int _)) = throwError "Cannot compare Bool and Int" -- FIXME: translate
-evalBinExpr _ (BinExpr Neq (Int _) (Bool _)) = throwError "Cannot compare Int and Bool" -- FIXME: translate
-evalBinExpr _ (BinExpr Neq (Float l) (Float r)) = return . Bool $ l /= r
-evalBinExpr _ (BinExpr Neq (String _) (Float _)) = throwError "Cannot compare String and Float" -- FIXME: translate
-evalBinExpr _ (BinExpr Neq (Float _) (String _)) = throwError "Cannot compare Float and String" -- FIXME: translate
-evalBinExpr _ (BinExpr Neq (Bool _) (Float _)) = throwError "Cannot compare Bool and Float" -- FIXME: translate
-evalBinExpr _ (BinExpr Neq (Float _) (Bool _)) = throwError "Cannot compare Float and Bool" -- FIXME: translate
-evalBinExpr _ (BinExpr Neq (String l) (String r)) = return . Bool $ l /= r
-evalBinExpr _ (BinExpr Neq (Bool _) (String _)) = throwError "Cannot compare Bool and String"
-evalBinExpr _ (BinExpr Neq (String _) (Bool _)) = throwError "Cannot compare String and Bool"
-evalBinExpr _ (BinExpr Neq (Bool l) (Bool r)) = return . Bool $ l /= r
-
-evalBinExpr _ (BinExpr Eq (Int l) (Int r)) = return . Bool $ l == r
-evalBinExpr _ (BinExpr Eq (Int l) (Float r)) = return . Bool $ fromInteger l == r
-evalBinExpr _ (BinExpr Eq (Float l) (Int r)) = return . Bool $ l == fromInteger r
-evalBinExpr _ (BinExpr Eq (String _) (Int _)) = throwError "Cannot compare String and Int" -- FIXME: translate
-evalBinExpr _ (BinExpr Eq (Int _) (String _)) = throwError "Cannot compare Int and String" -- FIXME: translate
-evalBinExpr _ (BinExpr Eq (Bool _) (Int _)) = throwError "Cannot compare Bool and Int" -- FIXME: translate
-evalBinExpr _ (BinExpr Eq (Int _) (Bool _)) = throwError "Cannot compare Int and Bool" -- FIXME: translate
-evalBinExpr _ (BinExpr Eq (Float l) (Float r)) = return . Bool $ l == r
-evalBinExpr _ (BinExpr Eq (String _) (Float _)) = throwError "Cannot compare String and Float" -- FIXME: translate
-evalBinExpr _ (BinExpr Eq (Float _) (String _)) = throwError "Cannot compare Float and String" -- FIXME: translate
-evalBinExpr _ (BinExpr Eq (Bool _) (Float _)) = throwError "Cannot compare Bool and Float" -- FIXME: translate
-evalBinExpr _ (BinExpr Eq (Float _) (Bool _)) = throwError "Cannot compare Float and Bool" -- FIXME: translate
-evalBinExpr _ (BinExpr Eq (String l) (String r)) = return . Bool $ l == r
-evalBinExpr _ (BinExpr Eq (Bool _) (String _)) = throwError "Cannot compare Bool and String"
-evalBinExpr _ (BinExpr Eq (String _) (Bool _)) = throwError "Cannot compare String and Bool"
-evalBinExpr _ (BinExpr Eq (Bool l) (Bool r)) = return . Bool $ l == r
-
 evalBinExpr _ (BinExpr Pow (Int l) (Int r)) = return . Float $ fromInteger l ** fromInteger r
 evalBinExpr _ (BinExpr Pow (Int l) (Float r)) = return . Float $ fromInteger l ** r
 evalBinExpr _ (BinExpr Pow (Float l) (Int r)) = return . Float $ l ** fromInteger r
@@ -548,6 +446,31 @@ evalBinExpr _ (BinExpr Pow (String _) (String _)) = throwError "Cannot raise Str
 evalBinExpr _ (BinExpr Pow (Bool _) (String _)) = throwError "Cannot raise Bool and String"
 evalBinExpr _ (BinExpr Pow (String _) (Bool _)) = throwError "Cannot raise String and Bool"
 evalBinExpr _ (BinExpr Pow (Bool _) (Bool _)) = throwError "Cannot raise Bools" -- FIXME: translate
+
+evalBinExpr env (BinExpr Lt a b) = do
+    (_, l) <- eval env $ E a
+    (_, r) <- eval env $ E b
+    liftM Bool $ lt env l r
+evalBinExpr env (BinExpr Le a b) = do
+    (_, l) <- eval env $ E a
+    (_, r) <- eval env $ E b
+    liftM Bool $ le env l r
+evalBinExpr env (BinExpr Ge a b) = do
+    (_, l) <- eval env $ E a
+    (_, r) <- eval env $ E b
+    liftM Bool $ ge env l r
+evalBinExpr env (BinExpr Gt a b) = do
+    (_, l) <- eval env $ E a
+    (_, r) <- eval env $ E b
+    liftM Bool $ gt env l r
+evalBinExpr env (BinExpr Neq a b) = do
+    (_, l) <- eval env $ E a
+    (_, r) <- eval env $ E b
+    liftM Bool $ neq env l r
+evalBinExpr env (BinExpr Eq a b) = do
+    (_, l) <- eval env $ E a
+    (_, r) <- eval env $ E b
+    liftM Bool $ eq env l r
 
 evalBinExpr env (BinExpr op l r) = do
     (_, a) <- eval env $ E l
@@ -568,3 +491,147 @@ evalUnExpr _ (UnExpr Not (List _)) = throwError "List cannot be negated"
 evalUnExpr env (UnExpr op a) =  do
     (_, val) <- eval env $ E a
     evalUnExpr env $ UnExpr op val
+
+
+lt :: Env -> Expr -> Expr -> Error Bool
+lt _ (Int l) (Int r) = return $ l < r
+lt _ (Int l) (Float r) = return $ fromInteger l < r
+lt _ (Float l) (Int r) = return $ l < fromInteger r
+lt _ (String _) (Int _) = throwError "Cannot compare String and Int" -- FIXME: translate
+lt _ (Int _) (String _) = throwError "Cannot compare Int and String" -- FIXME: translate
+lt _ (Bool _) (Int _) = throwError "Cannot compare Bool and Int" -- FIXME: translate
+lt _ (Int _) (Bool _) = throwError "Cannot compare Int and Bool" -- FIXME: translate
+lt _ (Float l) (Float r) = return $ l < r
+lt _ (String _) (Float _) = throwError "Cannot compare String and Float" -- FIXME: translate
+lt _ (Float _) (String _) = throwError "Cannot compare Float and String" -- FIXME: translate
+lt _ (Bool _) (Float _) = throwError "Cannot compare Bool and Float" -- FIXME: translate
+lt _ (Float _) (Bool _) = throwError "Cannot compare Float and Bool" -- FIXME: translate
+lt _ (String l) (String r) = return $ l < r
+lt _ (Bool _) (String _) = throwError "Cannot compare Bool and String"
+lt _ (String _) (Bool _) = throwError "Cannot compare String and Bool"
+lt _ (Bool _) (Bool _) = throwError "Cannot compare Bools" -- FIXME: translate
+lt env a b = do
+     (_, l) <- eval env $ E a
+     (_, r) <- eval env $ E b
+     eval env (E (BinExpr Lt l r)) >>= \(_, res) -> case res of
+        Bool val -> return val
+
+
+le :: Env -> Expr -> Expr -> Error Bool
+le _ (Int l) (Int r) = return $ l <= r
+le _ (Int l) (Float r) = return $ fromInteger l <= r
+le _ (Float l) (Int r) = return $ l <= fromInteger r
+le _ (String _) (Int _) = throwError "Cannot compare String and Int" -- FIXME: translate
+le _ (Int _) (String _) = throwError "Cannot compare Int and String" -- FIXME: translate
+le _ (Bool _) (Int _) = throwError "Cannot compare Bool and Int" -- FIXME: translate
+le _ (Int _) (Bool _) = throwError "Cannot compare Int and Bool" -- FIXME: translate
+le _ (Float l) (Float r) = return $ l <= r
+le _ (String _) (Float _) = throwError "Cannot compare String and Float" -- FIXME: translate
+le _ (Float _) (String _) = throwError "Cannot compare Float and String" -- FIXME: translate
+le _ (Bool _) (Float _) = throwError "Cannot compare Bool and Float" -- FIXME: translate
+le _ (Float _) (Bool _) = throwError "Cannot compare Float and Bool" -- FIXME: translate
+le _ (String l) (String r) = return $ l <= r
+le _ (Bool _) (String _) = throwError "Cannot compare Bool and String"
+le _ (String _) (Bool _) = throwError "Cannot compare String and Bool"
+le _ (Bool _) (Bool _) = throwError "Cannot compare Bools" -- FIXME: translate
+le env a b = do
+     (_, l) <- eval env $ E a
+     (_, r) <- eval env $ E b
+     eval env (E (BinExpr Le l r)) >>= \(_, res) -> case res of
+        Bool val -> return val
+
+
+ge :: Env -> Expr -> Expr -> Error Bool
+ge _ (Int l) (Int r) = return $ l >= r
+ge _ (Int l) (Float r) = return $ fromInteger l >= r
+ge _ (Float l) (Int r) = return $ l >= fromInteger r
+ge _ (String _) (Int _) = throwError "Cannot compare String and Int" -- FIXME: translate
+ge _ (Int _) (String _) = throwError "Cannot compare Int and String" -- FIXME: translate
+ge _ (Bool _) (Int _) = throwError "Cannot compare Bool and Int" -- FIXME: translate
+ge _ (Int _) (Bool _) = throwError "Cannot compare Int and Bool" -- FIXME: translate
+ge _ (Float l) (Float r) = return $ l >= r
+ge _ (String _) (Float _) = throwError "Cannot compare String and Float" -- FIXME: translate
+ge _ (Float _) (String _) = throwError "Cannot compare Float and String" -- FIXME: translate
+ge _ (Bool _) (Float _) = throwError "Cannot compare Bool and Float" -- FIXME: translate
+ge _ (Float _) (Bool _) = throwError "Cannot compare Float and Bool" -- FIXME: translate
+ge _ (String l) (String r) = return $ l >= r
+ge _ (Bool _) (String _) = throwError "Cannot compare Bool and String"
+ge _ (String _) (Bool _) = throwError "Cannot compare String and Bool"
+ge _ (Bool _) (Bool _) = throwError "Cannot compare Bools" -- FIXME: translate
+ge env a b = do
+     (_, l) <- eval env $ E a
+     (_, r) <- eval env $ E b
+     eval env (E (BinExpr Ge l r)) >>= \(_, res) -> case res of
+        Bool val -> return val
+
+
+gt :: Env -> Expr -> Expr -> Error Bool
+gt _ (Int l) (Int r) = return $ l > r
+gt _ (Int l) (Float r) = return $ fromInteger l > r
+gt _ (Float l) (Int r) = return $ l > fromInteger r
+gt _ (String _) (Int _) = throwError "Cannot compare String and Int" -- FIXME: translate
+gt _ (Int _) (String _) = throwError "Cannot compare Int and String" -- FIXME: translate
+gt _ (Bool _) (Int _) = throwError "Cannot compare Bool and Int" -- FIXME: translate
+gt _ (Int _) (Bool _) = throwError "Cannot compare Int and Bool" -- FIXME: translate
+gt _ (Float l) (Float r) = return $ l > r
+gt _ (String _) (Float _) = throwError "Cannot compare String and Float" -- FIXME: translate
+gt _ (Float _) (String _) = throwError "Cannot compare Float and String" -- FIXME: translate
+gt _ (Bool _) (Float _) = throwError "Cannot compare Bool and Float" -- FIXME: translate
+gt _ (Float _) (Bool _) = throwError "Cannot compare Float and Bool" -- FIXME: translate
+gt _ (String l) (String r) = return $ l > r
+gt _ (Bool _) (String _) = throwError "Cannot compare Bool and String"
+gt _ (String _) (Bool _) = throwError "Cannot compare String and Bool"
+gt _ (Bool _) (Bool _) = throwError "Cannot compare Bools" -- FIXME: translate
+gt env a b = do
+     (_, l) <- eval env $ E a
+     (_, r) <- eval env $ E b
+     eval env (E (BinExpr Gt l r)) >>= \(_, res) -> case res of
+        Bool val -> return val
+
+
+neq :: Env -> Expr -> Expr -> Error Bool
+neq _ (Int l) (Int r) = return $ l /= r
+neq _ (Int l) (Float r) = return $ fromInteger l /= r
+neq _ (Float l) (Int r) = return $ l /= fromInteger r
+neq _ (String _) (Int _) = throwError "Cannot compare String and Int" -- FIXME: translate
+neq _ (Int _) (String _) = throwError "Cannot compare Int and String" -- FIXME: translate
+neq _ (Bool _) (Int _) = throwError "Cannot compare Bool and Int" -- FIXME: translate
+neq _ (Int _) (Bool _) = throwError "Cannot compare Int and Bool" -- FIXME: translate
+neq _ (Float l) (Float r) = return $ l /= r
+neq _ (String _) (Float _) = throwError "Cannot compare String and Float" -- FIXME: translate
+neq _ (Float _) (String _) = throwError "Cannot compare Float and String" -- FIXME: translate
+neq _ (Bool _) (Float _) = throwError "Cannot compare Bool and Float" -- FIXME: translate
+neq _ (Float _) (Bool _) = throwError "Cannot compare Float and Bool" -- FIXME: translate
+neq _ (String l) (String r) = return $ l /= r
+neq _ (Bool _) (String _) = throwError "Cannot compare Bool and String"
+neq _ (String _) (Bool _) = throwError "Cannot compare String and Bool"
+neq _ (Bool l) (Bool r) = return $ l /= r
+neq env a b = do
+     (_, l) <- eval env $ E a
+     (_, r) <- eval env $ E b
+     eval env (E (BinExpr Neq l r)) >>= \(_, res) -> case res of
+        Bool val -> return val
+
+
+eq :: Env -> Expr -> Expr -> Error Bool
+eq _ (Int l) (Int r) = return $ l == r
+eq _ (Int l) (Float r) = return $ fromInteger l == r
+eq _ (Float l) (Int r) = return $ l == fromInteger r
+eq _ (String _) (Int _) = throwError "Cannot compare String and Int" -- FIXME: translate
+eq _ (Int _) (String _) = throwError "Cannot compare Int and String" -- FIXME: translate
+eq _ (Bool _) (Int _) = throwError "Cannot compare Bool and Int" -- FIXME: translate
+eq _ (Int _) (Bool _) = throwError "Cannot compare Int and Bool" -- FIXME: translate
+eq _ (Float l) (Float r) = return $ l == r
+eq _ (String _) (Float _) = throwError "Cannot compare String and Float" -- FIXME: translate
+eq _ (Float _) (String _) = throwError "Cannot compare Float and String" -- FIXME: translate
+eq _ (Bool _) (Float _) = throwError "Cannot compare Bool and Float" -- FIXME: translate
+eq _ (Float _) (Bool _) = throwError "Cannot compare Float and Bool" -- FIXME: translate
+eq _ (String l) (String r) = return $ l == r
+eq _ (Bool _) (String _) = throwError "Cannot compare Bool and String"
+eq _ (String _) (Bool _) = throwError "Cannot compare String and Bool"
+eq _ (Bool l) (Bool r) = return $ l == r
+eq env a b = do
+     (_, l) <- eval env $ E a
+     (_, r) <- eval env $ E b
+     eval env (E (BinExpr Eq l r)) >>= \(_, res) -> case res of
+        Bool val -> return val
