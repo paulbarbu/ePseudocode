@@ -40,5 +40,7 @@ Test-Suite tests
                        haskeline,
                        transformers,
                        containers,
-                       mtl
+                       mtl >= 2.2.1,
+                       raw-strings-qq >= 1.0.2,
+                       text >= 1.2.0
   ghc-options:         -fhpc
