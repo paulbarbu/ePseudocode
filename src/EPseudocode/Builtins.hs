@@ -21,9 +21,11 @@ ioBuiltins = [
 
 write :: [[Expr]] -> ErrorWithIO Expr
 write [args] = do
-    liftIO . putStr $ intercalate "" $ map showExpr args
+    liftIO . putStr $ intercalate "" $ map writeExpr args
     liftIO $ hFlush stdout
     return Void
+    where writeExpr (String s) = s
+          writeExpr x = showExpr x
 write [_:_] = throwError "scrie takes a single argument list: scrie(1, 2, 3, 4)"
 
 

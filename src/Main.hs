@@ -31,6 +31,7 @@ loop env = do
     case line of
         Nothing -> return ()
         Just ":quit" -> return ()
+        Just ":q" -> return ()
         Just ":env" -> do
             outputStrLn $ "env: " ++ show env
             loop env

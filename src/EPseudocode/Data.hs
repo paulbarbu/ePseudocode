@@ -65,7 +65,7 @@ type IndexedList = [Expr]
 showExpr :: Expr -> String
 showExpr (Int i) = show i
 showExpr (Float f) = show f
-showExpr (String s) = s
+showExpr (String s) = "\"" ++ s ++ "\""
 showExpr (Bool b) = if b then tTrue else tFalse
 showExpr (List l) = "{" ++ intercalate ", " (map showExpr l) ++ "}"
 showExpr (Void) = ""
