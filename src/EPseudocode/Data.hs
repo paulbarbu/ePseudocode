@@ -1,6 +1,7 @@
 module EPseudocode.Data
 where
 
+import Control.Monad.Except
 import Text.Show.Functions()
 
 import Data.List (intercalate)
@@ -25,7 +26,7 @@ data Expr =
     | FuncCall Expr [[Expr]] -- foo() = [[]], func_in_func()(2) = [[],[2]], func_in_list[1]() = [[]], a(1)() = [[1],[]]
     | FuncDef String [String] [Stmt] -- func name args body
     | Void -- should not be evaluated, just a placeholder for "none" or apophasis
-    | PrimitiveIOFunc ([[Expr]] -> Error Expr)
+    | PrimitiveIOFunc ([[Expr]] -> ErrorWithIO Expr)
     deriving (Show)
 
 
@@ -52,6 +53,7 @@ type Env = [(String, Expr)]
 
 
 type Error = Either String
+type ErrorWithIO = ExceptT String IO
 
 
 -- Helpers
@@ -63,7 +65,7 @@ type IndexedList = [Expr]
 showExpr :: Expr -> String
 showExpr (Int i) = show i
 showExpr (Float f) = show f
-showExpr (String s) = "\"" ++ s ++ "\""
+showExpr (String s) = s
 showExpr (Bool b) = if b then tTrue else tFalse
 showExpr (List l) = "{" ++ intercalate ", " (map showExpr l) ++ "}"
 showExpr (Void) = ""

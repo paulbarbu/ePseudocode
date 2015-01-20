@@ -2,22 +2,31 @@ module EPseudocode.Builtins (builtinEnv)
 where
 
 import Control.Monad.Except
-import Debug.Trace
+import Data.List (intercalate)
+import System.IO
 
 import EPseudocode.Data
-
 
 builtinEnv :: Env
 builtinEnv = [(name, PrimitiveIOFunc f) | (name, f) <- ioBuiltins] ++
     [(":stopiteration:", Bool False)]
 
 
-ioBuiltins :: [(String, [[Expr]] -> Error Expr)]
+ioBuiltins :: [(String, [[Expr]] -> ErrorWithIO Expr)]
 ioBuiltins = [
     ("scrie", write)
+   ,("citeste", readLine)
  ]
 
 
-write :: [[Expr]] -> Error Expr
-write [[args]] = trace (show args) $ return Void
+write :: [[Expr]] -> ErrorWithIO Expr
+write [args] = do
+    liftIO . putStr $ intercalate "" $ map showExpr args
+    liftIO $ hFlush stdout
+    return Void
 write [_:_] = throwError "scrie takes a single argument list: scrie(1, 2, 3, 4)"
+
+
+readLine :: [[Expr]] -> ErrorWithIO Expr
+readLine [[]] = (liftIO $ getLine) >>= return . String
+readLine _ = throwError "citeste takes zero arguments"

@@ -1,7 +1,6 @@
 module EPseudocode.Helpers
 where
 
-import EPseudocode.Builtins
 import EPseudocode.Data
 
 replace :: Int -> a -> [a] -> [a]

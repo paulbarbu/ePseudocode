@@ -1,6 +1,8 @@
+import Control.Monad.Except
 import System.Directory
 import System.Environment
 
+import System.IO.Unsafe (unsafePerformIO)
 import System.Console.Haskeline
 
 import EPseudocode.Builtins
@@ -20,23 +22,24 @@ help = "ePseudocode, A small programming language (with pseudocode appearance) i
 -- TODO: multiline input
 runRepl :: IO ()
 runRepl = runInputT defaultSettings $ loop builtinEnv
-    where
-        loop :: Env -> InputT IO ()
-        loop env = do
-            line <- getInputLine "epc> "
-            case line of
-                Nothing -> return ()
-                Just ":quit" -> return ()
-                Just ":env" -> do
-                    outputStrLn $ "env: " ++ show env
-                    loop env
-                Just input ->
-                    case interpret env input of
-                        Left err -> outputStrLn err >> loop env
-                        Right res -> do
-                            x <- outputStrLn . showExpr . snd $ res
-                            loop $ fst res
-                            return x
+
+
+loop :: Env -> InputT IO ()
+loop env = do
+    outputStrLn ""
+    line <- getInputLine "epc> "
+    case line of
+        Nothing -> return ()
+        Just ":quit" -> return ()
+        Just ":env" -> do
+            outputStrLn $ "env: " ++ show env
+            loop env
+        Just input -> case unsafePerformIO $ runExceptT $ interpret env input of
+                         Left err -> outputStrLn err >> loop env
+                         Right res -> do
+                             x <- outputStr . showExpr . snd $ res
+                             loop $ fst res
+                             return x
 
 
 runFile :: String -> [String] -> IO ()
@@ -44,10 +47,11 @@ runFile filePath argv = do
     contents <- readFile filePath
     case eParse toplevelParser contents  of
         Left err -> putStrLn $ "failed: " ++ err
-        Right p -> case interpretProgram builtinEnv p argv of
-                      Left err -> putStrLn $ "failed: " ++ err
-                      Right _ -> putStrLn $ "ok"
-    return ()
+        Right p -> do
+            res <- runExceptT $ interpretProgram builtinEnv p argv
+            case res of
+                Left err -> putStrLn $ "Error: " ++ err
+                Right _ -> return ()
 
 
 main :: IO ()

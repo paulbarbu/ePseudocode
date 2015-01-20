@@ -19,29 +19,38 @@ import EPseudocode.Parser
 
  * TODO: add tests for main with and without arguments
 
+ * TODO: builtins tests: epc> scrie(1+2)
+        3
+        epc> scrie(1+2, "123\n", {1+2,32})
+        3123
+        {3, 32}
+
+
  * TODO: I/O
 -}
 
-interpretProgram :: Env -> [Stmt] -> [String] -> Error ()
+interpretProgram :: Env -> [Stmt] -> [String] -> ErrorWithIO ()
 interpretProgram env program argv = if mainHasArgs program
     then interpret' env (program ++ [E (FuncCall (Var "main") [map String argv])]) >> return ()
     else interpret' env (program ++ [E (FuncCall (Var "main") [])]) >> return ()
 
 
-interpret :: Env -> String -> Error (Env, Expr)
-interpret env input = eParse mainParser input >>= interpret' env
+interpret :: Env -> String -> ErrorWithIO (Env, Expr)
+interpret env input = case eParse mainParser input of
+        Left err -> throwError err
+        Right prog -> interpret' env prog
 
 
-interpret' :: Env -> [Stmt] -> Error (Env, Expr)
+interpret' :: Env -> [Stmt] -> ErrorWithIO (Env, Expr)
 interpret' env stmts = foldlM runUntilBreak (env, undefined) stmts
     where
-    runUntilBreak :: (Env, Expr) -> Stmt -> Error (Env, Expr)
+    runUntilBreak :: (Env, Expr) -> Stmt -> ErrorWithIO (Env, Expr)
     runUntilBreak (e, _) stmt = case stmt of
         Break -> return ((":stopiteration:", Bool True):env, Void)
         _ -> if continueIteration e then eval e stmt else return (e, Void)
 
 
-applyToNamedList :: Env -> Expr -> Maybe Expr -> Error (Env, Expr)
+applyToNamedList :: Env -> Expr -> Maybe Expr -> ErrorWithIO (Env, Expr)
 applyToNamedList env (Index name [e]) newVal =
     case lookup name env of
         Nothing -> throwError $ "Unbound variable name " ++ name
@@ -95,7 +104,7 @@ applyToNamedList env (Index name (e:es)) newVal =
         _ -> throwError "Multiple indexing can be applied only to Lists"
 
 
-applyToAnonString :: Env -> IndexingListExpr -> String -> Maybe Expr -> Error Expr
+applyToAnonString :: Env -> IndexingListExpr -> String -> Maybe Expr -> ErrorWithIO Expr
 applyToAnonString env [e] str newVal = do
     (_, index) <- eval env $ E e
     case index of
@@ -109,7 +118,7 @@ applyToAnonString env [e] str newVal = do
         _ -> throwError "Strings can be indexed only with Integer evaluating expressions"
 
 
-applyToAnonList :: Env -> IndexingListExpr -> IndexedList -> Maybe Expr -> Error Expr
+applyToAnonList :: Env -> IndexingListExpr -> IndexedList -> Maybe Expr -> ErrorWithIO Expr
 applyToAnonList env [e] list newVal = do
     (_, index) <- eval env $ E e
     case index of
@@ -143,7 +152,7 @@ applyToAnonList env (e:es) list newVal = do
         _ -> throwError "List can be indexed only with Integer evaluating expressions"
 
 
-eval :: Env -> Stmt -> Error (Env, Expr)
+eval :: Env -> Stmt -> ErrorWithIO (Env, Expr)
 eval env Break = return (env, Void)
 eval _ (E Void) = throwError "Cannot evaluate Void. Statement used in expression?"
 eval env (E a@(Int _)) = return (env, a)
@@ -166,16 +175,18 @@ eval env (Assign (Var name) s) = do
 eval env (Assign index@(Index _ _) s) = do
     (_, val) <- eval env $ E s
     applyToNamedList env index $ Just val
-eval env (SimpleIf cond stmts) = case eval env (E cond) of
-    Left err -> throwError err
-    Right (newEnv, Bool val) -> if val
-        then evalStmtBody newEnv stmts
-        else return (newEnv, Void)
-    _ -> throwError "An If's condition should evaluate to Bool"
-eval env (CompleteIf cond trueStmts falseStmts) = case eval env (E cond) of
-    Left err -> throwError err
-    Right (newEnv, Bool val) -> evalStmtBody newEnv (if val then trueStmts else falseStmts)
-    _ -> throwError "An If's condition should evaluate to Bool"
+eval env (SimpleIf cond stmts) = do
+    (newEnv, res) <- eval env (E cond)
+    case res of
+        Bool val -> if val
+            then evalStmtBody newEnv stmts
+            else return (newEnv, Void)
+        _ -> throwError "An If's condition should evaluate to Bool"
+eval env (CompleteIf cond trueStmts falseStmts) = do
+    (newEnv, res) <- eval env (E cond)
+    case res of
+        Bool val -> evalStmtBody newEnv (if val then trueStmts else falseStmts)
+        _ -> throwError "An If's condition should evaluate to Bool"
 eval env (While cond stmts) = repeatWhile env cond stmts
 eval env (For initial cond it stmts) =
     case initial of
@@ -197,11 +208,11 @@ eval env (E (FuncCall nameExpr args)) = eval env (E nameExpr) >>= \(e, f) ->
     case f of
         FuncDef _ _ _ -> do
             applyFunc e f args >>= return . (e,)
-        PrimitiveIOFunc primitive -> primitive args >> return (e, Void)
+        PrimitiveIOFunc primitive -> mapM (getEvaledExprList env) args >>= primitive >>= \val -> return (e, val)
         _ -> throwError "Only functions are callable"
 
 
-applyFunc :: Env -> Expr -> [[Expr]] -> Error Expr
+applyFunc :: Env -> Expr -> [[Expr]] -> ErrorWithIO Expr
 applyFunc env (FuncDef _ _ body) [] = evalFuncBody (env) body
 applyFunc env (FuncDef _ argNames body) [args] = getEvaledExprList env args >>=
     argsToEnv argNames >>= \e ->
@@ -211,7 +222,7 @@ applyFunc _ (FuncDef _ _ _) (_:_) = do
     return Void
 
 
-evalFuncBody :: Env -> [Stmt] -> Error Expr
+evalFuncBody :: Env -> [Stmt] -> ErrorWithIO Expr
 evalFuncBody env (Ret expr:_) = eval env (E expr) >>= \(_, val) -> return val
 evalFuncBody env [stmt] = eval env stmt >>= \(e, val) -> case lookup ":ret:" e of
     Nothing -> return val
@@ -221,32 +232,33 @@ evalFuncBody env (stmt:stmts) = eval env stmt >>= \(e, _) -> case lookup ":ret:"
     Just v -> return v
 
 
-argsToEnv :: [String] -> [Expr] -> Error Env
+argsToEnv :: [String] -> [Expr] -> ErrorWithIO Env
 argsToEnv argNames args = if length argNames == length args
     then return $ [(name, arg) | name <- argNames, arg <- args]
     else throwError $ "Trying to pass " ++ show (length args) ++ " args to a function that takes " ++ show (length argNames)
 
 
-repeatWhile :: Env -> Expr -> [Stmt] -> Error (Env, Expr)
-repeatWhile env cond stmts = case eval env (E cond) of
-    Left err -> throwError err
-    Right (newEnv, Bool val) -> if val && continueIteration env
-        then liftM fst (evalStmtBody newEnv stmts) >>= (\e -> repeatWhile e cond stmts)
-        else return ((":stopiteration:",Bool False):newEnv, Void)
-    _ -> throwError "A loop's condition should evaluate to Bool"
+repeatWhile :: Env -> Expr -> [Stmt] -> ErrorWithIO (Env, Expr)
+repeatWhile env cond stmts = do
+    (newEnv, res) <- eval env (E cond)
+    case res of
+        Bool val -> if val && continueIteration env
+            then liftM fst (evalStmtBody newEnv stmts) >>= (\e -> repeatWhile e cond stmts)
+            else return ((":stopiteration:",Bool False):newEnv, Void)
+        _ -> throwError "A loop's condition should evaluate to Bool"
 
 
-evalStmtBody :: Env -> [Stmt] -> Error (Env, Expr)
+evalStmtBody :: Env -> [Stmt] -> ErrorWithIO (Env, Expr)
 evalStmtBody env stmts = liftM fst (interpret' env stmts) >>= (\e -> return (e, Void))
 
 
-getEvaledExprList :: Env -> [Expr] -> Error [Expr]
+getEvaledExprList :: Env -> [Expr] -> ErrorWithIO [Expr]
 getEvaledExprList env l = do
     a' <- mapM (eval env . E) l
     return $ map snd a'
 
 
-evalBinExpr :: Env -> Expr -> Error Expr
+evalBinExpr :: Env -> Expr -> ErrorWithIO Expr
 evalBinExpr _ (BinExpr And _ (List _)) = throwError "Cannot apply and to a list"
 evalBinExpr _ (BinExpr And (List _) _) = throwError "Cannot apply and to a list"
 evalBinExpr _ (BinExpr Or _ (List _)) = throwError "Cannot apply or to a list"
@@ -478,7 +490,7 @@ evalBinExpr env (BinExpr op l r) = do
     evalBinExpr env $ BinExpr op a b
 
 
-evalUnExpr :: Env-> Expr -> Error Expr
+evalUnExpr :: Env-> Expr -> ErrorWithIO Expr
 evalUnExpr _ (UnExpr UnMinus (Int a)) = return . Int $ -1*a
 evalUnExpr _ (UnExpr Not (Int _)) = throwError "Integer cannot be negated"
 evalUnExpr _ (UnExpr UnMinus (Float a)) = return . Float $ -1.0*a
@@ -493,7 +505,7 @@ evalUnExpr env (UnExpr op a) =  do
     evalUnExpr env $ UnExpr op val
 
 
-lt :: Env -> Expr -> Expr -> Error Bool
+lt :: Env -> Expr -> Expr -> ErrorWithIO Bool
 lt _ (Int l) (Int r) = return $ l < r
 lt _ (Int l) (Float r) = return $ fromInteger l < r
 lt _ (Float l) (Int r) = return $ l < fromInteger r
@@ -517,7 +529,7 @@ lt env a b = do
         Bool val -> return val
 
 
-le :: Env -> Expr -> Expr -> Error Bool
+le :: Env -> Expr -> Expr -> ErrorWithIO Bool
 le _ (Int l) (Int r) = return $ l <= r
 le _ (Int l) (Float r) = return $ fromInteger l <= r
 le _ (Float l) (Int r) = return $ l <= fromInteger r
@@ -541,7 +553,7 @@ le env a b = do
         Bool val -> return val
 
 
-ge :: Env -> Expr -> Expr -> Error Bool
+ge :: Env -> Expr -> Expr -> ErrorWithIO Bool
 ge _ (Int l) (Int r) = return $ l >= r
 ge _ (Int l) (Float r) = return $ fromInteger l >= r
 ge _ (Float l) (Int r) = return $ l >= fromInteger r
@@ -565,7 +577,7 @@ ge env a b = do
         Bool val -> return val
 
 
-gt :: Env -> Expr -> Expr -> Error Bool
+gt :: Env -> Expr -> Expr -> ErrorWithIO Bool
 gt _ (Int l) (Int r) = return $ l > r
 gt _ (Int l) (Float r) = return $ fromInteger l > r
 gt _ (Float l) (Int r) = return $ l > fromInteger r
@@ -589,7 +601,7 @@ gt env a b = do
         Bool val -> return val
 
 
-neq :: Env -> Expr -> Expr -> Error Bool
+neq :: Env -> Expr -> Expr -> ErrorWithIO Bool
 neq _ (Int l) (Int r) = return $ l /= r
 neq _ (Int l) (Float r) = return $ fromInteger l /= r
 neq _ (Float l) (Int r) = return $ l /= fromInteger r
@@ -613,7 +625,7 @@ neq env a b = do
         Bool val -> return val
 
 
-eq :: Env -> Expr -> Expr -> Error Bool
+eq :: Env -> Expr -> Expr -> ErrorWithIO Bool
 eq _ (Int l) (Int r) = return $ l == r
 eq _ (Int l) (Float r) = return $ fromInteger l == r
 eq _ (Float l) (Int r) = return $ l == fromInteger r
