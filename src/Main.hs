@@ -18,7 +18,6 @@ help = "ePseudocode, A small programming language (with pseudocode appearance) i
 \* Pass \"--help\" or \"-h\" as a single argument to display this help"
 
 
--- TODO: multiline input
 runRepl :: IO ()
 runRepl = runInputT defaultSettings $ loop builtinEnv
 

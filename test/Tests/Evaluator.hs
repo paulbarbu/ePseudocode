@@ -1467,4 +1467,8 @@ evaluatorTests = TestList [
  , "doubly defined function" ~: do
     r <- evalFail "func a() ret 1 sffunc func a() ret 42 sffunc" "The function name \"a\" shadows another name in the current scope"
     True @=? r
+
+ , "parse fail" ~: do
+    r <- evalFail "(" "unexpected end of input"
+    True @=? r
  ]

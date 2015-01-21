@@ -17,8 +17,6 @@ import EPseudocode.Parser
  * TODO: clean the Env, it should not be cluttered when I reassign a variable in a loop
  * TODO: find a better way to implement :stopiteration: and :ret:
 
- * TODO: add tests for main with and without arguments
-
  * TODO: casts
 -}
 
