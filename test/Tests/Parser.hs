@@ -78,11 +78,11 @@ parserTests = TestList [
        trim [r|[E (FuncDef "main" [] [Assign (Var "sum") (Int 0),
         For (Just (Assign (Var "i") (Int 1))) (Just (BinExpr Le (Var "i") (Int 100))) (Just (Assign (Var "i") (BinExpr Plus (Var "i") (Int 1))))
             [Assign (Var "sum") (BinExpr Plus (Var "sum") (Var "i"))],
-        E (FuncCall (Var "scrie") [[String "Sum = ",Var "sum"]])])]|] @=? parseFile c
+        E (FuncCall (Var "scrie") [[String "Sum = ",Var "sum",String "\n"]])])]|] @=? parseFile c
 
  , "simple 'hello world' program" ~:
     do c <- readFile "examples/hello.epc"
-       trim [r|[E (FuncDef "main" [] [E (FuncCall (Var "scrie") [[String "Hello world"]])])]|] @=? parseFile c
+       trim [r|[E (FuncDef "main" [] [E (FuncCall (Var "scrie") [[String "Hello world\n"]])])]|] @=? parseFile c
 
  , "process a range of numbers with a callback function and a custom step" ~:
     do c <- readFile "examples/callback.epc"
@@ -104,7 +104,7 @@ parserTests = TestList [
                           [Ret (Int 1)],
                 Ret (BinExpr Plus (FuncCall (Var "fib") [[BinExpr Minus (Var "n") (Int 1)]])
                                      (FuncCall (Var "fib") [[BinExpr Minus (Var "n") (Int 2)]]))]),
-        E (FuncDef "main" [] [E (FuncCall (Var "scrie") [[FuncCall (Var "fib") [[Int 10]]]])])]|] @=? parseFile c
+        E (FuncDef "main" [] [E (FuncCall (Var "scrie") [[FuncCall (Var "fib") [[Int 10]],String "\n"]])])]|] @=? parseFile c
 
  , "display indices in a list along with values" ~:
     do c <- readFile "examples/lists.epc"
@@ -125,8 +125,8 @@ parserTests = TestList [
                           [Ret (Var "a")],
                  E (FuncCall (Var "gcd") [[Var "b",BinExpr Mod (Var "a") (Var "b")]])]),
         E (FuncDef "main" []
-                [E (FuncCall (Var "scrie") [[FuncCall (Var "gcd") [[Int 5,Int 25]]]]),
-                 E (FuncCall (Var "scrie") [[FuncCall (Var "greatestCommonDivisor") [[Int 3,Int 5]]]])])]|] @=? parseFile c
+                [E (FuncCall (Var "scrie") [[FuncCall (Var "gcd") [[Int 5,Int 25]],String "\n"]]),
+                 E (FuncCall (Var "scrie") [[FuncCall (Var "greatestCommonDivisor") [[Int 3,Int 5]],String "\n"]])])]|] @=? parseFile c
 
  , "simple closure program" ~:
     do c <- readFile "examples/closure.epc"
@@ -140,18 +140,19 @@ parserTests = TestList [
   , "fizzbuzz program" ~:
     do c <- readFile "examples/fizzbuzz.epc"
        trim [r|[E (FuncDef "main" []
-        [Assign (Var "n") (FuncCall (Var "citeste") [[]]),
+        [E (FuncCall (Var "scrie") [[String "n="]]),
+        Assign (Var "n") (FuncCall (Var "int") [[FuncCall (Var "citeste") [[]]]]),
         Assign (Var "i") (Int 1),
         While (BinExpr Le (Var "i") (Var "n"))
               [CompleteIf (BinExpr And
                                     (BinExpr Eq (BinExpr Mod (Var "i") (Int 3)) (Int 0))
                                     (BinExpr Eq (BinExpr Mod (Var "i") (Int 5)) (Int 0)))
-                          [E (FuncCall (Var "scrie") [[String "fizzbuzz"]])]
+                          [E (FuncCall (Var "scrie") [[String "fizzbuzz\n"]])]
                           [CompleteIf (BinExpr Eq (BinExpr Mod (Var "i") (Int 3)) (Int 0))
-                                      [E (FuncCall (Var "scrie") [[String "fizz"]])]
+                                      [E (FuncCall (Var "scrie") [[String "fizz\n"]])]
                                       [CompleteIf (BinExpr Eq (BinExpr Mod (Var "i") (Int 5)) (Int 0))
-                                                  [E (FuncCall (Var "scrie") [[String "buzz"]])]
-                                                  [E (FuncCall (Var "scrie") [[Var "i"]])]]],
+                                                  [E (FuncCall (Var "scrie") [[String "buzz\n"]])]
+                                                  [E (FuncCall (Var "scrie") [[Var "i",String "\n"]])]]],
                Assign (Var "i") (BinExpr Plus (Var "i") (Int 1))]])]|] @=? parseFile c
 
   , "global variable program" ~:
@@ -160,7 +161,7 @@ parserTests = TestList [
                 (FuncDef "" []
                  [Ret (Int 42)]),
          E (FuncDef "main" []
-          [E (FuncCall (Var "scrie") [[FuncCall (Var "a") [[]]]])])]|] @=? parseFile c
+          [E (FuncCall (Var "scrie") [[FuncCall (Var "a") [[]],String "\n"]])])]|] @=? parseFile c
 
  , "imbricated ifs" ~:
     trim [r|[SimpleIf (Int 1)
@@ -380,7 +381,7 @@ parserTests = TestList [
        trim [r|[Assign (Var "a") (FuncDef "" []
                                   [Ret (Int 42)]),
         E (FuncDef "main" []
-                [E (FuncCall (Var "scrie") [[FuncCall (Var "a") [[]]]])])]|] @=? parseFile c
+                [E (FuncCall (Var "scrie") [[FuncCall (Var "a") [[]],String "\n"]])])]|] @=? parseFile c
 
  , "index a list with another list index" ~:
     trim [r|[E (Index "a" [Index "b" [Int 1]])]|] ~=? parseRepl "a[b[1]]"

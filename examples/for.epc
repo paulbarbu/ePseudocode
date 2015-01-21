@@ -5,5 +5,5 @@ func main()
         sum = sum + i //there's no need for an EOL marker
     sfpt
 
-    scrie("Sum = ", sum) // outputs: Sum = 5050
+    scrie("Sum = ", sum, "\n") // outputs: Sum = 5050
 sffunc

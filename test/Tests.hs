@@ -13,18 +13,18 @@ import Tests.Parser
 main :: IO ()
 main = do
     let sum = 0
-    
+
     putStrLn "Data:"
     hFlush stdout
     a <- runTestTT dataTests
 
-    putStrLn "\nEvaluator:"
-    hFlush stdout
-    b <- runTestTT evaluatorTests
-
     putStrLn "\nParser:"
     hFlush stdout
-    c <- runTestTT parserTests
+    b <- runTestTT parserTests
+
+    putStrLn "\nEvaluator:"
+    hFlush stdout
+    c <- runTestTT evaluatorTests
 
     putStrLn $ "\nTotal tests: " ++ show (cases a + cases b + cases c)
     putStrLn $ "Total tried: " ++ show (tried a + tried b + tried c)

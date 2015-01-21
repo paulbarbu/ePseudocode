@@ -1,5 +1,5 @@
 a = func() ret 42 sffunc
 
 func main()
-    scrie(a())
+    scrie(a(), "\n")
 sffunc

@@ -24,7 +24,7 @@ import EPseudocode.Parser
 
 interpretProgram :: Env -> [Stmt] -> [String] -> ErrorWithIO ()
 interpretProgram env program argv = if mainHasArgs program
-    then interpret' env (program ++ [E (FuncCall (Var "main") [map String argv])]) >> return ()
+    then interpret' env (program ++ [E (FuncCall (Var "main") [[List $ map String argv]])]) >> return ()
     else interpret' env (program ++ [E (FuncCall (Var "main") [])]) >> return ()
 
 

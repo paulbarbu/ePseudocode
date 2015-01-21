@@ -7,5 +7,5 @@ func fib(n)
 sffunc
 
 func main()
-    scrie(fib(10)) //55
+    scrie(fib(10), "\n") //55
 sffunc

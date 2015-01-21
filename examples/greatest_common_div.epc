@@ -19,6 +19,6 @@ func gcd(a, b)
 sffunc
 
 func main()
-    scrie(gcd(5, 25))
-    scrie(greatestCommonDivisor(3, 5))
+    scrie(gcd(5, 25), "\n")
+    scrie(greatestCommonDivisor(3, 5), "\n")
 sffunc

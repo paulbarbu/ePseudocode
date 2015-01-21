@@ -5,6 +5,7 @@ run:
 	cabal run
 
 test:
+	./test/files.sh
 	cabal test --show-details=always # --keep-tix-files
 	hpc markup dist/hpc/vanilla/tix/epseudocode-0.2.0.0/epseudocode-0.2.0.0.tix --exclude={Tests.Evaluator,Tests.Data,Tests.Parser,Tests.Scope} --destdir=dist/markup --hpcdir=dist/hpc/vanilla/mix/tests > /dev/null
 	chromium dist/markup/hpc_index.html &

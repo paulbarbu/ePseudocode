@@ -1,18 +1,19 @@
 //Fizz Buzz game in ePseudocode
 func main()
-    n = citeste()
+    scrie("n=")
+    n = int(citeste())
 
     i = 1
 
     cattimp i <= n executa
         daca i % 3 == 0 si i % 5 == 0 atunci
-            scrie("fizzbuzz")
+            scrie("fizzbuzz\n")
         altfel daca i % 3 == 0 atunci
-            scrie("fizz")
+            scrie("fizz\n")
         altfel daca i % 5 == 0 atunci
-            scrie("buzz")
+            scrie("buzz\n")
         altfel
-            scrie(i)
+            scrie(i,"\n")
         sfdaca    sfdaca    sfdaca //TODO: maybe here I can put a single sfdaca
 
         i = i + 1
