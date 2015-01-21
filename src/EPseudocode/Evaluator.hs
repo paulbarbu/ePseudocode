@@ -19,14 +19,7 @@ import EPseudocode.Parser
 
  * TODO: add tests for main with and without arguments
 
- * TODO: builtins tests: epc> scrie(1+2)
-        3
-        epc> scrie(1+2, "123\n", {1+2,32})
-        3123
-        {3, 32}
-
-
- * TODO: I/O
+ * TODO: casts
 -}
 
 interpretProgram :: Env -> [Stmt] -> [String] -> ErrorWithIO ()

@@ -2,7 +2,6 @@ import Control.Monad.Except
 import System.Directory
 import System.Environment
 
-import System.IO.Unsafe (unsafePerformIO)
 import System.Console.Haskeline
 
 import EPseudocode.Builtins
@@ -35,12 +34,14 @@ loop env = do
         Just ":env" -> do
             outputStrLn $ "env: " ++ show env
             loop env
-        Just input -> case unsafePerformIO $ runExceptT $ interpret env input of
-                         Left err -> outputStrLn err >> loop env
-                         Right res -> do
-                             x <- outputStr . showExpr . snd $ res
-                             loop $ fst res
-                             return x
+        Just input -> do
+            res <- liftIO $ runExceptT $ interpret env input
+            case res of
+                 Left err -> outputStrLn err >> loop env
+                 Right val -> do
+                     x <- outputStr . showExpr . snd $ val
+                     loop $ fst val
+                     return x
 
 
 runFile :: String -> [String] -> IO ()
