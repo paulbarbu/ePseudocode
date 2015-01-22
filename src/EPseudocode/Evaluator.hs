@@ -18,8 +18,6 @@ import EPseudocode.Parser
  * TODO: find a better way to implement :stopiteration: and :ret:
 
  * TODO: apply
-
- * TODO: functions that modify their args (float("12.2", ok))
 -}
 
 interpretProgram :: Env -> [Stmt] -> [String] -> ErrorWithIO ()
