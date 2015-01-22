@@ -3,19 +3,25 @@ func main()
     scrie("n=")
     n = int(citeste())
 
-    i = 1
+    daca n[0] atunci
+        n = n[1]
 
-    cattimp i <= n executa
-        daca i % 3 == 0 si i % 5 == 0 atunci
-            scrie("fizzbuzz\n")
-        altfel daca i % 3 == 0 atunci
-            scrie("fizz\n")
-        altfel daca i % 5 == 0 atunci
-            scrie("buzz\n")
-        altfel
-            scrie(i,"\n")
-        sfdaca    sfdaca    sfdaca //TODO: maybe here I can put a single sfdaca
+        i = 1
 
-        i = i + 1
-    sfcattimp
+        cattimp i <= n executa
+            daca i % 3 == 0 si i % 5 == 0 atunci
+                scrie("fizzbuzz\n")
+            altfel daca i % 3 == 0 atunci
+                scrie("fizz\n")
+            altfel daca i % 5 == 0 atunci
+                scrie("buzz\n")
+            altfel
+                scrie(i,"\n")
+            sfdaca    sfdaca    sfdaca //TODO: maybe here I can put a single sfdaca
+
+            i = i + 1
+        sfcattimp
+    altfel
+        scrie("Invalid n!\n")
+    sfdaca
 sffunc

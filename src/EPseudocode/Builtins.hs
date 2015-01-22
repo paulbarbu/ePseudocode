@@ -2,6 +2,7 @@ module EPseudocode.Builtins (builtinEnv)
 where
 
 import Control.Monad.Except
+import Data.Maybe
 import Data.List (intercalate)
 import System.IO
 
@@ -28,7 +29,12 @@ builtins = [
 
 
 strToInt :: [[Expr]] -> Error Expr
-strToInt [[String arg]] = return $ Int (read arg :: Integer)
+strToInt [[String arg]] = case listToMaybe $ reads arg of
+    Nothing -> return $ List [Bool False, String $ "int cannot parse " ++ arg]
+    Just (parsed, remaining) ->
+        if remaining == ""
+            then return $ List [Bool True, Int parsed]
+            else return $ List [Bool False, String $ "int cannot parse " ++ arg]
 strToInt _ = throwError "int takes a single String argument"
 
 

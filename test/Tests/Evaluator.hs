@@ -1496,7 +1496,7 @@ evaluatorTests = TestList [
 
  , "string to int cast" ~: do
     r <- evalTest "int(\"42\")"
-    "42" @=? r
+    "{adevarat, 42}" @=? r
 
  , "int error" ~: do
     r <- evalFail "int(42, 43)" "int takes a single String argument"
@@ -1513,4 +1513,12 @@ evaluatorTests = TestList [
  , "func args" ~: do
     r <- evalTest "func foo(a,b,c) ret a+b+c sffunc foo(1,2,3)"
     "6" @=? r
+
+ , "int partial parse fail" ~: do
+    r <- evalTest "int(\"2asd\")"
+    "{fals, \"int cannot parse 2asd\"}" @=? r
+
+ , "int parse fail" ~: do
+    r <- evalTest "int(\"asd\")"
+    "{fals, \"int cannot parse asd\"}" @=? r
  ]
