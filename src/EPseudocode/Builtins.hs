@@ -8,6 +8,7 @@ import System.IO
 
 import EPseudocode.Data
 
+
 builtinEnv :: Env
 builtinEnv = [(name, BuiltinIOFunc f) | (name, f) <- ioBuiltins] ++
     [(name, BuiltinFunc f) | (name, f) <- builtins] ++
@@ -29,7 +30,7 @@ builtins = [
 
 
 strToInt :: [[Expr]] -> Error Expr
-strToInt [[String arg]] = case listToMaybe $ reads arg of
+strToInt [[String arg]] = case listToMaybe (reads arg :: [(Integer, String)]) of
     Nothing -> return $ List [Bool False, String $ "int cannot parse " ++ arg]
     Just (parsed, remaining) ->
         if remaining == ""
