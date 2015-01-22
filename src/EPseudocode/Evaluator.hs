@@ -199,7 +199,7 @@ eval env (E f@(FuncDef name _ _)) = case lookup name env of
     Just _ -> throwError $ "The function name \"" ++ name ++ "\" shadows another name in the current scope"
 eval env (E (FuncCall nameExpr args)) = eval env (E nameExpr) >>= \(e, f) ->
     case f of
-        FuncDef _ _ _ -> do
+        FuncDef _ _ _ ->
             applyFunc e f args >>= return . (e,)
         BuiltinIOFunc primitive -> mapM (getEvaledExprList env) args >>=
             primitive >>= \val ->
@@ -214,7 +214,8 @@ eval env (E (FuncCall nameExpr args)) = eval env (E nameExpr) >>= \(e, f) ->
 
 applyFunc :: Env -> Expr -> [[Expr]] -> ErrorWithIO Expr
 applyFunc env (FuncDef _ _ body) [] = evalFuncBody (env) body
-applyFunc env (FuncDef _ argNames body) [args] = getEvaledExprList env args >>=
+applyFunc env (FuncDef _ argNames body) [args] =
+    getEvaledExprList env args >>=
     argsToEnv argNames >>= \e ->
     evalFuncBody (e++env) body
 applyFunc _ (FuncDef _ _ _) (_:_) = do
@@ -234,7 +235,7 @@ evalFuncBody env (stmt:stmts) = eval env stmt >>= \(e, _) -> case lookup ":ret:"
 
 argsToEnv :: [String] -> [Expr] -> ErrorWithIO Env
 argsToEnv argNames args = if length argNames == length args
-    then return $ [(name, arg) | name <- argNames, arg <- args]
+    then return $ zip argNames args
     else throwError $ "Trying to pass " ++ show (length args) ++ " args to a function that takes " ++ show (length argNames)
 
 

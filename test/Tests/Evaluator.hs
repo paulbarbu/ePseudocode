@@ -1513,4 +1513,7 @@ evaluatorTests = TestList [
  , "list length error" ~: do
     r <- evalFail "lung(2)" "lung takes a single List argument"
     True @=? r
+ , "func args" ~: do
+    r <- evalTest "func foo(a,b,c) ret a+b+c sffunc foo(1,2,3)"
+    "6" @=? r
  ]
