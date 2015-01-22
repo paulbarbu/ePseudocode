@@ -8,7 +8,8 @@ import System.IO
 import EPseudocode.Data
 
 builtinEnv :: Env
-builtinEnv = [(name, PrimitiveIOFunc f) | (name, f) <- ioBuiltins] ++
+builtinEnv = [(name, BuiltinIOFunc f) | (name, f) <- ioBuiltins] ++
+    [(name, BuiltinFunc f) | (name, f) <- builtins] ++
     [(":stopiteration:", Bool False)]
 
 
@@ -17,6 +18,23 @@ ioBuiltins = [
     ("scrie", write)
    ,("citeste", readLine)
  ]
+
+
+builtins :: [(String, [[Expr]] -> Error Expr)]
+builtins = [
+    ("int", strToInt)
+   ,("lung", listLen)
+ ]
+
+
+strToInt :: [[Expr]] -> Error Expr
+strToInt [[String arg]] = return $ Int (read arg :: Integer)
+strToInt _ = throwError "int takes a single String argument"
+
+
+listLen :: [[Expr]] -> Error Expr
+listLen [[List arg]] = return . Int . fromIntegral $ length arg
+listLen _ = throwError "lung takes a single List argument"
 
 
 write :: [[Expr]] -> ErrorWithIO Expr

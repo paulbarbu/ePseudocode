@@ -1497,4 +1497,20 @@ evaluatorTests = TestList [
 
  , "citeste error" ~: do
     evalProgram "func main() citeste(123) sffunc" []
+
+ , "string to int cast" ~: do
+    r <- evalTest "int(\"42\")"
+    "42" @=? r
+
+ , "int error" ~: do
+    r <- evalFail "int(42, 43)" "int takes a single String argument"
+    True @=? r
+
+ , "list length" ~: do
+    r <- evalTest "lung({\"42\", 2})"
+    "2" @=? r
+
+ , "list length error" ~: do
+    r <- evalFail "lung(2)" "lung takes a single List argument"
+    True @=? r
  ]

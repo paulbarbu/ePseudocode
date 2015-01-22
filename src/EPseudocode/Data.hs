@@ -26,7 +26,8 @@ data Expr =
     | FuncCall Expr [[Expr]] -- foo() = [[]], func_in_func()(2) = [[],[2]], func_in_list[1]() = [[]], a(1)() = [[1],[]]
     | FuncDef String [String] [Stmt] -- func name args body
     | Void -- should not be evaluated, just a placeholder for "none" or apophasis
-    | PrimitiveIOFunc ([[Expr]] -> ErrorWithIO Expr)
+    | BuiltinIOFunc ([[Expr]] -> ErrorWithIO Expr)
+    | BuiltinFunc ([[Expr]] -> Error Expr)
     deriving (Show)
 
 

@@ -110,7 +110,7 @@ parserTests = TestList [
     do c <- readFile "examples/lists.epc"
        trim [r|[E (FuncDef "main" [] [Assign (Var "l") (List [Int 1,Int 2,Int 5,Int 7,Int 8]),
         For (Just (Assign (Var "i") (Int 0))) (Just (BinExpr Lt (Var "i") (FuncCall (Var "lung") [[Var "l"]]))) (Just (Assign (Var "i") (BinExpr Plus (Var "i") (Int 1))))
-            [E (FuncCall (Var "scrie") [[Var "i",Index "l" [Var "i"]]])]])]|] @=? parseFile c
+            [E (FuncCall (Var "scrie") [[Var "i",String ":",Index "l" [Var "i"],String "\n"]])]])]|] @=? parseFile c
 
  , "greatest common divisor program" ~:
     do c <- readFile "examples/greatest_common_div.epc"

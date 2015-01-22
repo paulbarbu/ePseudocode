@@ -2,6 +2,6 @@ func main()
     l = {1, 2, 5, 7, 8}
 
     pt i=0;i<lung(l);i=i+1 executa
-        scrie(i, l[i])
+        scrie(i, ":", l[i], "\n")
     sfpt
 sffunc

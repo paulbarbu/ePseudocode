@@ -47,5 +47,41 @@ testNoMainFunc()
     assertEquals 'Error: Unbound variable name main' "$(interpreter test/epc/no_main.epc)"
 }
 
+testFizzBuzz()
+{
+out=$(cat <<'EOOUT'
+n=1
+2
+fizz
+4
+buzz
+fizz
+7
+8
+fizz
+buzz
+11
+fizz
+13
+14
+fizzbuzz
+EOOUT
+)
+    assertEquals "$out" "$(echo 15 | interpreter examples/fizzbuzz.epc)"
+}
+
+testLists()
+{
+out=$(cat <<'EOOUT'
+0:1
+1:2
+2:5
+3:7
+4:8
+EOOUT
+)
+    assertEquals "$out" "$(interpreter examples/lists.epc)"
+}
+
 # load shunit2
 . test/shell/shunit2

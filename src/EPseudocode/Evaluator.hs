@@ -17,7 +17,9 @@ import EPseudocode.Parser
  * TODO: clean the Env, it should not be cluttered when I reassign a variable in a loop
  * TODO: find a better way to implement :stopiteration: and :ret:
 
- * TODO: casts
+ * TODO: make the examples work
+
+ * TODO: functions that modify their args (float("12.2", ok))
 -}
 
 interpretProgram :: Env -> [Stmt] -> [String] -> ErrorWithIO ()
@@ -199,7 +201,14 @@ eval env (E (FuncCall nameExpr args)) = eval env (E nameExpr) >>= \(e, f) ->
     case f of
         FuncDef _ _ _ -> do
             applyFunc e f args >>= return . (e,)
-        PrimitiveIOFunc primitive -> mapM (getEvaledExprList env) args >>= primitive >>= \val -> return (e, val)
+        BuiltinIOFunc primitive -> mapM (getEvaledExprList env) args >>=
+            primitive >>= \val ->
+            return (e, val)
+        BuiltinFunc primitive -> mapM (getEvaledExprList env) args >>= \a ->
+            case primitive a of
+                Left err -> throwError err
+                Right val -> return val
+                >>= \val -> return (e, val)
         _ -> throwError "Only functions are callable"
 
 
