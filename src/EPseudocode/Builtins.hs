@@ -26,7 +26,7 @@ write [args] = do
     return Void
     where writeExpr (String s) = s
           writeExpr x = showExpr x
-write [_:_] = throwError "scrie takes a single argument list: scrie(1, 2, 3, 4)"
+write _ = throwError "scrie takes a single argument list: scrie(1, 2, 3, 4)"
 
 
 readLine :: [[Expr]] -> ErrorWithIO Expr

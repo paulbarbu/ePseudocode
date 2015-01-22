@@ -11,6 +11,7 @@ import EPseudocode.Builtins
 import EPseudocode.Data
 import EPseudocode.Evaluator
 import EPseudocode.Lexer
+import EPseudocode.Parser
 
 evalTest :: String -> IO String
 evalTest input = do
@@ -29,6 +30,16 @@ evalFail input needle = do
                                  hFlush stdout >> return False
                         True -> return True
         Right _ -> return False
+
+
+evalProgram :: String -> [String] -> IO ()
+evalProgram input argv = case eParse toplevelParser input  of
+    Left err -> putStrLn $ "failed: " ++ err
+    Right p -> do
+        res <- runExceptT $ interpretProgram builtinEnv p argv
+        case res of
+            Left err -> putStrLn $ "Error: " ++ err
+            Right _ -> return ()
 
 
 evaluatorTests = TestList [
@@ -1471,4 +1482,19 @@ evaluatorTests = TestList [
  , "parse fail" ~: do
     r <- evalFail "(" "unexpected end of input"
     True @=? r
+
+ , "full program, no args" ~: do
+    evalProgram "func main() scrie(42) sffunc" []
+
+ , "full program, with args" ~: do
+    evalProgram "func main(argv) scrie(\"args:\", argv) sffunc" ["1", "2", "3"]
+
+ , "full program, with args and two functions" ~: do
+    evalProgram "func a() ret 42 sffunc func main(argv) return 1 sffunc" ["1", "2", "3"]
+
+ , "scrie error" ~: do
+    evalProgram "func main() scrie()() sffunc" []
+
+ , "citeste error" ~: do
+    evalProgram "func main() citeste(123) sffunc" []
  ]
