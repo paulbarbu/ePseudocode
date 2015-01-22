@@ -48,5 +48,5 @@ write _ = throwError "scrie takes a single argument list: scrie(1, 2, 3, 4)"
 
 
 readLine :: [[Expr]] -> ErrorWithIO Expr
-readLine [[]] = (liftIO $ getLine) >>= return . String
+readLine [[]] = liftIO getLine >>= return . String
 readLine _ = throwError "citeste takes zero arguments"

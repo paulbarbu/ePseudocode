@@ -24,8 +24,8 @@ import EPseudocode.Parser
 
 interpretProgram :: Env -> [Stmt] -> [String] -> ErrorWithIO ()
 interpretProgram env program argv = if mainHasArgs program
-    then interpret' env (program ++ [E (FuncCall (Var "main") [[List $ map String argv]])]) >> return ()
-    else interpret' env (program ++ [E (FuncCall (Var "main") [])]) >> return ()
+    then void $ interpret' env (program ++ [E (FuncCall (Var "main") [[List $ map String argv]])])
+    else void $ interpret' env (program ++ [E (FuncCall (Var "main") [])])
 
 
 interpret :: Env -> String -> ErrorWithIO (Env, Expr)
@@ -199,7 +199,7 @@ eval env (E f@(FuncDef name _ _)) = case lookup name env of
     Just _ -> throwError $ "The function name \"" ++ name ++ "\" shadows another name in the current scope"
 eval env (E (FuncCall nameExpr args)) = eval env (E nameExpr) >>= \(e, f) ->
     case f of
-        FuncDef _ _ _ ->
+        FuncDef{} ->
             applyFunc e f args >>= return . (e,)
         BuiltinIOFunc primitive -> mapM (getEvaledExprList env) args >>=
             primitive >>= \val ->
@@ -213,12 +213,12 @@ eval env (E (FuncCall nameExpr args)) = eval env (E nameExpr) >>= \(e, f) ->
 
 
 applyFunc :: Env -> Expr -> [[Expr]] -> ErrorWithIO Expr
-applyFunc env (FuncDef _ _ body) [] = evalFuncBody (env) body
+applyFunc env (FuncDef _ _ body) [] = evalFuncBody env body
 applyFunc env (FuncDef _ argNames body) [args] =
     getEvaledExprList env args >>=
     argsToEnv argNames >>= \e ->
     evalFuncBody (e++env) body
-applyFunc _ (FuncDef _ _ _) (_:_) = do
+applyFunc _ FuncDef{} (_:_) = do
     trace "()()()()() not yet implemented" $ return Void
     return Void
 

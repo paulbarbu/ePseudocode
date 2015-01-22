@@ -88,5 +88,10 @@ testGcd()
     assertEquals "$(echo -e '5\n1')" "$(interpreter examples/greatest_common_div.epc)"
 }
 
+testCallback()
+{
+    assertEquals "246810" "$(interpreter examples/callback.epc)"
+}
+
 # load shunit2
 . test/shell/shunit2

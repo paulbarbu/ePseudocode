@@ -24,11 +24,10 @@ evalTest input = do
 evalFail input needle = do
     x <- runExceptT $ interpret builtinEnv input
     case x of
-        Left err -> case needle `isInfixOf` err of
-                        False -> putStrLn ("\nEval failed (" ++ err ++
-                                "), but could not find needle: " ++ needle) >>
-                                 hFlush stdout >> return False
-                        True -> return True
+        Left err -> if needle `isInfixOf` err then return True else
+                        putStrLn ("\nEval failed (" ++ err ++
+                            "), but could not find needle: " ++ needle) >>
+                             hFlush stdout >> return False
         Right _ -> return False
 
 
@@ -1483,20 +1482,17 @@ evaluatorTests = TestList [
     r <- evalFail "(" "unexpected end of input"
     True @=? r
 
- , "full program, no args" ~: do
-    evalProgram "func main() scrie(42) sffunc" []
+ , "full program, no args" ~: evalProgram "func main() scrie(42) sffunc" []
 
- , "full program, with args" ~: do
+ , "full program, with args" ~:
     evalProgram "func main(argv) scrie(\"args:\", argv) sffunc" ["1", "2", "3"]
 
- , "full program, with args and two functions" ~: do
+ , "full program, with args and two functions" ~:
     evalProgram "func a() ret 42 sffunc func main(argv) return 1 sffunc" ["1", "2", "3"]
 
- , "scrie error" ~: do
-    evalProgram "func main() scrie()() sffunc" []
+ , "scrie error" ~: evalProgram "func main() scrie()() sffunc" []
 
- , "citeste error" ~: do
-    evalProgram "func main() citeste(123) sffunc" []
+ , "citeste error" ~: evalProgram "func main() citeste(123) sffunc" []
 
  , "string to int cast" ~: do
     r <- evalTest "int(\"42\")"
@@ -1513,6 +1509,7 @@ evaluatorTests = TestList [
  , "list length error" ~: do
     r <- evalFail "lung(2)" "lung takes a single List argument"
     True @=? r
+
  , "func args" ~: do
     r <- evalTest "func foo(a,b,c) ret a+b+c sffunc foo(1,2,3)"
     "6" @=? r
