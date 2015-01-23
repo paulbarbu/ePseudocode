@@ -88,7 +88,6 @@ applyToNamedList env (Index name (e:es)) newVal =
                                               return ((name, List $ replace (fromIntegral i) val list):env, v))
                                     newVal
                             _ -> throwError "Only Lists and Strings can be indexed"
-
                     else
                         throwError $ invalidListIndex name i
                 _ -> throwError "List can be indexed only with Integer evaluating expressions"
@@ -191,13 +190,13 @@ eval env (For initial cond it stmts) =
             case bodyCond of
                 Nothing -> repeatWhile bodyEnv (Bool True) stmts'
                 Just a -> repeatWhile bodyEnv a stmts'
-eval env (E f@(FuncDef "" _ _)) = return (env, f)
-eval env (E f@(FuncDef name _ _)) = case lookup name env of
-    Nothing -> return ((name, f):env, Void)
+eval env (E (FuncDef "" args body)) = return (env, Func args body env)
+eval env (E f@(FuncDef name args body)) = case lookup name env of
+    Nothing -> return ((name, Func args body env):env, Func args body env)
     Just _ -> throwError $ "The function name \"" ++ name ++ "\" shadows another name in the current scope"
 eval env (E (FuncCall nameExpr args)) = eval env (E nameExpr) >>= \(e, f) ->
     case f of
-        FuncDef{} ->
+        Func{} ->
             applyFunc e f args >>= return . (e,)
         BuiltinIOFunc primitive -> mapM (getEvaledExprList env) args >>=
             primitive >>= \val ->
@@ -211,14 +210,16 @@ eval env (E (FuncCall nameExpr args)) = eval env (E nameExpr) >>= \(e, f) ->
 
 
 applyFunc :: Env -> Expr -> [[Expr]] -> ErrorWithIO Expr
-applyFunc env (FuncDef _ _ body) [] = evalFuncBody env body
-applyFunc env (FuncDef _ argNames body) [args] =
+applyFunc env (Func _ body closure) [] = evalFuncBody env body
+applyFunc env (Func argNames body closure) [args] =
     getEvaledExprList env args >>=
     argsToEnv argNames >>= \e ->
-    evalFuncBody (e++env) body
-applyFunc _ FuncDef{} (_:_) = do
-    trace "()()()()() not yet implemented" $ return Void
-    return Void
+    evalFuncBody (e++closure++env) body
+applyFunc env (Func argNames body closure) (arg:args) =
+    getEvaledExprList env arg >>=
+    argsToEnv argNames >>= \e ->
+    evalFuncBody (e++closure++env) body >>= \(Func innerArgNames innerBody innerClosure) ->
+    eval (innerClosure++env) (E (FuncCall (FuncDef "" innerArgNames innerBody) args)) >>= \(_,val) -> return val
 
 
 evalFuncBody :: Env -> [Stmt] -> ErrorWithIO Expr

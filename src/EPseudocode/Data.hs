@@ -23,8 +23,9 @@ data Expr =
     | UnExpr UnOp Expr
     | BinExpr BinOp Expr Expr
     -- function calls, the Stmt is limited to expr or function definitions
+    | Func [String] [Stmt] Env -- func args body env - the actual type that gets generated upon defining a function
     | FuncCall Expr [[Expr]] -- foo() = [[]], func_in_func()(2) = [[],[2]], func_in_list[1]() = [[]], a(1)() = [[1],[]]
-    | FuncDef String [String] [Stmt] -- func name args body
+    | FuncDef String [String] [Stmt] -- func name args body - this comes out of the parser
     | Void -- should not be evaluated, just a placeholder for "none" or apophasis
     | BuiltinIOFunc ([[Expr]] -> ErrorWithIO Expr)
     | BuiltinFunc ([[Expr]] -> Error Expr)
@@ -69,5 +70,8 @@ showExpr (Float f) = show f
 showExpr (String s) = "\"" ++ s ++ "\""
 showExpr (Bool b) = if b then tTrue else tFalse
 showExpr (List l) = "{" ++ intercalate ", " (map showExpr l) ++ "}"
-showExpr (Void) = ""
+showExpr Void = ""
+showExpr BuiltinFunc{} = "<builtin func>"
+showExpr BuiltinIOFunc{} = "<builtin func>"
+showExpr (Func args _ _) = "<user defined func taking " ++ (show $ length args) ++ " args>"
 showExpr a = show a

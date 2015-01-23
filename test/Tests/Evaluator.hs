@@ -1521,4 +1521,20 @@ evaluatorTests = TestList [
  , "int parse fail" ~: do
     r <- evalTest "int(\"asd\")"
     "{fals, \"int cannot parse asd\"}" @=? r
+
+ , "named closure, called directly" ~: do
+    r <- evalTest "func foo(x) ret func xyz(b) ret x+b sffunc sffunc foo(123)(123)"
+    "246" @=? r
+
+ , "display bultin func" ~: do
+    r <- evalTest "int"
+    "<builtin func>" @=? r
+
+ , "display bultin io func" ~: do
+    r <- evalTest "scrie"
+    "<builtin func>" @=? r
+
+ , "display user defined func" ~: do
+       r <- evalTest "func foo(a,b) ret a+b sffunc foo"
+       "<user defined func taking 2 args>" @=? r
  ]

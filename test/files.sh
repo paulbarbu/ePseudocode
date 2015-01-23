@@ -93,5 +93,10 @@ testCallback()
     assertEquals "246810" "$(interpreter examples/callback.epc)"
 }
 
+testClosure()
+{
+    assertEquals "8" "$(interpreter examples/closure.epc)"
+}
+
 # load shunit2
 . test/shell/shunit2
