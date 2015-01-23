@@ -6,6 +6,8 @@ sffunc
 
 func main()
     plus3 = plusN(3)
+    plus1 = plusN(1)
 
-    scrie(plus3(5)) // 8
+    scrie(plus3(5), "\n") // 8
+    scrie(plus1(3)) // 4
 sffunc

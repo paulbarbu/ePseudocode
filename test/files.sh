@@ -95,7 +95,7 @@ testCallback()
 
 testClosure()
 {
-    assertEquals "8" "$(interpreter examples/closure.epc)"
+    assertEquals "$(echo -e '8\n4')" "$(interpreter examples/closure.epc)"
 }
 
 # load shunit2

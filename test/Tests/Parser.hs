@@ -135,7 +135,9 @@ parserTests = TestList [
                               [Ret (BinExpr Plus (Var "n") (Var "x"))])]),
         E (FuncDef "main" []
                 [Assign (Var "plus3") (FuncCall (Var "plusN") [[Int 3]]),
-                 E (FuncCall (Var "scrie") [[FuncCall (Var "plus3") [[Int 5]]]])])]|] @=? parseFile c
+                 Assign (Var "plus1") (FuncCall (Var "plusN") [[Int 1]]),
+                 E (FuncCall (Var "scrie") [[FuncCall (Var "plus3") [[Int 5]],String "\n"]]),
+                 E (FuncCall (Var "scrie") [[FuncCall (Var "plus1") [[Int 3]]]])])]|] @=? parseFile c
 
   , "fizzbuzz program" ~:
     do c <- readFile "examples/fizzbuzz.epc"
