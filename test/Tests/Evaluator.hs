@@ -1535,6 +1535,23 @@ evaluatorTests = TestList [
     "<builtin func>" @=? r
 
  , "display user defined func" ~: do
-       r <- evalTest "func foo(a,b) ret a+b sffunc foo"
-       "<user defined func taking 2 args>" @=? r
+    r <- evalTest "func foo(a,b) ret a+b sffunc foo"
+    "<user defined func taking 2 args>" @=? r
+
+ , "float partial parse fail" ~: do
+    r <- evalTest "float(\"2.2asd\")"
+    "{fals, \"float cannot parse 2.2asd\"}" @=? r
+
+ , "float parse fail" ~: do
+    r <- evalTest "float(\"asd\")"
+    "{fals, \"float cannot parse asd\"}" @=? r
+
+ , "string to float cast" ~: do
+    r <- evalTest "float(\"4.2\")"
+    "{adevarat, 4.2}" @=? r
+
+ , "float error" ~: do
+    r <- evalFail "float(4.2, 43)" "float takes a single String argument"
+    True @=? r
+
  ]

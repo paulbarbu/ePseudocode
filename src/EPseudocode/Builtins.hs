@@ -25,6 +25,7 @@ ioBuiltins = [
 builtins :: [(String, [[Expr]] -> Error Expr)]
 builtins = [
     ("int", strToInt)
+   ,("float", strToFloat)
    ,("lung", listLen)
  ]
 
@@ -39,6 +40,16 @@ strToInt [[String arg]] = case listToMaybe (reads arg :: [(Integer, String)]) of
 strToInt _ = throwError "int takes a single String argument"
 
 
+strToFloat :: [[Expr]] -> Error Expr
+strToFloat [[String arg]] = case listToMaybe (reads arg :: [(Double, String)]) of
+    Nothing -> return $ List [Bool False, String $ "float cannot parse " ++ arg]
+    Just (parsed, remaining) ->
+        if remaining == ""
+            then return $ List [Bool True, Float parsed]
+            else return $ List [Bool False, String $ "float cannot parse " ++ arg]
+strToFloat _ = throwError "float takes a single String argument"
+
+-- TODO: user space
 listLen :: [[Expr]] -> Error Expr
 listLen [[List arg]] = return . Int . fromIntegral $ length arg
 listLen _ = throwError "lung takes a single List argument"
