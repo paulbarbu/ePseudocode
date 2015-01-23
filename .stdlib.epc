@@ -1,0 +1,7 @@
+func car(l)
+    daca lung(l) >= 1 atunci
+        ret l[0]
+    sfdaca
+
+    ret l
+sffunc

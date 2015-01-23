@@ -1,5 +1,5 @@
 {-# LANGUAGE TupleSections #-}
-module EPseudocode.Evaluator (interpret, interpretProgram)
+module EPseudocode.Evaluator (interpret, interpretProgram, eval)
 where
 
 import Control.Monad.Except
@@ -218,8 +218,9 @@ applyFunc env (Func argNames body closure) [args] =
 applyFunc env (Func argNames body closure) (arg:args) =
     getEvaledExprList env arg >>=
     argsToEnv argNames >>= \e ->
-    evalFuncBody (e++closure++env) body >>= \(Func innerArgNames innerBody innerClosure) ->
-    eval (innerClosure++env) (E (FuncCall (FuncDef "" innerArgNames innerBody) args)) >>= \(_,val) -> return val
+    evalFuncBody (e ++ closure ++ env) body >>= \(Func innerArgNames innerBody innerClosure) ->
+    eval (innerClosure ++ env) (E (FuncCall (FuncDef "" innerArgNames innerBody) args)) >>=
+    \(_,val) -> return val
 
 
 evalFuncBody :: Env -> [Stmt] -> ErrorWithIO Expr

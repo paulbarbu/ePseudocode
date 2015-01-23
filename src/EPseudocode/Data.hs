@@ -73,5 +73,5 @@ showExpr (List l) = "{" ++ intercalate ", " (map showExpr l) ++ "}"
 showExpr Void = ""
 showExpr BuiltinFunc{} = "<builtin func>"
 showExpr BuiltinIOFunc{} = "<builtin func>"
-showExpr (Func args _ _) = "<user defined func taking " ++ (show $ length args) ++ " args>"
+showExpr (Func args _ _) = "<user defined func taking " ++ show (length args) ++ " args>"
 showExpr a = show a

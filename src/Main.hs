@@ -8,6 +8,7 @@ import EPseudocode.Builtins
 import EPseudocode.Data
 import EPseudocode.Evaluator
 import EPseudocode.Parser
+import EPseudocode.Stdlib
 
 
 help :: String
@@ -19,7 +20,11 @@ help = "ePseudocode, A small programming language (with pseudocode appearance) i
 
 
 runRepl :: IO ()
-runRepl = runInputT defaultSettings $ loop builtinEnv
+runRepl = do
+    stdLibEnv <- runExceptT getStdLibEnv
+    case stdLibEnv of
+        Left err -> putStrLn $ "Error: " ++ err
+        Right stdlib -> runInputT defaultSettings $ loop (stdlib ++ builtinEnv)
 
 
 loop :: Env -> InputT IO ()
@@ -45,14 +50,18 @@ loop env = do
 
 runFile :: String -> [String] -> IO ()
 runFile filePath argv = do
-    contents <- readFile filePath
-    case eParse toplevelParser contents  of
-        Left err -> putStrLn $ "failed: " ++ err
-        Right p -> do
-            res <- runExceptT $ interpretProgram builtinEnv p argv
-            case res of
-                Left err -> putStrLn $ "Error: " ++ err
-                Right _ -> return ()
+    stdLibEnv <- runExceptT getStdLibEnv
+    case stdLibEnv of
+        Left err -> putStrLn $ "Error: " ++ err
+        Right stdlib -> do
+            contents <- readFile filePath
+            case eParse toplevelParser contents  of
+                Left err -> putStrLn $ "failed: " ++ err
+                Right p -> do
+                    res <- runExceptT $ interpretProgram (stdlib ++ builtinEnv) p argv
+                    case res of
+                        Left err -> putStrLn $ "Error: " ++ err
+                        Right _ -> return ()
 
 
 main :: IO ()

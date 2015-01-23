@@ -1554,4 +1554,11 @@ evaluatorTests = TestList [
     r <- evalFail "float(4.2, 43)" "float takes a single String argument"
     True @=? r
 
+ , "apply error" ~: do
+    r <- evalFail "apply(1, 2, 3)" "apply takes a two arguments"
+    True @=? r
+
+ , "apply" ~: do
+    r <- evalTest "a=apply(func foo(a,b) ret a+b sffunc, 2) a(3)"
+    "5" @=? r
  ]

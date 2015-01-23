@@ -7,7 +7,7 @@ import Data.List (intercalate)
 import System.IO
 
 import EPseudocode.Data
-
+import EPseudocode.Evaluator
 
 builtinEnv :: Env
 builtinEnv = [(name, BuiltinIOFunc f) | (name, f) <- ioBuiltins] ++
@@ -19,6 +19,7 @@ ioBuiltins :: [(String, [[Expr]] -> ErrorWithIO Expr)]
 ioBuiltins = [
     ("scrie", write)
    ,("citeste", readLine)
+   ,("apply", applyFunc)
  ]
 
 
@@ -49,7 +50,7 @@ strToFloat [[String arg]] = case listToMaybe (reads arg :: [(Double, String)]) o
             else return $ List [Bool False, String $ "float cannot parse " ++ arg]
 strToFloat _ = throwError "float takes a single String argument"
 
--- TODO: user space
+
 listLen :: [[Expr]] -> Error Expr
 listLen [[List arg]] = return . Int . fromIntegral $ length arg
 listLen _ = throwError "lung takes a single List argument"
@@ -68,3 +69,10 @@ write _ = throwError "scrie takes a single argument list: scrie(1, 2, 3, 4)"
 readLine :: [[Expr]] -> ErrorWithIO Expr
 readLine [[]] = liftIO getLine >>= return . String
 readLine _ = throwError "citeste takes zero arguments"
+
+
+applyFunc :: [[Expr]] -> ErrorWithIO Expr
+applyFunc [[Func (argName:argNames) body closure, arg]] = do
+    (_, val) <- eval closure (E arg)
+    return . Func argNames body $ (argName,val) : closure
+applyFunc _ = throwError "apply takes a two arguments"
