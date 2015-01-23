@@ -42,5 +42,6 @@ Test-Suite tests
                        containers,
                        mtl >= 2.2.1,
                        raw-strings-qq >= 1.0.2,
-                       text >= 1.2.0
+                       text >= 1.2.0,
+                       directory
   ghc-options:         -fhpc

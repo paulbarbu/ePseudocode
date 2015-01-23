@@ -1,10 +1,14 @@
 module EPseudocode.Builtins (builtinEnv)
 where
 
+import Control.Exception
 import Control.Monad.Except
 import Data.Maybe
 import Data.List (intercalate)
+import System.Directory
 import System.IO
+import System.IO.Error
+
 
 import EPseudocode.Data
 import EPseudocode.Evaluator
@@ -19,6 +23,10 @@ ioBuiltins :: [(String, [[Expr]] -> ErrorWithIO Expr)]
 ioBuiltins = [
     ("scrie", write)
    ,("citeste", readLine)
+   ,("deschide", open)
+   ,("inchide", close)
+   ,("fscrie", fwrite)
+   ,("fciteste", fread)
    ,("apply", applyFunc)
  ]
 
@@ -63,7 +71,7 @@ write [args] = do
     return Void
     where writeExpr (String s) = s
           writeExpr x = showExpr x
-write _ = throwError "scrie takes a single argument list: scrie(1, 2, 3, 4)"
+write _ = throwError "scrie takes a variable number of arguments"
 
 
 readLine :: [[Expr]] -> ErrorWithIO Expr
@@ -75,4 +83,47 @@ applyFunc :: [[Expr]] -> ErrorWithIO Expr
 applyFunc [[Func (argName:argNames) body closure, arg]] = do
     (_, val) <- eval closure (E arg)
     return . Func argNames body $ (argName,val) : closure
-applyFunc _ = throwError "apply takes a two arguments"
+applyFunc _ = throwError "apply takes two arguments, a function with at least one parameter and a value to partially apply the fucntion to"
+
+
+-- WARNING: corner cases are not handled!
+
+open :: [[Expr]] -> ErrorWithIO Expr
+open [[String filePath, String "r"]] = do
+    fileExists <- liftIO $  doesFileExist filePath
+    if fileExists
+       then open' filePath ReadMode
+       else throwError $ "File " ++ filePath ++ " doesn't exist"
+open [[String filePath, String "w"]] = open' filePath WriteMode
+open [[String filePath, String "a"]] = open' filePath AppendMode
+open _ = throwError "deschide takes two arguments, a String as the file path and a mode describing how to open the file"
+
+
+open' :: String -> IOMode -> ErrorWithIO Expr
+open' filePath mode = liftM File . liftIO $ openBinaryFile filePath mode
+
+
+close :: [[Expr]] -> ErrorWithIO Expr
+close [[File file]] = do
+    liftIO $ hClose file
+    return Void
+close _ = throwError "inchide takes a single argument, the result of deschide"
+
+
+fwrite :: [[Expr]] -> ErrorWithIO Expr
+fwrite [File f:args] = do
+    liftIO . hPutStr f . intercalate "" $ map writeExpr args
+    liftIO $ hFlush f
+    return Void
+    where writeExpr (String s) = s
+          writeExpr x = showExpr x
+fwrite _ = throwError "fscrie takes a variable number of arguments, the first one should be the file to write to"
+
+
+fread :: [[Expr]] -> ErrorWithIO Expr
+fread [[File f]] = do
+    i <- liftIO $ try $ hGetLine f
+    case i of
+        Left err -> if isEOFError err then return (Bool False) else throwError "Unexpected error"
+        Right val -> return $ String val
+fread _ = throwError "fciteste takes single argument, the result of deschide"

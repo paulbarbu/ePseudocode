@@ -2,9 +2,9 @@ module EPseudocode.Data
 where
 
 import Control.Monad.Except
-import Text.Show.Functions()
-
 import Data.List (intercalate)
+import Text.Show.Functions ()
+import System.IO
 
 import EPseudocode.Lexer
 
@@ -29,6 +29,7 @@ data Expr =
     | Void -- should not be evaluated, just a placeholder for "none" or apophasis
     | BuiltinIOFunc ([[Expr]] -> ErrorWithIO Expr)
     | BuiltinFunc ([[Expr]] -> Error Expr)
+    | File Handle
     deriving (Show)
 
 

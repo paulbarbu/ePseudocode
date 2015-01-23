@@ -1555,10 +1555,50 @@ evaluatorTests = TestList [
     True @=? r
 
  , "apply error" ~: do
-    r <- evalFail "apply(1, 2, 3)" "apply takes a two arguments"
+    r <- evalFail "apply(1, 2, 3)" "apply takes two arguments"
     True @=? r
 
  , "apply" ~: do
     r <- evalTest "a=apply(func foo(a,b) ret a+b sffunc, 2) a(3)"
     "5" @=? r
+
+ , "open, write, close" ~: do
+    r <- evalTest "f=deschide(\"testfile.txt\", \"w\") fscrie(f, 1, 2, \"12\") inchide(f)"
+    "" @=? r
+
+ , "open error" ~: do
+    r <- evalFail "deschide()" "deschide takes two arguments, a String as the file path and a mode describing how to open the file"
+    True @=? r
+
+ , "close error" ~: do
+    r <- evalFail "inchide()" "inchide takes a single argument, the result of deschide"
+    True @=? r
+
+ , "fwrite error" ~: do
+    r <- evalFail "fscrie()" "fscrie takes a variable number of arguments, the first one should be the file to write to"
+    True @=? r
+
+ , "open error" ~: do
+    r <- evalFail "deschide(\"1234567890\", \"r\")" "File 1234567890 doesn't exist"
+    True @=? r
+
+ , "open (read), close" ~: do
+    r <- evalTest "f=deschide(\"testfile.txt\", \"r\") inchide(f)"
+    "" @=? r
+
+ , "open (append), close" ~: do
+    r <- evalTest "f=deschide(\"testfile.txt\", \"a\") inchide(f)"
+    "" @=? r
+
+ , "open, read, close" ~: do
+    r <- evalTest "f=deschide(\"testfile.txt\", \"r\") a=fciteste(f) inchide(f) a"
+    "\"1212\"" @=? r
+
+ , "read fail" ~: do
+    r <- evalFail "fciteste(2)" "fciteste takes single argument, the result of deschide"
+    True @=? r
+
+ , "open, read until EOF, close" ~: do
+    r <- evalTest "f=deschide(\"testfile.txt\", \"r\") fciteste(f) a=fciteste(f) inchide(f) a"
+    "fals" @=? r
  ]
