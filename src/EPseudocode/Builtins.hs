@@ -41,21 +41,21 @@ builtins = [
 
 strToInt :: [[Expr]] -> Error Expr
 strToInt [[String arg]] = case listToMaybe (reads arg :: [(Integer, String)]) of
-    Nothing -> return $ List [Bool False, String $ "int cannot parse " ++ arg]
+    Nothing -> return $ Bool False
     Just (parsed, remaining) ->
         if remaining == ""
-            then return $ List [Bool True, Int parsed]
-            else return $ List [Bool False, String $ "int cannot parse " ++ arg]
+            then return $ Int parsed
+            else return $ Bool False
 strToInt _ = throwError "int takes a single String argument"
 
 
 strToFloat :: [[Expr]] -> Error Expr
 strToFloat [[String arg]] = case listToMaybe (reads arg :: [(Double, String)]) of
-    Nothing -> return $ List [Bool False, String $ "float cannot parse " ++ arg]
+    Nothing -> return $ Bool False
     Just (parsed, remaining) ->
         if remaining == ""
-            then return $ List [Bool True, Float parsed]
-            else return $ List [Bool False, String $ "float cannot parse " ++ arg]
+            then return $ Float parsed
+            else return $ Bool False
 strToFloat _ = throwError "float takes a single String argument"
 
 

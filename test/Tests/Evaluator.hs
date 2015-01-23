@@ -595,12 +595,12 @@ evaluatorTests = TestList [
     True @=? r
 
  , "bool == int" ~: do
-    r <- evalFail "fals == 4" "Cannot compare Bool and Int"
-    True @=? r
+    r <- evalTest "fals == 4"
+    "fals" @=? r
 
  , "int == bool" ~: do
-    r <- evalFail "4 == fals" "Cannot compare Int and Bool"
-    True @=? r
+    r <- evalTest "4 == fals"
+    "fals" @=? r
 
  , "str == float" ~: do
     r <- evalFail "\"abc\" == 4.2" "Cannot compare String and Float"
@@ -611,20 +611,20 @@ evaluatorTests = TestList [
     True @=? r
 
  , "bool == float" ~: do
-    r <- evalFail "fals == 4.2" "Cannot compare Bool and Float"
-    True @=? r
+    r <- evalTest "fals == 4.2"
+    "fals" @=? r
 
  , "float == bool" ~: do
-    r <- evalFail "4.2 == fals" "Cannot compare Float and Bool"
-    True @=? r
+    r <- evalTest "4.2 == fals"
+    "fals" @=? r
 
  , "bool == str" ~: do
-    r <- evalFail "fals == \"abc\"" "Cannot compare Bool and String"
-    True @=? r
+    r <- evalTest "fals == \"abc\""
+    "fals" @=? r
 
  , "str == bool" ~: do
-    r <- evalFail "\"abc\" == fals" "Cannot compare String and Bool"
-    True @=? r
+    r <- evalTest "\"abc\" == fals"
+    "fals" @=? r
 
  , "int != float" ~: do
     r <- evalTest "1 != 1.2"
@@ -655,12 +655,12 @@ evaluatorTests = TestList [
     True @=? r
 
  , "bool != int" ~: do
-    r <- evalFail "fals != 4" "Cannot compare Bool and Int"
-    True @=? r
+    r <- evalTest "fals != 4"
+    "adevarat" @=? r
 
  , "int != bool" ~: do
-    r <- evalFail "4 != fals" "Cannot compare Int and Bool"
-    True @=? r
+    r <- evalTest "4 != fals"
+    "adevarat" @=? r
 
  , "str != float" ~: do
     r <- evalFail "\"abc\" != 4.2" "Cannot compare String and Float"
@@ -671,20 +671,20 @@ evaluatorTests = TestList [
     True @=? r
 
  , "bool != float" ~: do
-    r <- evalFail "fals != 4.2" "Cannot compare Bool and Float"
-    True @=? r
+    r <- evalTest "fals != 4.2"
+    "adevarat" @=? r
 
  , "float != bool" ~: do
-    r <- evalFail "4.2 != fals" "Cannot compare Float and Bool"
-    True @=? r
+    r <- evalTest "4.2 != fals"
+    "adevarat" @=? r
 
  , "bool != str" ~: do
-    r <- evalFail "fals != \"abc\"" "Cannot compare Bool and String"
-    True @=? r
+    r <- evalTest "fals != \"abc\""
+    "adevarat" @=? r
 
  , "str != bool" ~: do
-    r <- evalFail "\"abc\" != fals" "Cannot compare String and Bool"
-    True @=? r
+    r <- evalTest "\"abc\" != fals"
+    "adevarat" @=? r
 
  , "1 sau 1" ~: do
     r <- evalFail "1 sau 1" "Or is invalid on Ints"
@@ -1496,7 +1496,7 @@ evaluatorTests = TestList [
 
  , "string to int cast" ~: do
     r <- evalTest "int(\"42\")"
-    "{adevarat, 42}" @=? r
+    "42" @=? r
 
  , "int error" ~: do
     r <- evalFail "int(42, 43)" "int takes a single String argument"
@@ -1516,11 +1516,11 @@ evaluatorTests = TestList [
 
  , "int partial parse fail" ~: do
     r <- evalTest "int(\"2asd\")"
-    "{fals, \"int cannot parse 2asd\"}" @=? r
+    "fals" @=? r
 
  , "int parse fail" ~: do
     r <- evalTest "int(\"asd\")"
-    "{fals, \"int cannot parse asd\"}" @=? r
+    "fals" @=? r
 
  , "named closure, called directly" ~: do
     r <- evalTest "func foo(x) ret func xyz(b) ret x+b sffunc sffunc foo(123)(123)"
@@ -1540,15 +1540,15 @@ evaluatorTests = TestList [
 
  , "float partial parse fail" ~: do
     r <- evalTest "float(\"2.2asd\")"
-    "{fals, \"float cannot parse 2.2asd\"}" @=? r
+    "fals" @=? r
 
  , "float parse fail" ~: do
     r <- evalTest "float(\"asd\")"
-    "{fals, \"float cannot parse asd\"}" @=? r
+    "fals" @=? r
 
  , "string to float cast" ~: do
     r <- evalTest "float(\"4.2\")"
-    "{adevarat, 4.2}" @=? r
+    "4.2" @=? r
 
  , "float error" ~: do
     r <- evalFail "float(4.2, 43)" "float takes a single String argument"

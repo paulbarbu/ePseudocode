@@ -144,7 +144,8 @@ parserTests = TestList [
        trim [r|[E (FuncDef "main" []
         [E (FuncCall (Var "scrie") [[String "n="]]),
         Assign (Var "n") (FuncCall (Var "int") [[FuncCall (Var "citeste") [[]]]]),
-        CompleteIf (Index "n" [Int 0]) [Assign (Var "n") (Index "n" [Int 1]),
+        SimpleIf (BinExpr Eq (Bool False) (Var "n"))
+            [E (FuncCall (Var "scrie") [[String "Invalid n!\n"]]),Ret (Int 0)],
         Assign (Var "i") (Int 1),
         While (BinExpr Le (Var "i") (Var "n"))
               [CompleteIf (BinExpr And
@@ -156,7 +157,7 @@ parserTests = TestList [
                                       [CompleteIf (BinExpr Eq (BinExpr Mod (Var "i") (Int 5)) (Int 0))
                                                   [E (FuncCall (Var "scrie") [[String "buzz\n"]])]
                                                   [E (FuncCall (Var "scrie") [[Var "i",String "\n"]])]]],
-               Assign (Var "i") (BinExpr Plus (Var "i") (Int 1))]] [E (FuncCall (Var "scrie") [[String "Invalid n!\n"]])]])]|] @=? parseFile c
+               Assign (Var "i") (BinExpr Plus (Var "i") (Int 1))]])]|] @=? parseFile c
 
   , "global variable program" ~:
      do c <- readFile "examples/global.epc"
