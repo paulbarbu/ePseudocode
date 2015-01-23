@@ -300,12 +300,16 @@ evalBinExpr env (BinExpr Neq (List l) (List r)) = do
     a <- getEvaledExprList env l
     b <- getEvaledExprList env r
     (liftM and . sequence $ zipWith (neq env) a b) >>= return . Bool
+evalBinExpr _ (BinExpr Neq (Bool _) (List _)) = return $ Bool True
+evalBinExpr _ (BinExpr Neq (List _) (Bool _)) = return $ Bool True
 evalBinExpr _ (BinExpr Neq _ (List _)) = throwError "Lists can be compared only to lists"
 evalBinExpr _ (BinExpr Neq (List _) _) = throwError "Lists can be compared only to lists"
 evalBinExpr env (BinExpr Eq (List l) (List r)) = do
     a <- getEvaledExprList env l
     b <- getEvaledExprList env r
     (liftM and . sequence $ zipWith (eq env) a b) >>= return . Bool
+evalBinExpr _ (BinExpr Eq (Bool _) (List _)) = return $ Bool False
+evalBinExpr _ (BinExpr Eq (List _) (Bool _)) = return $ Bool False
 evalBinExpr _ (BinExpr Eq _ (List _)) = throwError "Lists can be compared only to lists"
 evalBinExpr _ (BinExpr Eq (List _) _) = throwError "Lists can be compared only to lists"
 evalBinExpr env (BinExpr Plus (List l) (List r)) = do

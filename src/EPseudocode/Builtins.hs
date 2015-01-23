@@ -1,6 +1,7 @@
 module EPseudocode.Builtins (builtinEnv)
 where
 
+import Control.Concurrent
 import Control.Exception
 import Control.Monad.Except
 import Data.Maybe
@@ -28,6 +29,7 @@ ioBuiltins = [
    ,("fscrie", fwrite)
    ,("fciteste", fread)
    ,("apply", applyFunc)
+   ,("sleep", sleep)
  ]
 
 
@@ -36,6 +38,8 @@ builtins = [
     ("int", strToInt)
    ,("float", strToFloat)
    ,("lung", listLen)
+   ,("floor", floorEpc)
+   ,("ceiling", ceilingEpc)
  ]
 
 
@@ -61,6 +65,7 @@ strToFloat _ = throwError "float takes a single String argument"
 
 listLen :: [[Expr]] -> Error Expr
 listLen [[List arg]] = return . Int . fromIntegral $ length arg
+listLen [[String arg]] = return . Int . fromIntegral $ length arg
 listLen _ = throwError "lung takes a single List argument"
 
 
@@ -126,4 +131,20 @@ fread [[File f]] = do
     case i of
         Left err -> if isEOFError err then return (Bool False) else throwError "Unexpected error"
         Right val -> return $ String val
-fread _ = throwError "fciteste takes single argument, the result of deschide"
+fread _ = throwError "fciteste takes a single argument, the result of deschide"
+
+
+sleep :: [[Expr]] -> ErrorWithIO Expr
+sleep [[Int t]] = (liftIO . threadDelay $ (fromIntegral t)*1000) >> return Void
+sleep _ = throwError "sleep takes a single int argument"
+
+
+floorEpc :: [[Expr]] -> Error Expr
+floorEpc [[Int i]] = return $ Int i
+floorEpc [[Float f]] = return . Int $ floor f
+floorEpc _ = throwError "floor takes a single int/float argument"
+
+ceilingEpc :: [[Expr]] -> Error Expr
+ceilingEpc [[Int i]] = return $ Int i
+ceilingEpc [[Float f]] = return . Int $ ceiling f
+ceilingEpc _ = throwError "ceiling takes a single int/float argument"

@@ -1595,10 +1595,62 @@ evaluatorTests = TestList [
     "\"1212\"" @=? r
 
  , "read fail" ~: do
-    r <- evalFail "fciteste(2)" "fciteste takes single argument, the result of deschide"
+    r <- evalFail "fciteste(2)" "fciteste takes a single argument, the result of deschide"
     True @=? r
 
  , "open, read until EOF, close" ~: do
     r <- evalTest "f=deschide(\"testfile.txt\", \"r\") fciteste(f) a=fciteste(f) inchide(f) a"
     "fals" @=? r
+
+ , "strlen" ~: do
+    r <- evalTest "lung(\"abcd\")"
+    "4" @=? r
+
+ , "sleep" ~: do
+    r <- evalTest "sleep(2)"
+    "" @=? r
+
+ , "sleep error" ~: do
+    r <- evalFail "sleep(2,2,3)" "sleep takes a single int argument"
+    True @=? r
+
+ , "ceiling error" ~: do
+    r <- evalFail "ceiling(2,2,3)" "ceiling takes a single int/float argument"
+    True @=? r
+
+ , "floor error" ~: do
+    r <- evalFail "floor(2,2,3)" "floor takes a single int/float argument"
+    True @=? r
+
+  , "floor int" ~: do
+     r <- evalTest "floor(42)"
+     "42" @=? r
+
+  , "floor float" ~: do
+     r <- evalTest "floor(42.6)"
+     "42" @=? r
+
+ , "ceiling int" ~: do
+     r <- evalTest "ceiling(42)"
+     "42" @=? r
+
+ , "ceiling float" ~: do
+    r <- evalTest "ceiling(41.2)"
+    "42" @=? r
+
+ , "list == bool" ~: do
+    r <- evalTest "{1,2,3} == fals"
+    "fals" @=? r
+
+ , "bool == list" ~: do
+    r <- evalTest "fals == {1,2,3}"
+    "fals" @=? r
+
+ , "list != bool" ~: do
+    r <- evalTest "{1,2,3} != fals"
+    "adevarat" @=? r
+
+ , "bool != list" ~: do
+    r <- evalTest "fals != {1,2,3}"
+    "adevarat" @=? r
  ]
