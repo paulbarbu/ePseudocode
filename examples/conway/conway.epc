@@ -1,0 +1,111 @@
+RESET_CURSOR_POS = "\x1b[H"
+SHOW_CURSOR = "\x1b[?25h"
+HIDE_CURSOR = "\x1b[?25l"
+CLEAR = "\x1b[2J"
+GREEN = "\x1b[92m"
+ENDC = "\x1b[0m"
+
+
+MAX_H = 20
+MAX_W = 80
+
+func get_initial(path)
+    map = {}
+    n = {}
+
+    f=deschide(path, "r")
+
+    cattimp n != fals executa
+        map = map + n
+        n = fciteste(f)
+    sfcattimp
+
+    inchide(f)
+    ret map
+sffunc
+
+func make_map(initial)
+    h = lung(initial)
+
+    w = lung(initial[0])
+    pt i=1; i<h; i=i+1 executa
+        l = lung(initial[i])
+        daca l > w atunci
+            w = l
+        sfdaca
+    sfpt
+
+    daca h > MAX_H sau w > MAX_W atunci
+        ret fals
+    sfdaca
+
+    ci_x = ceiling(w/2) // center initial x
+    ci_y = ceiling(h/2) // center initial y
+
+    cm_x = ceiling(MAX_W/2)
+    cm_y = ceiling(MAX_H/2)
+
+    map = {{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}}
+
+    pt i=0; i<MAX_H; i=i+1 executa // lines
+        pt j=0; j<MAX_W; j=j+1 executa // columns
+            map[i] = map[i] + "."
+        sfpt
+    sfpt
+
+    // insert initial configuration
+    pt i=0; i<h; i=i+1 executa
+        pt j=0; j<lung(initial[i]); j=j+1 executa
+            map[i + cm_y - ci_y][j + cm_x - ci_x] = initial[i][j]
+        sfpt
+    sfpt
+
+    ret map
+sffunc
+
+func print_map(m)
+    scrie(CLEAR)
+    scrie(RESET_CURSOR_POS)
+
+    pt i=0; i<MAX_H; i=i+1 executa // lines
+        pt j=0; j<MAX_W; j=j+1 executa // columns
+            scrie(map[i][j])
+        sfpt
+
+        scrie("\n")
+    sfpt
+sffunc
+
+func evolve_map(m)
+    old_map = m
+
+    pt i=0; i<MAX_H; i=i+1 executa
+        pt j=0; j<MAX_W; j=j+1 executa
+            //TODO!
+        sfpt
+    sfpt
+
+    ret m
+sffunc
+
+func main(argv)
+    daca lung(argv) <= 0 atunci
+        scrie("Please provide a starting configuration")
+        ret 1
+    sfdaca
+
+
+    map = make_map(get_initial(argv[0]))
+
+    daca map == fals atunci
+        scrie("Invalid starting configuration")
+        ret 1
+    sfdaca
+
+    scrie(HIDE_CURSOR)
+    cattimp adevarat executa
+        print_map(map)
+        map = evolve_map(map)
+        sleep(100)
+    sfcattimp
+sffunc
