@@ -506,9 +506,17 @@ evaluatorTests = TestList [
     r <- evalTest "a=43.2 b=-(-a)"
     "43.2" @=? r
 
- , "list concatenation" ~: do
+ , "list append" ~: do
     r <- evalTest "a=4 b=2 {1,b} + {3,a}"
-    "{1, 2, 3, 4}" @=? r
+    "{1, 2, {3, 4}}" @=? r
+
+ , "list (variable) append" ~: do
+    r <- evalTest "a={1,2} a+{3,4}"
+    "{1, 2, {3, 4}}" @=? r
+    
+ , "list (variable) append on the right" ~: do
+    r <- evalTest "a={1,2} {3,4}+a"
+    "{3, 4, {1, 2}}" @=? r
 
  , "item prepend to list" ~: do
     r <- evalTest "a=1.1 a + {2, 3,4}"

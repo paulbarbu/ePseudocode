@@ -2,11 +2,10 @@ RESET_CURSOR_POS = "\x1b[H"
 SHOW_CURSOR = "\x1b[?25h"
 HIDE_CURSOR = "\x1b[?25l"
 CLEAR = "\x1b[2J"
-GREEN = "\x1b[92m"
 ENDC = "\x1b[0m"
 
 LIVE = "o"
-DEAD = "."
+DEAD = " "
 
 MAX_H = 20
 MAX_W = 40
@@ -47,9 +46,9 @@ func make_map(initial)
     cm_x = ceiling(MAX_W/2)
     cm_y = ceiling(MAX_H/2)
 
-    map = {{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}}
-
+    map = {}
     pt i=0; i<MAX_H; i=i+1 executa // lines
+        map = map + {}
         pt j=0; j<MAX_W; j=j+1 executa // columns
             map[i] = map[i] + DEAD
         sfpt

@@ -313,13 +313,17 @@ evalBinExpr _ (BinExpr Eq (List _) _) = throwError "Lists can be compared only t
 evalBinExpr env (BinExpr Plus (List l) (List r)) = do
     a <- getEvaledExprList env l
     b <- getEvaledExprList env r
-    return . List $ a ++ b
+    return . List $ a ++ [List b]
 evalBinExpr env (BinExpr Plus l (List r)) = do
-    (_, val) <- eval env $ E l
-    return . List $ val : r
+     (_, val) <- eval env $ E l
+     case val of
+         List lst -> return . List $ lst ++ [List r]
+         _ -> return . List $ val : r
 evalBinExpr env (BinExpr Plus (List l) r) = do
-    (_, val) <- eval env $ E r
-    return . List $ l ++ [val]
+     (_, val) <- eval env $ E r
+     case val of
+        List lst -> return . List $ l ++ [List lst]
+        _ -> return . List $ l ++ [val]
 evalBinExpr _ (BinExpr Minus _ (List _)) = throwError "Cannot subtract a list from a value"
 evalBinExpr env (BinExpr Minus (List l) r) = do
     (_, val) <- eval env (E r)

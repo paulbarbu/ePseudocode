@@ -5,3 +5,11 @@ func car(l)
 
     ret l
 sffunc
+
+func concat(l1, l2)
+    pt i=0; i<lung(l2); i=i+1 executa
+        l1 = l1 + l2[i]
+    sfpt
+
+    ret l1
+sffunc
