@@ -5,9 +5,11 @@ CLEAR = "\x1b[2J"
 GREEN = "\x1b[92m"
 ENDC = "\x1b[0m"
 
+LIVE = "o"
+DEAD = "."
 
 MAX_H = 20
-MAX_W = 80
+MAX_W = 40
 
 func get_initial(path)
     map = {}
@@ -45,11 +47,11 @@ func make_map(initial)
     cm_x = ceiling(MAX_W/2)
     cm_y = ceiling(MAX_H/2)
 
-    map = {{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}}
+    map = {{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}}
 
     pt i=0; i<MAX_H; i=i+1 executa // lines
         pt j=0; j<MAX_W; j=j+1 executa // columns
-            map[i] = map[i] + "."
+            map[i] = map[i] + DEAD
         sfpt
     sfpt
 
@@ -77,11 +79,36 @@ func print_map(m)
 sffunc
 
 func evolve_map(m)
+    func get_num_live_neighbours(m, k, p)
+        ct = 0
+        dy = {-1, -1, 0, 1, 1,  1,  0, -1}
+        dx = { 0,  1, 1, 1, 0, -1, -1, -1}
+
+        pt i=0; i<8; i=i+1 executa
+            row = k+dy[i]
+            col = p+dx[i]
+
+            daca row >= 0 si row < MAX_H si col >= 0 si col < MAX_W si LIVE == m[row][col] atunci
+                ct = ct+1
+            sfdaca
+        sfpt
+
+        ret ct
+    sffunc
+
     old_map = m
 
     pt i=0; i<MAX_H; i=i+1 executa
         pt j=0; j<MAX_W; j=j+1 executa
-            //TODO!
+            n = get_num_live_neighbours(old_map, i, j)
+
+            daca LIVE == old_map[i][j] atunci
+                daca n < 2 sau n > 3 atunci
+                    m[i][j] = DEAD
+                sfdaca
+            altfel daca n == 3 atunci
+                m[i][j] = LIVE
+            sfdaca sfdaca
         sfpt
     sfpt
 
@@ -90,7 +117,7 @@ sffunc
 
 func main(argv)
     daca lung(argv) <= 0 atunci
-        scrie("Please provide a starting configuration")
+        scrie("Please provide a starting configuration\n")
         ret 1
     sfdaca
 
@@ -98,7 +125,7 @@ func main(argv)
     map = make_map(get_initial(argv[0]))
 
     daca map == fals atunci
-        scrie("Invalid starting configuration")
+        scrie("Invalid starting configuration\n")
         ret 1
     sfdaca
 
@@ -106,6 +133,5 @@ func main(argv)
     cattimp adevarat executa
         print_map(map)
         map = evolve_map(map)
-        sleep(100)
     sfcattimp
 sffunc
