@@ -16,8 +16,6 @@ import EPseudocode.Parser
 {-
  * TODO: clean the Env, it should not be cluttered when I reassign a variable in a loop
  * TODO: find a better way to implement :stopiteration: and :ret:
-
- * TODO: apply
 -}
 
 interpretProgram :: Env -> [Stmt] -> [String] -> ErrorWithIO ()
@@ -343,7 +341,17 @@ evalBinExpr _ (BinExpr And (Float _) (Bool _)) = throwError "And is invalid on F
 evalBinExpr _ (BinExpr And (String _) (String _)) = throwError "And is invalid on Strings"
 evalBinExpr _ (BinExpr And (Bool _) (String _)) = throwError "And is invalid on Bool and String"
 evalBinExpr _ (BinExpr And (String _) (Bool _)) = throwError "And is invalid on String and Bool"
-evalBinExpr _ (BinExpr And (Bool l) (Bool r)) = return . Bool $ l && r
+evalBinExpr env (BinExpr And l r) = do
+    (_, a) <- eval env $ E l
+    case a of
+        Bool v1 -> if v1
+            then do
+                (_, b) <- eval env $ E r
+                case b of
+                    Bool v2 -> return . Bool $ v1 && v2
+                    _ -> throwError "And is valid only on Bools"
+            else return $ Bool v1
+        _ -> throwError "And is valid only on Bools"
 
 evalBinExpr _ (BinExpr Or (Int _) (Int _)) = throwError "Or is invalid on Ints"
 evalBinExpr _ (BinExpr Or (Int _) (Float _)) = throwError "Or is invalid on Int and Float"
@@ -360,7 +368,17 @@ evalBinExpr _ (BinExpr Or (Float _) (Bool _)) = throwError "Or is invalid on Flo
 evalBinExpr _ (BinExpr Or (String _) (String _)) = throwError "Or is invalid on Strings"
 evalBinExpr _ (BinExpr Or (Bool _) (String _)) = throwError "Or is invalid on Bool and String"
 evalBinExpr _ (BinExpr Or (String _) (Bool _)) = throwError "Or is invalid on String and Bool"
-evalBinExpr _ (BinExpr Or (Bool l) (Bool r)) = return . Bool $ l || r
+evalBinExpr env (BinExpr Or l r) = do
+    (_, a) <- eval env $ E l
+    case a of
+        Bool v1 -> if v1
+            then return $ Bool v1
+            else do
+                (_, b) <- eval env $ E r
+                case b of
+                    Bool v2 -> return . Bool $ v1 || v2
+                    _ -> throwError "Or is valid only on Bools"
+        _ -> throwError "Or is valid only on Bools"
 
 evalBinExpr _ (BinExpr Plus (Int l) (Int r)) = return . Int $ l + r
 evalBinExpr _ (BinExpr Plus (Int l) (Float r)) = return . Float $ fromIntegral l + r

@@ -1653,4 +1653,28 @@ evaluatorTests = TestList [
  , "bool != list" ~: do
     r <- evalTest "fals != {1,2,3}"
     "adevarat" @=? r
+
+ , "shortcircuit and" ~: do
+    r <- evalTest "fals si scrie(2)"
+    "fals" @=? r
+
+ , "shortcircuit and - error" ~: do
+    r <- evalFail "int(\"2\") si scrie(2)" "And is valid only on Bools"
+    True @=? r
+
+ , "shortcircuit and - error on the right side" ~: do
+    r <- evalFail "adevarat si int(\"2\")" "And is valid only on Bools"
+    True @=? r
+
+ , "shortcircuit or" ~: do
+    r <- evalTest "adevarat sau scrie(2)"
+    "adevarat" @=? r
+
+ , "shortcircuit or - error" ~: do
+    r <- evalFail "int(\"2\") sau scrie(2)" "Or is valid only on Bools"
+    True @=? r
+
+ , "shortcircuit or - error on the right side" ~: do
+    r <- evalFail "fals sau int(\"2\")" "Or is valid only on Bools"
+    True @=? r
  ]
