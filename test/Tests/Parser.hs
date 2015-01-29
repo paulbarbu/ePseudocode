@@ -392,7 +392,7 @@ parserTests = TestList [
 
  , "simple type def" ~:
     do c <- readFile "test/epc/simple_typedef.epc"
-       trim [r|[Struct "point"
+       trim [r|[TypeDef "point"
         [Assign (Var "x") (Int 0),
          Assign (Var "y") (Int 0),
          E (FuncDef "translate" ["dx","dy"]
@@ -409,4 +409,8 @@ parserTests = TestList [
 
  , "simple member assignment" ~:
        trim [r|[Assign (BinExpr MemberAccess (Var "a") (Var "x")) (Int 42)]|] ~=? parseRepl "a.x = 42"
+
+ , "simple member assignment" ~: parseFailFile "struct sfstruct" "structure name"
+
+ , "empty struct" ~: parseFailFile "struct xyz sfstruct" "unexpected reserved word \"sfstruct\""
  ]

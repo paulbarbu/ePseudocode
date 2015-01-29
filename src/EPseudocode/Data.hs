@@ -30,6 +30,7 @@ data Expr =
     | BuiltinIOFunc ([[Expr]] -> ErrorWithIO Expr)
     | BuiltinFunc ([[Expr]] -> Error Expr)
     | File Handle
+    | Struct Env
     deriving (Show)
 
 
@@ -41,7 +42,7 @@ data UnOp = Not | UnMinus
     deriving (Show)
 
 
-data Stmt = Struct String [Stmt] -- struct <name> body - body is limited only to assignments and func defs
+data Stmt = TypeDef String [Stmt] -- struct <name> body - body is limited only to assignments and func defs
     | Assign Expr Expr -- assignments (the left side is limited to variable or list index and the right side is limited here to expression or function (call/def) similarly to Ret)
     | CompleteIf Expr [Stmt] [Stmt] -- if condition then statements else statements
     | SimpleIf Expr [Stmt] -- if condition then statements

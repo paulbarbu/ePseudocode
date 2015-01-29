@@ -15,6 +15,6 @@ getStdLibEnv = do
     if fileExists
        then do
            contents <- liftIO $ readFile ".stdlib.epc"
-           (env, _) <- interpret builtinEnv contents
+           (env, _) <- interpretStdLib builtinEnv contents
            return env
        else throwError "File \".stdlib.epc\" doesn't exist"

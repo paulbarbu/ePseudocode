@@ -114,7 +114,7 @@ typeDef = do reserved tStruct
              name <- identifier <?> "structure name"
              body <- many1 (liftM E funcDef <|> assignment funcExpr)
              reserved tEndStruct
-             return $ Struct name body
+             return $ TypeDef name body
 
 
 funcExpr :: Parser Expr

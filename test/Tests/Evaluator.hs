@@ -31,14 +31,14 @@ evalFail input needle = do
         Right _ -> return False
 
 
-evalProgram :: String -> [String] -> IO ()
+evalProgram :: String -> [String] -> IO String
 evalProgram input argv = case eParse toplevelParser input  of
-    Left err -> putStrLn $ "failed: " ++ err
+    Left err -> return $ "failed: " ++ err
     Right p -> do
         res <- runExceptT $ interpretProgram builtinEnv p argv
         case res of
-            Left err -> putStrLn $ "Error: " ++ err
-            Right _ -> return ()
+            Left err -> return $ "Error: " ++ err
+            Right _ -> return "OK"
 
 
 evaluatorTests = TestList [
@@ -513,7 +513,7 @@ evaluatorTests = TestList [
  , "list (variable) append" ~: do
     r <- evalTest "a={1,2} a+{3,4}"
     "{1, 2, {3, 4}}" @=? r
-    
+
  , "list (variable) append on the right" ~: do
     r <- evalTest "a={1,2} {3,4}+a"
     "{3, 4, {1, 2}}" @=? r
@@ -1490,17 +1490,25 @@ evaluatorTests = TestList [
     r <- evalFail "(" "unexpected end of input"
     True @=? r
 
- , "full program, no args" ~: evalProgram "func main() scrie(42) sffunc" []
+ , "full program, no args" ~: do
+     r <- evalProgram "func main() scrie(42) sffunc" []
+     "OK" @=? r
 
- , "full program, with args" ~:
-    evalProgram "func main(argv) scrie(\"args:\", argv) sffunc" ["1", "2", "3"]
+ , "full program, with args" ~: do
+    r <- evalProgram "func main(argv) scrie(\"args:\", argv) sffunc" ["1", "2", "3"]
+    "OK" @=? r
 
- , "full program, with args and two functions" ~:
-    evalProgram "func a() ret 42 sffunc func main(argv) return 1 sffunc" ["1", "2", "3"]
+ , "full program, with args and two functions" ~: do
+    r <- evalProgram "func a() ret 42 sffunc func main(argv) ret 1 sffunc" ["1", "2", "3"]
+    "OK" @=? r
 
- , "scrie error" ~: evalProgram "func main() scrie()() sffunc" []
+ , "scrie error" ~: do
+     r <- evalProgram "func main() scrie()() sffunc" []
+     "Error: scrie takes a variable number of arguments" @=? r
 
- , "citeste error" ~: evalProgram "func main() citeste(123) sffunc" []
+ , "citeste error" ~: do
+     r <- evalProgram "func main() citeste(123) sffunc" []
+     "Error: citeste takes zero arguments" @=? r
 
  , "string to int cast" ~: do
     r <- evalTest "int(\"42\")"
@@ -1685,4 +1693,20 @@ evaluatorTests = TestList [
  , "shortcircuit or - error on the right side" ~: do
     r <- evalFail "fals sau int(\"2\")" "Or is valid only on Bools"
     True @=? r
+
+ , "struct shadowing func" ~: do
+    r <- evalProgram "func point() ret 42 sffunc struct point x=0 y=0 sfstruct" []
+    "Error: Cannot declare type point since it will shadow other names" @=? r
+
+ , "struct ctor simple call" ~: do
+    r <- evalProgram "struct point x=0 y=0 sfstruct func main() point() sffunc" []
+    "Error: Cannot declare type point since it will shadow other names" @=? r
+
+ , "struct ctor + direct member access" ~: do
+    r <- evalProgram "struct point x=0 y=0 sfstruct func main() scrie(point().x) sffunc" []
+    "Error: Cannot declare type point since it will shadow other names" @=? r
+
+ , "non-struct member access" ~: do
+    r <- evalProgram "func main() a=2 scrie(a.x) sffunc" []
+    "Error: Cannot declare type point since it will shadow other names" @=? r
  ]

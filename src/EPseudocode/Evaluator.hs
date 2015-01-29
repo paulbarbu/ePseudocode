@@ -1,5 +1,5 @@
 {-# LANGUAGE TupleSections #-}
-module EPseudocode.Evaluator (interpret, interpretProgram, eval)
+module EPseudocode.Evaluator (interpret, interpretProgram, eval, interpretStdLib)
 where
 
 import Control.Monad.Except
@@ -22,6 +22,13 @@ interpretProgram :: Env -> [Stmt] -> [String] -> ErrorWithIO ()
 interpretProgram env program argv = if mainHasArgs program
     then void $ interpret' env (program ++ [E (FuncCall (Var "main") [[List $ map String argv]])])
     else void $ interpret' env (program ++ [E (FuncCall (Var "main") [])])
+
+
+-- TODO: clean this up
+interpretStdLib :: Env -> String -> ErrorWithIO (Env, Expr)
+interpretStdLib env input = case eParse toplevelParser input of
+        Left err -> throwError err
+        Right prog -> interpret' env prog
 
 
 interpret :: Env -> String -> ErrorWithIO (Env, Expr)
@@ -147,6 +154,7 @@ eval env (E a@(Int _)) = return (env, a)
 eval env (E a@(Float _)) = return (env, a)
 eval env (E a@(String _)) = return (env, a)
 eval env (E a@(Bool _)) = return (env, a)
+eval env (E a@(Struct _)) = return (env, a)
 eval env (E (List a)) = do
     x <- mapM (eval env . E) a
     return (env, List $ map snd x)
@@ -189,13 +197,20 @@ eval env (For initial cond it stmts) =
             case bodyCond of
                 Nothing -> repeatWhile bodyEnv (Bool True) stmts'
                 Just a -> repeatWhile bodyEnv a stmts'
+eval env (TypeDef name body) = do
+    case lookup name env of
+        Just _ -> throwError $ "Cannot declare type " ++ name ++ " since it will shadow other names"
+        Nothing -> do
+            structEnv <- structToEnv env body
+            return ((name, Func [] [Ret $ Struct structEnv] env):env, Void)
 eval env (E (FuncDef "" args body)) = return (env, Func args body env)
 eval env (E f@(FuncDef name args body)) = case lookup name env of
     Nothing -> return ((name, Func args body env):env, Func args body env)
     Just _ -> throwError $ "The function name \"" ++ name ++ "\" shadows another name in the current scope"
 eval env (E (FuncCall nameExpr args)) = eval env (E nameExpr) >>= \(e, f) ->
     case f of
-        Func{} ->
+        Func{} -> do
+            trace ("Called function!") (return Void)
             applyFunc e f args >>= return . (e,)
         BuiltinIOFunc primitive -> mapM (getEvaledExprList env) args >>=
             primitive >>= \val ->
@@ -512,7 +527,68 @@ evalBinExpr env (BinExpr Eq a b) = do
     (_, r) <- eval env $ E b
     liftM Bool $ eq env l r
 
-evalBinExpr env (BinExpr MemberAccess x y) = trace ("Member access") $ return Void
+
+--TODO: cleanup comments and trace calls
+--TODO: point().translate() infinite loop
+--TODO: test with struct placed in a list
+--TODO: a[1].l[1]
+--TODO: a[1].l[1].x
+--TODO: a[1].foo()
+--TODO: a().foo()
+--TODO: a().foo().x
+--TODO: a.x.y
+--TODO: foo=2 foo.3
+-- evalBinExpr env (BinExpr MemberAccess (Struct s) (Var y)) = do
+--     trace ("DIRECT Member access: struct . " ++ y) $ return Void
+--     case lookup y s of
+--         Just m -> do
+--             (_, val) <- eval s $ E m -- evaluate the member m in the structure environment s
+--             return val
+--         Nothing -> throwError $ "No such member " ++ y ++ " in struct"
+-- evalBinExpr env (BinExpr MemberAccess (Struct s) (FuncCall (Var y) [[]])) = do
+--         --TODO: p.x()
+--         trace ("FuncCall Member access:"  ++ " . " ++ y) $ return Void
+--         case lookup y s of
+--             Just m -> do
+--                 (_, val) <- eval s $ E m -- evaluate the member m in the structure environment s
+--                 return val
+--             Nothing -> throwError $ "No such member " ++ y ++ " in struct"
+-- evalBinExpr env (BinExpr MemberAccess (Var x) (Var y)) = do
+--     trace ("NAMED Member access:" ++ x ++ "." ++ y) $ return Void
+--     case lookup x env of
+--         Just (Struct s) -> do
+--             case lookup y s of
+--                 Just m -> do
+--                     (_, val) <- eval s $ E m -- evaluate the member m in the structure envirnment s
+--                     return val
+--                 Nothing -> throwError $ "No such member " ++ y ++ " in struct " ++ x
+--         _ -> throwError "Only structs have members available for access"
+
+--evalBinExpr env (BinExpr MemberAccess (List x) _) = throwError "List cannot be used like a struct"
+--evalBinExpr env (BinExpr MemberAccess (Int x) _) = throwError "Int cannot be used like a struct"
+evalBinExpr env (BinExpr MemberAccess x y) = do
+    trace ("GENERIC Member Access: " ++ take 10 (show x) ++ " . " ++ show y) (return Void)
+    (_, s) <- eval env $ E x
+    case s of
+        Struct s -> do
+            case y of
+                Index name [expr] -> do
+                --TODO: implement
+                    throwError "get the name out of the struct and apply the index, finally ret the result"
+                Var name ->
+                    case lookup name s of
+                        Just m -> do
+                            (_, val) <- eval s $ E m -- evaluate the member m in the structure environment s
+                            return val
+                        Nothing -> throwError $ "No such member " ++ name ++ " in struct"
+                FuncCall (Var name) [[]] ->
+                    case lookup name s of
+                        Just m -> do
+                            (_, val) <- eval s $ E m -- evaluate the member m in the structure environment s
+                            return val
+                        Nothing -> throwError $ "No such member " ++ name ++ " in struct"
+                _ -> throwError "Member variables can only be variables, lists and functions"
+        _ -> throwError "Only structs have members available for access"
 
 evalBinExpr env (BinExpr op l r) = do
     (_, a) <- eval env $ E l
@@ -677,3 +753,18 @@ eq env a b = do
      (_, r) <- eval env $ E b
      eval env (E (BinExpr Eq l r)) >>= \(_, res) -> case res of
         Bool val -> return val
+
+
+structToEnv :: Env -> [Stmt] -> ErrorWithIO Env
+structToEnv env [a@Assign{}] = do
+    (e, _) <- eval env a
+    return e
+structToEnv env [f@(E FuncDef{})] = do
+    (e, _) <- eval env f
+    return e
+structToEnv env (stmt:stmts) = do
+    e <- structToEnv env [stmt]
+    structToEnv (e++env) stmts
+
+-- TODO: collision fo scrie (from stdlib) with foo.scrie()
+-- TODO: check that newer members actually have access to older members inside the struct itself
