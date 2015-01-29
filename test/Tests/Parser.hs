@@ -389,4 +389,24 @@ parserTests = TestList [
 
  , "index a list with another list index" ~:
     trim [r|[E (Index "a" [Index "b" [Int 1]])]|] ~=? parseRepl "a[b[1]]"
+
+ , "simple type def" ~:
+    do c <- readFile "test/epc/simple_typedef.epc"
+       trim [r|[Struct "point"
+        [Assign (Var "x") (Int 0),
+         Assign (Var "y") (Int 0),
+         E (FuncDef "translate" ["dx","dy"]
+            [Assign (Var "x") (BinExpr Plus (Var "x") (Var "dx")),
+             Assign (Var "y") (BinExpr Plus (Var "y") (Var "dy")),
+             E (FuncCall (Var "scrie") [[String "translate was called\n"]])]),
+         Assign (Var "move") (FuncDef "" ["new_x","new_y"]
+            [Assign (Var "x") (Var "new_x"),
+             Assign (Var "y") (Var "new_y")])]]|] @=? parseFile c
+
+
+ , "simple member access" ~:
+    trim [r|[E (BinExpr MemberAccess (Var "a") (Var "x"))]|] ~=? parseRepl "a.x"
+
+ , "simple member assignment" ~:
+       trim [r|[Assign (BinExpr MemberAccess (Var "a") (Var "x")) (Int 42)]|] ~=? parseRepl "a.x = 42"
  ]

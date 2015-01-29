@@ -163,6 +163,7 @@ eval env (Assign (Var name) s) = do
 eval env (Assign index@(Index _ _) s) = do
     (_, val) <- eval env $ E s
     applyToNamedList env index $ Just val
+eval env (Assign (BinExpr MemberAccess x y) s) = trace ("Member access assignment") (return (env, Void))
 eval env (SimpleIf cond stmts) = do
     (newEnv, res) <- eval env (E cond)
     case res of
@@ -510,6 +511,8 @@ evalBinExpr env (BinExpr Eq a b) = do
     (_, l) <- eval env $ E a
     (_, r) <- eval env $ E b
     liftM Bool $ eq env l r
+
+evalBinExpr env (BinExpr MemberAccess x y) = trace ("Member access") $ return Void
 
 evalBinExpr env (BinExpr op l r) = do
     (_, a) <- eval env $ E l

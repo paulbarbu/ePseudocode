@@ -1,8 +1,9 @@
 module EPseudocode.Parser (eParse, runParser, mainParser, toplevelParser)
 where
-import Prelude hiding (id)
+
 import Control.Applicative hiding ((<|>), many)
 import Control.Monad
+import Prelude hiding (id)
 
 import Text.ParserCombinators.Parsec hiding (runParser)
 import Text.ParserCombinators.Parsec.Expr
@@ -17,7 +18,8 @@ expr = buildExpressionParser exprTable term
 
 exprTable :: [[Operator Char () Expr]]
 exprTable = [
-     [riop "**" Pow]
+      [riop "." MemberAccess]
+    , [riop "**" Pow]
     , [pop "-" UnMinus, pop "!" Not]
     , [iop "*" Mul, iop "/" Div, iop "%" Mod]
     , [iop "+" Plus, iop "-" Minus]
@@ -47,7 +49,7 @@ term = parens expr
 
 
 toplevelParser :: Parser Stmt
-toplevelParser = liftM E funcDef <|> assignment funcExpr
+toplevelParser = liftM E funcDef <|> assignment funcExpr <|> typeDef
 
 
 mainParser :: Parser Stmt
@@ -107,6 +109,14 @@ mainParser =
   liftM E expr -- TODO: is this the right thing? (because it allows stuff like: "func foo() 1 sffunc")
 
 
+typeDef :: Parser Stmt
+typeDef = do reserved tStruct
+             name <- identifier <?> "structure name"
+             body <- many1 (liftM E funcDef <|> assignment funcExpr)
+             reserved tEndStruct
+             return $ Struct name body
+
+
 funcExpr :: Parser Expr
 funcExpr = funcDef <|> expr
 
@@ -126,13 +136,21 @@ funcCall = do name <- try indexAccess <|> try (liftM Var identifier)
 
 
 assignment :: Parser Expr -> Parser Stmt
-assignment rhsParser = do lval <- try indexAccess <|> liftM Var identifier
+assignment rhsParser = do lval <- try indexAccess <|> try memberAccess <|> liftM Var identifier
                           reservedOp "="
                           liftM (Assign lval) rhsParser
 
 
 indexAccess :: Parser Expr
 indexAccess = liftM2 Index identifier (many1 $ brackets expr)
+
+
+memberAccess :: Parser Expr
+memberAccess = do
+    name <- try identifier
+    try dot
+    e <- try indexAccess <|> try (liftM Var identifier)
+    return $ BinExpr MemberAccess (Var name) e
 
 
 runParser :: Parser Stmt -> String -> String

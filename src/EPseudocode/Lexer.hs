@@ -1,8 +1,8 @@
 {-# OPTIONS_GHC -fno-warn-missing-signatures #-}
 
 module EPseudocode.Lexer (parens, braces, identifier, reservedOp, reserved, whiteSpace, integer, float, stringLiteral, commaSep,
-  semi, brackets,
-  tAnd, tOr, tTrue, tFalse, tReturn, tIf, tThen, tElse, tEndIf, tWhile, tEndWhile, tFor, tEndFor, tDo, tFunc, tEndFunc, tBreak)
+  semi, brackets, dot,
+  tAnd, tOr, tTrue, tFalse, tReturn, tIf, tThen, tElse, tEndIf, tWhile, tEndWhile, tFor, tEndFor, tDo, tFunc, tEndFunc, tBreak, tStruct, tEndStruct)
 where
 
 import Text.ParserCombinators.Parsec
@@ -27,6 +27,8 @@ tDo = "executa"
 tFunc = "func"
 tEndFunc = "sffunc"
 tBreak = "stop"
+tStruct = "struct"
+tEndStruct = "sfstruct"
 
 
 epcTokens  = emptyDef {
@@ -40,7 +42,7 @@ epcTokens  = emptyDef {
   --, opStart = opLetter emptyDef
   , opLetter = oneOf "=*"
   --, reservedOpNames = ["!", "<", "=", ">", ">=", "<=", "==", "!=", "+", "-", "/", "%", "*", "**"]
-  , reservedNames = [tOr, tAnd, tTrue, tFalse, tReturn, tIf, tThen, tElse, tEndIf, tWhile, tDo, tEndWhile, tFor, tEndFor, tFunc, tEndFunc, tBreak]
+  , reservedNames = [tOr, tAnd, tTrue, tFalse, tReturn, tIf, tThen, tElse, tEndIf, tWhile, tDo, tEndWhile, tFor, tEndFor, tFunc, tEndFunc, tBreak, tStruct, tEndStruct]
 }
 
 
@@ -58,3 +60,4 @@ float = P.float lexer
 stringLiteral = P.stringLiteral lexer
 commaSep = P.commaSep lexer
 semi = P.semi lexer
+dot = P.dot lexer

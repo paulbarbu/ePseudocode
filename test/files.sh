@@ -39,7 +39,7 @@ testDoubleFunctionDef()
 
 testExprNoMain()
 {
-    assertTrue 'Expression insted of main' 'grep -q "expecting \"func\" or identifier"<<<"$(interpreter test/epc/expr.epc)"'
+    assertTrue 'Expression instead of main' 'grep -q "expecting \"func\", identifier or \"struct\""<<<"$(interpreter test/epc/expr.epc)"'
 }
 
 testNoMainFunc()

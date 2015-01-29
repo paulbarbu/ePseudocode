@@ -33,7 +33,7 @@ data Expr =
     deriving (Show)
 
 
-data BinOp = And | Or | Plus | Minus | Mul | Div | Mod | Lt | Le | Gt | Ge | Neq | Eq | Pow
+data BinOp = And | Or | Plus | Minus | Mul | Div | Mod | Lt | Le | Gt | Ge | Neq | Eq | Pow | MemberAccess
     deriving (Show)
 
 
@@ -41,7 +41,8 @@ data UnOp = Not | UnMinus
     deriving (Show)
 
 
-data Stmt = Assign Expr Expr -- assignments (the left side is limited to variable or list index and the right side is limited here to expression or function (call/def) similarly to Ret)
+data Stmt = Struct String [Stmt] -- struct <name> body - body is limited only to assignments and func defs
+    | Assign Expr Expr -- assignments (the left side is limited to variable or list index and the right side is limited here to expression or function (call/def) similarly to Ret)
     | CompleteIf Expr [Stmt] [Stmt] -- if condition then statements else statements
     | SimpleIf Expr [Stmt] -- if condition then statements
     | While Expr [Stmt] -- while condition then statements

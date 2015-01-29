@@ -1,0 +1,34 @@
+struct point
+    //TODO: index access
+    /*
+    x.a[1]
+    x.a(2)
+
+    */
+    x = 0
+    y = 0
+
+    func translate(dx, dy)
+        x = x+dx
+        y = y+dy
+        scrie("translate was called\n")
+    sffunc
+
+    move = func(new_x, new_y)
+        x = new_x
+        y = new_y
+    sffunc
+sfstruct
+
+//TODO: compare structs
+//TODO: operator overloading?!
+
+func main()
+    p = point()
+    p.x = 123
+
+    scrie("x=", p.x, " y=", p.y, "\n")
+
+    p.translate(1, 1)
+    scrie("x=", p.x, " y=", p.y, "\n")
+sffunc

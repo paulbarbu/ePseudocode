@@ -1,0 +1,15 @@
+struct point
+    x = 0
+    y = 0
+
+    func translate(dx, dy)
+        x = x+dx
+        y = y+dy
+        scrie("translate was called\n")
+    sffunc
+
+    move = func(new_x, new_y)
+        x = new_x
+        y = new_y
+    sffunc
+sfstruct
