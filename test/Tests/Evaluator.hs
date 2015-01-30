@@ -1700,13 +1700,49 @@ evaluatorTests = TestList [
 
  , "struct ctor simple call" ~: do
     r <- evalProgram "struct point x=0 y=0 sfstruct func main() point() sffunc" []
-    "Error: Cannot declare type point since it will shadow other names" @=? r
+    "OK" @=? r
 
  , "struct ctor + direct member access" ~: do
-    r <- evalProgram "struct point x=0 y=0 sfstruct func main() scrie(point().x) sffunc" []
-    "Error: Cannot declare type point since it will shadow other names" @=? r
+    r <- evalProgram "struct point x=0 y=0 sfstruct func main() point().x sffunc" []
+    "OK" @=? r
 
  , "non-struct member access" ~: do
     r <- evalProgram "func main() a=2 scrie(a.x) sffunc" []
-    "Error: Cannot declare type point since it will shadow other names" @=? r
+    "Error: Only structs have members available for access" @=? r
+
+ , "string index struct member" ~: do
+    r <- evalProgram "struct person name=\"foobarbaz\" sfstruct func main() person().name[1] sffunc" []
+    "OK" @=? r
+
+ , "list index struct member" ~: do
+    r <- evalProgram "struct point pts={{1, 0},{0, 0},{1, 1}} sfstruct func main() point().pts[1][1] sffunc" []
+    "OK" @=? r
+
+ , "invalid list index struct member" ~: do
+    r <- evalProgram "struct point pts=1 sfstruct func main() point().pts[1] sffunc" []
+    "Error: Only Lists and Strings can be indexed" @=? r
+
+ , "inexistent indexing member" ~: do
+    r <- evalProgram "struct point pts=1 sfstruct func main() point().foo[1] sffunc" []
+    "Error: No such member foo in struct" @=? r
+
+ , "inexistent func member" ~: do
+    r <- evalProgram "struct point pts=1 sfstruct func main() point().foo() sffunc" []
+    "Error: No such member foo in struct" @=? r
+
+ , "inexistent var member" ~: do
+    r <- evalProgram "struct point pts=1 sfstruct func main() point().foo sffunc" []
+    "Error: No such member foo in struct" @=? r
+
+ , "invalid member type" ~: do
+    r <- evalProgram "struct point pts=1 sfstruct func main() point().1 sffunc" []
+    "Error: Struct members can only be variables, lists and functions" @=? r
+
+ , "func call (struct member - anon func)" ~: do
+    r <- evalProgram "struct point move=func() ret 1 sffunc sfstruct func main() point().move() sffunc" []
+    "OK" @=? r
+
+ , "func call (struct member - proper func)" ~: do
+    r <- evalProgram "struct point func move() ret 1 sffunc sfstruct func main() point().move() sffunc" []
+    "OK" @=? r
  ]

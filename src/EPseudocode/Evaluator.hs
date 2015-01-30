@@ -209,9 +209,7 @@ eval env (E f@(FuncDef name args body)) = case lookup name env of
     Just _ -> throwError $ "The function name \"" ++ name ++ "\" shadows another name in the current scope"
 eval env (E (FuncCall nameExpr args)) = eval env (E nameExpr) >>= \(e, f) ->
     case f of
-        Func{} -> do
-            trace ("Called function!") (return Void)
-            applyFunc e f args >>= return . (e,)
+        Func{} -> applyFunc e f args >>= return . (e,)
         BuiltinIOFunc primitive -> mapM (getEvaledExprList env) args >>=
             primitive >>= \val ->
             return (e, val)
@@ -532,62 +530,37 @@ evalBinExpr env (BinExpr Eq a b) = do
 --TODO: point().translate() infinite loop
 --TODO: test with struct placed in a list
 --TODO: a[1].l[1]
+--TODO: a[1].l[1] = 1
 --TODO: a[1].l[1].x
+--TODO: a[1].l[1].x = 1
 --TODO: a[1].foo()
 --TODO: a().foo()
 --TODO: a().foo().x
 --TODO: a.x.y
+--TODO: a.x.y = 1
 --TODO: foo=2 foo.3
--- evalBinExpr env (BinExpr MemberAccess (Struct s) (Var y)) = do
---     trace ("DIRECT Member access: struct . " ++ y) $ return Void
---     case lookup y s of
---         Just m -> do
---             (_, val) <- eval s $ E m -- evaluate the member m in the structure environment s
---             return val
---         Nothing -> throwError $ "No such member " ++ y ++ " in struct"
--- evalBinExpr env (BinExpr MemberAccess (Struct s) (FuncCall (Var y) [[]])) = do
---         --TODO: p.x()
---         trace ("FuncCall Member access:"  ++ " . " ++ y) $ return Void
---         case lookup y s of
---             Just m -> do
---                 (_, val) <- eval s $ E m -- evaluate the member m in the structure environment s
---                 return val
---             Nothing -> throwError $ "No such member " ++ y ++ " in struct"
--- evalBinExpr env (BinExpr MemberAccess (Var x) (Var y)) = do
---     trace ("NAMED Member access:" ++ x ++ "." ++ y) $ return Void
---     case lookup x env of
---         Just (Struct s) -> do
---             case lookup y s of
---                 Just m -> do
---                     (_, val) <- eval s $ E m -- evaluate the member m in the structure envirnment s
---                     return val
---                 Nothing -> throwError $ "No such member " ++ y ++ " in struct " ++ x
---         _ -> throwError "Only structs have members available for access"
-
---evalBinExpr env (BinExpr MemberAccess (List x) _) = throwError "List cannot be used like a struct"
---evalBinExpr env (BinExpr MemberAccess (Int x) _) = throwError "Int cannot be used like a struct"
 evalBinExpr env (BinExpr MemberAccess x y) = do
-    trace ("GENERIC Member Access: " ++ take 10 (show x) ++ " . " ++ show y) (return Void)
     (_, s) <- eval env $ E x
     case s of
         Struct s -> do
             case y of
-                Index name [expr] -> do
-                --TODO: implement
-                    throwError "get the name out of the struct and apply the index, finally ret the result"
+                Index name indexingExpr -> do
+                    case lookup name s of
+                        Just (List m) -> applyToAnonList s indexingExpr m Nothing
+                        Just (String m) -> applyToAnonString s indexingExpr m Nothing
+                        Just _ -> throwError "Only Lists and Strings can be indexed"
+                        Nothing -> throwError $ "No such member " ++ name ++ " in struct"
                 Var name ->
                     case lookup name s of
                         Just m -> do
                             (_, val) <- eval s $ E m -- evaluate the member m in the structure environment s
                             return val
                         Nothing -> throwError $ "No such member " ++ name ++ " in struct"
-                FuncCall (Var name) [[]] ->
+                FuncCall (Var name) args ->
                     case lookup name s of
-                        Just m -> do
-                            (_, val) <- eval s $ E m -- evaluate the member m in the structure environment s
-                            return val
+                        Just f -> applyFunc s f args
                         Nothing -> throwError $ "No such member " ++ name ++ " in struct"
-                _ -> throwError "Member variables can only be variables, lists and functions"
+                _ -> throwError "Struct members can only be variables, lists and functions"
         _ -> throwError "Only structs have members available for access"
 
 evalBinExpr env (BinExpr op l r) = do
