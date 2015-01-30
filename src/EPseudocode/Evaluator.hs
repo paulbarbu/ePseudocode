@@ -149,7 +149,7 @@ applyToAnonList env (e:es) list newVal = do
 
 eval :: Env -> Stmt -> ErrorWithIO (Env, Expr)
 eval env Break = return (env, Void)
-eval _ (E Void) = throwError "Cannot evaluate Void. Statement used in expression?"
+eval env (E Void) = return (env, Void) -- throwError "Cannot evaluate Void. Statement used in expression?"
 eval env (E a@(Int _)) = return (env, a)
 eval env (E a@(Float _)) = return (env, a)
 eval env (E a@(String _)) = return (env, a)
@@ -525,20 +525,11 @@ evalBinExpr env (BinExpr Eq a b) = do
     (_, r) <- eval env $ E b
     liftM Bool $ eq env l r
 
-
---TODO: cleanup comments and trace calls
---TODO: point().translate() infinite loop
---TODO: test with struct placed in a list
---TODO: a[1].l[1]
 --TODO: a[1].l[1] = 1
---TODO: a[1].l[1].x
 --TODO: a[1].l[1].x = 1
---TODO: a[1].foo()
---TODO: a().foo()
---TODO: a().foo().x
---TODO: a.x.y
 --TODO: a.x.y = 1
---TODO: foo=2 foo.3
+--TODO: test with a.foo() = 3
+--TODO: test with a.foo = 3 where foo is a function
 evalBinExpr env (BinExpr MemberAccess x y) = do
     (_, s) <- eval env $ E x
     case s of
@@ -741,3 +732,4 @@ structToEnv env (stmt:stmts) = do
 
 -- TODO: collision fo scrie (from stdlib) with foo.scrie()
 -- TODO: check that newer members actually have access to older members inside the struct itself
+-- TODO: constructor fucntions for user defined are overwriteable

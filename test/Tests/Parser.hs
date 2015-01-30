@@ -413,4 +413,8 @@ parserTests = TestList [
  , "simple member assignment" ~: parseFailFile "struct sfstruct" "structure name"
 
  , "empty struct" ~: parseFailFile "struct xyz sfstruct" "unexpected reserved word \"sfstruct\""
+
+ , "struct defined in list" ~: parseFailFile "func main() a={struct xyz sfstruct} sffunc" ""
+
+ , "struct defined in func" ~: parseFailFile "func main() struct xyz sfstruct sffunc" ""
  ]

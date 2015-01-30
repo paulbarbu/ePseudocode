@@ -1,10 +1,4 @@
 struct point
-    //TODO: index access
-    /*
-    x.a[1]
-    x.a(2)
-
-    */
     x = 0
     y = 0
 
@@ -21,7 +15,6 @@ struct point
 sfstruct
 
 //TODO: compare structs
-//TODO: operator overloading?!
 
 func main()
     p = point()

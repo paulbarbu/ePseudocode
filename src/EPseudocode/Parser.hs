@@ -18,7 +18,7 @@ expr = buildExpressionParser exprTable term
 
 exprTable :: [[Operator Char () Expr]]
 exprTable = [
-      [riop "." MemberAccess]
+      [iop "." MemberAccess]
     , [riop "**" Pow]
     , [pop "-" UnMinus, pop "!" Not]
     , [iop "*" Mul, iop "/" Div, iop "%" Mod]

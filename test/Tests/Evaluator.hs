@@ -1745,4 +1745,28 @@ evaluatorTests = TestList [
  , "func call (struct member - proper func)" ~: do
     r <- evalProgram "struct point func move() ret 1 sffunc sfstruct func main() point().move() sffunc" []
     "OK" @=? r
+
+ , "invalid func call (struct member - proper func)" ~: do
+    r <- evalProgram "struct point func move(nx, ny) ret 1 sffunc sfstruct func main() point().move() sffunc" []
+    "Error: Trying to pass 0 args to a function that takes 2" @=? r
+
+ , "struct placed in list - simple access" ~: do
+    r <- evalProgram "struct point x=1 y=1 sfstruct func main() a={0, point(), 2} a[1].x sffunc" []
+    "OK" @=? r
+
+ , "struct placed in list - func call" ~: do
+    r <- evalProgram "struct point func move(nx, ny) ret 1 sffunc sfstruct func main() a={0, point(), 2} a[1].move(1, 2) sffunc" []
+    "OK" @=? r
+
+ , "struct placed in list - list access" ~: do
+    r <- evalProgram "struct point pts={1,2,3} sfstruct func main() a={0, point(), 2} a[1].pts[2] sffunc" []
+    "OK" @=? r
+
+ , "struct with list member that holds a struct placed in list - simple access" ~: do
+    r <- evalProgram "struct point x=0 y=0 sfstruct struct points pts={point(), point(), 2} sfstruct func main() a=points() a.pts[1].x sffunc" []
+    "OK" @=? r
+
+ , "struct member that returns a struct, which is then accessed" ~: do
+    r <- evalProgram "struct other x=42 sfstruct struct point func foo() ret other() sffunc sfstruct func main() a=point() a.foo().x sffunc" []
+    "OK" @=? r
  ]
