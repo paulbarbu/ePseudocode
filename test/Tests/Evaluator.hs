@@ -1769,4 +1769,24 @@ evaluatorTests = TestList [
  , "struct member that returns a struct, which is then accessed" ~: do
     r <- evalProgram "struct other x=42 sfstruct struct point func foo() ret other() sffunc sfstruct func main() a=point() a.foo().x sffunc" []
     "OK" @=? r
+
+-- TODO: test what's below with .epc files
+ , "struct member that modifies the struct" ~: do
+     r <- evalProgram "struct point x=1 func foo() x=3 sffunc sfstruct func main() a=point() a.foo() sffunc" []
+     "OK" @=? r
+
+     {-
+        a.x  =2
+
+        a.str[1] = "3"
+        a.str[1][1] = 2 -> ERROR
+
+        a.l[1] = 4
+
+
+        a.lst -> {....}
+
+        a.lst = {}
+     -}
+
  ]

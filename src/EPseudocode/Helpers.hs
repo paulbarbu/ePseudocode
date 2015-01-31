@@ -1,6 +1,8 @@
 module EPseudocode.Helpers
 where
 
+import Data.Tuple (swap)
+
 import EPseudocode.Data
 
 replace :: Int -> a -> [a] -> [a]
@@ -39,3 +41,6 @@ mainHasArgs (stmt:stmts) = case stmt of
     E (FuncDef "main" (_:_) _) -> True
     E (FuncDef "main" [] _) -> False
     _ -> mainHasArgs stmts
+
+
+rlookup x = lookup x . map swap
