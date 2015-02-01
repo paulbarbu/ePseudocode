@@ -1,0 +1,76 @@
+struct point
+    x = 0
+    y = 0
+
+    func translate(dx, dy)
+        x = x+dx
+        y = y+dy
+        scrie("translate was called\n")
+    sffunc
+
+    move = func(new_x, new_y)
+        x = new_x
+        y = new_y
+    sffunc
+sfstruct
+
+struct set
+    elems = {1, 2, point()}
+    str = "foobarbaz"
+sfstruct
+
+struct doublePoint
+    dpoint = point()
+sfstruct
+
+func main()
+    p = point()
+
+    scrie("p.x = ", p.x, "\n")
+    p.x = 3
+    scrie("p.x = ", p.x, "\n")
+
+    p.move(1, 1)
+    scrie("p.x = ", p.x, " p.y = ", p.y,"\n")
+    p.translate(2, 2)
+    scrie("p.x = ", p.x, " p.y = ", p.y,"\n")
+
+    s = set()
+
+    scrie("s.str[1] = ", s.str[1], "\n")
+    s.str[1] = "p"
+    scrie("s.str[1] = ", s.str[1], "\n")
+    scrie("s.str = ", s.str, "\n")
+
+    scrie("s.elems[2] = ", s.elems[2], "\n")
+    s.elems[2] = 42
+    scrie("s.elems[2] = ", s.elems[2], "\n")
+    scrie("s.elems = ", s.elems, "\n")
+    s.elems = {}
+    scrie("s.elems = ", s.elems, "\n")
+
+    l = {1, point(), 3}
+
+    scrie("l[1].x = ", l[1].x, "\n")
+    l[1].x = 3
+    scrie("l[1].x = ", l[1].x, "\n")
+
+    l = {1, set(), 3}
+
+    scrie("l[1].elems[1] = ", l[1].elems[1], "\n")
+    l[1].elems[1] = 3
+    scrie("l[1].elems[1] = ", l[1].elems[1], "\n")
+    scrie("l[1].elems[2].x = ", l[1].elems[2].x, "\n")
+    l[1].elems[2].move(2, 2)
+    scrie("l[1].elems[2].x = ", l[1].elems[2].x, " l[1].elems[2].y = ", l[1].elems[2].y, "\n")
+    l[1].elems[2].translate(1, -1)
+    scrie("l[1].elems[2].x = ", l[1].elems[2].x, " l[1].elems[2].y = ", l[1].elems[2].y, "\n")
+
+    dp = doublePoint()
+    scrie("dp.dpoint.x = ", dp.dpoint.x, "\n")
+    // NOTE: dp.dpoint.x = 3 is not supported
+sffunc
+/*
+TODO:
+a.str[1][1] = 2 -> ERROR
+*/
