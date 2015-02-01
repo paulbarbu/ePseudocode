@@ -98,5 +98,34 @@ testClosure()
     assertEquals "$(echo -e '8\n4')" "$(interpreter examples/closure.epc)"
 }
 
+testStructs()
+{
+out=$(cat <<'EOOUT'
+p.x = 0
+p.x = 3
+p.x = 1 p.y = 1
+translate was called
+p.x = 3 p.y = 3
+s.str[1] = o
+s.str[1] = p
+s.str = fpobarbaz
+s.elems[2] = <user defined type>
+s.elems[2] = 42
+s.elems = {1, 2, 42}
+s.elems = {}
+l[1].x = 0
+l[1].x = 3
+l[1].elems[1] = 2
+l[1].elems[1] = 3
+l[1].elems[2].x = 0
+l[1].elems[2].x = 2 l[1].elems[2].y = 2
+translate was called
+l[1].elems[2].x = 3 l[1].elems[2].y = 1
+dp.dpoint.x = 0
+EOOUT
+)
+    assertEquals "$out" "$(interpreter test/epc/struct.epc)"
+}
+
 # load shunit2
 . test/shell/shunit2

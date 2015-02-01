@@ -5,7 +5,7 @@ where
 import Control.Monad.Except
 import Data.Foldable (foldlM)
 import Data.List ((\\))
-import Debug.Trace
+-- import Debug.Trace
 
 import EPseudocode.Data
 import EPseudocode.Lexer
@@ -43,12 +43,7 @@ interpret' env stmts = foldlM runUntilBreak (env, undefined) stmts
     runUntilBreak :: (Env, Expr) -> Stmt -> ErrorWithIO (Env, Expr)
     runUntilBreak (e, _) stmt = case stmt of
         Break -> return ((":stopiteration:", Bool True):env, Void)
-        _ -> if continueIteration e
-                then do
-                    (newEnv, v) <- eval e stmt
-                    trace ("Interpret newEnv: " ++ take 100 (show newEnv)) (return Void)
-                    return (newEnv, v)
-                else return (e, Void)
+        _ -> if continueIteration e then eval e stmt else return (e, Void)
 
 
 applyToNamedList :: Env -> Expr -> Maybe Expr -> ErrorWithIO (Env, Expr)
@@ -169,12 +164,7 @@ eval env (E (Var name)) = maybe (throwError $ "Unbound variable name " ++ name)
     $ lookup name env
 eval env (E index@(Index _ _)) = applyToNamedList env index Nothing
 eval env (E unExpr@(UnExpr _ _)) = evalUnExpr env unExpr >>= eval env . E
-eval env (E binExpr@BinExpr{}) = do
-    (e,v) <- evalBinExpr env binExpr
-    trace ("After evaling bin expr: " ++ show binExpr ++ ":" ++ take 100 (show e)) (return Void)
-    (e1, v1) <- eval e $ E v
-    trace ("After evaling RES of bin expr: " ++ show binExpr ++ ":" ++ take 100 (show e1)) (return Void)
-    return (e1, v1)
+eval env (E binExpr@BinExpr{}) = evalBinExpr env binExpr >>= \(e,v)-> eval e $ E v
 eval env (Ret expr) = eval env (E expr) >>= \(e, val) -> return ((":ret:", val):e, val) -- I can do this since Ret may appear only inside functions and the environment is not propagated outside the functions
 eval env (Assign (Var name) s) = do
     (newEnv, val) <- eval env $ E s
@@ -182,10 +172,8 @@ eval env (Assign (Var name) s) = do
 eval env (Assign index@(Index _ _) s) = do
     (_, val) <- eval env $ E s
     applyToNamedList env index $ Just val
-eval env (Assign (BinExpr MemberAccess x y) assignedExpr) = do
-    trace ("Member access assignment") (return (env, Void))
+eval env (Assign (BinExpr MemberAccess x y) assignedExpr) =
     case x of
-        -- TODO: this also works with lists
         Var varName -> do
             case lookup varName env of
                 Just (Struct _ s) -> do
@@ -211,6 +199,32 @@ eval env (Assign (BinExpr MemberAccess x y) assignedExpr) = do
                                 Nothing -> throwError $ "No such member " ++ name ++ " in struct"
                         _ -> throwError "Cannot assign to temporary member in struct"
                 Nothing -> throwError $ "Struct " ++ varName ++ "not found"
+                _ -> throwError "Only structs can have their members accessed"
+        index@(Index varName indexingExpr) -> do
+            (_, lst) <- applyToNamedList env index Nothing
+            case lst of
+                Struct _ s -> do
+                    case y of
+                        Index name indexingExpr -> do
+                            case lookup name s of
+                                Just (List m) -> do
+                                    val <- applyToAnonList s indexingExpr m $ Just assignedExpr
+                                    let modifiedStruct = Struct "" ([(name, val)]++s)
+                                    applyToNamedList env index $ Just modifiedStruct
+                                Just (String m) -> do
+                                    val <- applyToAnonString s indexingExpr m $ Just assignedExpr
+                                    let modifiedStruct = Struct "" ([(name, val)]++s)
+                                    applyToNamedList env index $ Just modifiedStruct
+                                Just _ -> throwError "Only Lists and Strings can be indexed"
+                                Nothing -> throwError $ "No such member " ++ name ++ " in struct"
+                        Var name ->
+                            case lookup name s of
+                                Just _ -> do
+                                    (_, val) <- eval env $ E assignedExpr
+                                    let modifiedStruct = Struct "" ([(name, val)]++s)
+                                    applyToNamedList env index $ Just modifiedStruct
+                                Nothing -> throwError $ "No such member " ++ name ++ " in struct"
+                        _ -> throwError "Cannot assign to temporary member in struct"
                 _ -> throwError "Only structs can have their members accessed"
         _ -> throwError "You cannot assign to temporary objects"
 eval env (SimpleIf cond stmts) = do
@@ -571,10 +585,7 @@ evalBinExpr env (BinExpr Eq a b) = do
     v <- eq env l r
     return (env, Bool v)
 
---TODO: a[1].l[1] = 1
---TODO: a[1].l[1].x = 1
 --TODO: a.x.y = 1
---TODO: a[3].x
 --TODO: test with a.foo() = 3
 --TODO: test with a.foo = 3 where foo is a function
 evalBinExpr env (BinExpr MemberAccess x y) = do
@@ -604,7 +615,6 @@ evalBinExpr env (BinExpr MemberAccess x y) = do
                             case lookup name s of
                                 Just f -> do
                                     (modifiedStruct,v) <- applyFunc s f args
-                                    trace ("Modified struct:" ++ take 100 (show modifiedStruct)) (return Void)
                                     return ((varName,Struct structName modifiedStruct):env,v)
                                 Nothing -> throwError $ "No such member " ++ name ++ " in struct"
                         _ -> throwError "Struct members can only be variables, lists and functions"
@@ -634,7 +644,6 @@ evalBinExpr env (BinExpr MemberAccess x y) = do
                             case lookup name s of
                                 Just f -> do
                                     (modifiedStruct,v) <- applyFunc s f args
-                                    trace ("Modified struct:" ++ take 100 (show modifiedStruct)) (return Void)
                                     return ((structName,Struct structName modifiedStruct):env,v)
                                 Nothing -> throwError $ "No such member " ++ name ++ " in struct"
                         _ -> throwError "Struct members can only be variables, lists and functions"

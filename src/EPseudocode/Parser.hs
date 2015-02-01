@@ -136,7 +136,7 @@ funcCall = do name <- try indexAccess <|> try (liftM Var identifier)
 
 
 assignment :: Parser Expr -> Parser Stmt
-assignment rhsParser = do lval <- try indexAccess <|> try memberAccess <|> liftM Var identifier
+assignment rhsParser = do lval <- try memberAccess <|> try indexAccess <|> liftM Var identifier
                           reservedOp "="
                           liftM (Assign lval) rhsParser
 
@@ -147,10 +147,10 @@ indexAccess = liftM2 Index identifier (many1 $ brackets expr)
 
 memberAccess :: Parser Expr
 memberAccess = do
-    name <- try identifier
+    struct <- try indexAccess <|> try (liftM Var identifier)
     try dot
     e <- try indexAccess <|> try (liftM Var identifier)
-    return $ BinExpr MemberAccess (Var name) e
+    return $ BinExpr MemberAccess struct e
 
 
 runParser :: Parser Stmt -> String -> String

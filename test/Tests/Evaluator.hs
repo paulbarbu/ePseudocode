@@ -1775,18 +1775,7 @@ evaluatorTests = TestList [
      r <- evalProgram "struct point x=1 func foo() x=3 sffunc sfstruct func main() a=point() a.foo() sffunc" []
      "OK" @=? r
 
-     {-
-        a.x  =2
-
-        a.str[1] = "3"
-        a.str[1][1] = 2 -> ERROR
-
-        a.l[1] = 4
-
-
-        a.lst -> {....}
-
-        a.lst = {}
-     -}
-
+ , "struct member modified inside a struct, inside a list" ~: do
+     r <- evalProgram "struct point x=1 y=1 sfstruct func main() a={1, point(), 3} a[1].x = 3 sffunc" []
+     "OK" @=? r
  ]
