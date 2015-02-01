@@ -30,7 +30,7 @@ data Expr =
     | BuiltinIOFunc ([[Expr]] -> ErrorWithIO Expr)
     | BuiltinFunc ([[Expr]] -> Error Expr)
     | File Handle
-    | Struct String Env --TODO: the streuct name is no longer necessary
+    | Struct Env
     deriving (Show)
 
 
@@ -77,5 +77,5 @@ showExpr Void = ""
 showExpr BuiltinFunc{} = "<builtin func>"
 showExpr BuiltinIOFunc{} = "<builtin func>"
 showExpr (Func args _ _) = "<user defined func taking " ++ show (length args) ++ " args>"
-showExpr (Struct _ _) = "<user defined type>"
+showExpr (Struct _) = "<user defined type>"
 showExpr a = show a

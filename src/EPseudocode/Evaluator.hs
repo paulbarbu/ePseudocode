@@ -155,7 +155,7 @@ eval env (E a@(Int _)) = return (env, a)
 eval env (E a@(Float _)) = return (env, a)
 eval env (E a@(String _)) = return (env, a)
 eval env (E a@(Bool _)) = return (env, a)
-eval env (E a@(Struct _ _)) = return (env, a)
+eval env (E a@(Struct _)) = return (env, a)
 eval env (E (List a)) = do
     x <- mapM (eval env . E) a
     return (env, List $ map snd x)
@@ -174,19 +174,19 @@ eval env (Assign index@(Index _ _) s) = do
     applyToNamedList env index $ Just val
 eval env (Assign (BinExpr MemberAccess x y) assignedExpr) =
     case x of
-        Var varName -> do
+        Var varName ->
             case lookup varName env of
-                Just (Struct _ s) -> do
+                Just (Struct s) ->
                     case y of
-                        Index name indexingExpr -> do
+                        Index name indexingExpr ->
                             case lookup name s of
                                 Just (List m) -> do
                                     val <- applyToAnonList s indexingExpr m $ Just assignedExpr
-                                    let modifiedStruct = Struct "" ([(name, val)]++s)
+                                    let modifiedStruct = Struct $ (name, val):s
                                     return ((varName, modifiedStruct):env, val)
                                 Just (String m) -> do
                                     val <- applyToAnonString s indexingExpr m $ Just assignedExpr
-                                    let modifiedStruct = Struct "" ([(name, val)]++s)
+                                    let modifiedStruct = Struct $ (name, val):s
                                     return ((varName, modifiedStruct):env, val)
                                 Just _ -> throwError "Only Lists and Strings can be indexed"
                                 Nothing -> throwError $ "No such member " ++ name ++ " in struct"
@@ -194,26 +194,26 @@ eval env (Assign (BinExpr MemberAccess x y) assignedExpr) =
                             case lookup name s of
                                 Just _ -> do
                                     (_, val) <- eval env $ E assignedExpr
-                                    let modifiedStruct = Struct "" ([(name, val)]++s)
+                                    let modifiedStruct = Struct $ (name, val):s
                                     return ((varName, modifiedStruct):env, val)
                                 Nothing -> throwError $ "No such member " ++ name ++ " in struct"
                         _ -> throwError "Cannot assign to temporary member in struct"
                 Nothing -> throwError $ "Struct " ++ varName ++ "not found"
                 _ -> throwError "Only structs can have their members accessed"
-        index@(Index varName indexingExpr) -> do
+        index@Index{} -> do
             (_, lst) <- applyToNamedList env index Nothing
             case lst of
-                Struct _ s -> do
+                Struct s ->
                     case y of
-                        Index name indexingExpr -> do
+                        Index name indexingExpr ->
                             case lookup name s of
                                 Just (List m) -> do
                                     val <- applyToAnonList s indexingExpr m $ Just assignedExpr
-                                    let modifiedStruct = Struct "" ([(name, val)]++s)
+                                    let modifiedStruct = Struct $ (name, val):s
                                     applyToNamedList env index $ Just modifiedStruct
                                 Just (String m) -> do
                                     val <- applyToAnonString s indexingExpr m $ Just assignedExpr
-                                    let modifiedStruct = Struct "" ([(name, val)]++s)
+                                    let modifiedStruct = Struct $ (name, val):s
                                     applyToNamedList env index $ Just modifiedStruct
                                 Just _ -> throwError "Only Lists and Strings can be indexed"
                                 Nothing -> throwError $ "No such member " ++ name ++ " in struct"
@@ -221,7 +221,7 @@ eval env (Assign (BinExpr MemberAccess x y) assignedExpr) =
                             case lookup name s of
                                 Just _ -> do
                                     (_, val) <- eval env $ E assignedExpr
-                                    let modifiedStruct = Struct "" ([(name, val)]++s)
+                                    let modifiedStruct = Struct $ (name, val):s
                                     applyToNamedList env index $ Just modifiedStruct
                                 Nothing -> throwError $ "No such member " ++ name ++ " in struct"
                         _ -> throwError "Cannot assign to temporary member in struct"
@@ -252,14 +252,14 @@ eval env (For initial cond it stmts) =
             case bodyCond of
                 Nothing -> repeatWhile bodyEnv (Bool True) stmts'
                 Just a -> repeatWhile bodyEnv a stmts'
-eval env (TypeDef name body) = do
+eval env (TypeDef name body) =
     case lookup name env of
         Just _ -> throwError $ "Cannot declare type " ++ name ++ " since it will shadow other names"
         Nothing -> do
             structEnv <- structToEnv env body
-            return ((name, Func [] [Ret $ Struct name structEnv] env):env, Void)
+            return ((name, Func [] [Ret $ Struct structEnv] env):env, Void)
 eval env (E (FuncDef "" args body)) = return (env, Func args body env)
-eval env (E f@(FuncDef name args body)) = case lookup name env of
+eval env (E (FuncDef name args body)) = case lookup name env of
     Nothing -> return ((name, Func args body env):env, Func args body env)
     Just _ -> throwError $ "The function name \"" ++ name ++ "\" shadows another name in the current scope"
 eval env (E (FuncCall nameExpr args)) = eval env (E nameExpr) >>= \(e, f) ->
@@ -277,7 +277,7 @@ eval env (E (FuncCall nameExpr args)) = eval env (E nameExpr) >>= \(e, f) ->
 
 
 applyFunc :: Env -> Expr -> [[Expr]] -> ErrorWithIO (Env, Expr)
-applyFunc env (Func _ body closure) [] = evalFuncBody env body
+applyFunc env (Func _ body _) [] = evalFuncBody env body
 applyFunc env (Func argNames body closure) [args] =
     getEvaledExprList env args >>=
     argsToEnv argNames >>= \e ->
@@ -285,8 +285,8 @@ applyFunc env (Func argNames body closure) [args] =
 applyFunc env (Func argNames body closure) (arg:args) =
     getEvaledExprList env arg >>=
     argsToEnv argNames >>= \e ->
-    evalFuncBody (e ++ closure ++ env) body >>= \(e, (Func innerArgNames innerBody innerClosure)) ->
-    eval (innerClosure ++ e ++ env) (E (FuncCall (FuncDef "" innerArgNames innerBody) args))
+    evalFuncBody (e ++ closure ++ env) body >>= \(innerEnv, Func innerArgNames innerBody innerClosure) ->
+    eval (innerClosure ++ innerEnv ++ env) (E (FuncCall (FuncDef "" innerArgNames innerBody) args))
 
 
 evalFuncBody :: Env -> [Stmt] -> ErrorWithIO (Env, Expr)
@@ -366,16 +366,16 @@ evalBinExpr env (BinExpr Neq (List l) (List r)) = do
     a <- getEvaledExprList env l
     b <- getEvaledExprList env r
     (liftM and . sequence $ zipWith (neq env) a b) >>= \v -> return (env, Bool v)
-evalBinExpr env (BinExpr Neq (Bool _) (List _)) = return $ (env, Bool True)
-evalBinExpr env (BinExpr Neq (List _) (Bool _)) = return $ (env, Bool True)
+evalBinExpr env (BinExpr Neq (Bool _) (List _)) = return (env, Bool True)
+evalBinExpr env (BinExpr Neq (List _) (Bool _)) = return (env, Bool True)
 evalBinExpr _ (BinExpr Neq _ (List _)) = throwError "Lists can be compared only to lists"
 evalBinExpr _ (BinExpr Neq (List _) _) = throwError "Lists can be compared only to lists"
 evalBinExpr env (BinExpr Eq (List l) (List r)) = do
     a <- getEvaledExprList env l
     b <- getEvaledExprList env r
     (liftM and . sequence $ zipWith (eq env) a b) >>= \v -> return (env, Bool v)
-evalBinExpr env (BinExpr Eq (Bool _) (List _)) = return $ (env, Bool False)
-evalBinExpr env (BinExpr Eq (List _) (Bool _)) = return $ (env, Bool False)
+evalBinExpr env (BinExpr Eq (Bool _) (List _)) = return (env, Bool False)
+evalBinExpr env (BinExpr Eq (List _) (Bool _)) = return (env, Bool False)
 evalBinExpr _ (BinExpr Eq _ (List _)) = throwError "Lists can be compared only to lists"
 evalBinExpr _ (BinExpr Eq (List _) _) = throwError "Lists can be compared only to lists"
 evalBinExpr env (BinExpr Plus (List l) (List r)) = do
@@ -585,17 +585,18 @@ evalBinExpr env (BinExpr Eq a b) = do
     v <- eq env l r
     return (env, Bool v)
 
+--TODO: a[1].foo()
 --TODO: a.x.y = 1
 --TODO: test with a.foo() = 3
 --TODO: test with a.foo = 3 where foo is a function
-evalBinExpr env (BinExpr MemberAccess x y) = do
+evalBinExpr env (BinExpr MemberAccess x y) =
     case x of
     -- TODO: here I can work with Indexes too, because I know the name
-        Var varName -> do
+        Var varName ->
             case lookup varName env of
-                Just (Struct structName s) -> do --TODO: here I might not find the struct
+                Just (Struct s) -> --TODO: here I might not find the struct
                     case y of
-                        Index name indexingExpr -> do
+                        Index name indexingExpr ->
                             case lookup name s of
                                 Just (List m) -> do
                                     v <- applyToAnonList s indexingExpr m Nothing
@@ -615,16 +616,16 @@ evalBinExpr env (BinExpr MemberAccess x y) = do
                             case lookup name s of
                                 Just f -> do
                                     (modifiedStruct,v) <- applyFunc s f args
-                                    return ((varName,Struct structName modifiedStruct):env,v)
+                                    return ((varName,Struct modifiedStruct):env,v)
                                 Nothing -> throwError $ "No such member " ++ name ++ " in struct"
                         _ -> throwError "Struct members can only be variables, lists and functions"
                 _ -> throwError "Only structs have members available for access"
         _ -> do
-            (_, s) <- eval env $ E x
-            case s of
-                Struct structName s -> do
+            (_, val) <- eval env $ E x
+            case val of
+                Struct s ->
                     case y of
-                        Index name indexingExpr -> do
+                        Index name indexingExpr ->
                             case lookup name s of
                                 Just (List m) -> do
                                     v <- applyToAnonList s indexingExpr m Nothing
@@ -637,14 +638,16 @@ evalBinExpr env (BinExpr MemberAccess x y) = do
                         Var name ->
                             case lookup name s of
                                 Just m -> do
-                                    (_, val) <- eval s $ E m -- evaluate the member m in the structure environment s
-                                    return (env, val)
+                                    (_, newVal) <- eval s $ E m -- evaluate the member m in the structure environment s
+                                    return (env, newVal)
                                 Nothing -> throwError $ "No such member " ++ name ++ " in struct"
                         FuncCall (Var name) args ->
                             case lookup name s of
                                 Just f -> do
-                                    (modifiedStruct,v) <- applyFunc s f args
-                                    return ((structName,Struct structName modifiedStruct):env,v)
+                                    -- (modifiedStruct,v) <- applyFunc s f args
+                                    -- return ((structName,Struct modifiedStruct):env,v)
+                                    (_, v) <- applyFunc s f args
+                                    return (env, v)
                                 Nothing -> throwError $ "No such member " ++ name ++ " in struct"
                         _ -> throwError "Struct members can only be variables, lists and functions"
                 _ -> throwError "Only structs have members available for access"
