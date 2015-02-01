@@ -35,9 +35,6 @@ loop env = do
         Nothing -> return ()
         Just ":quit" -> return ()
         Just ":q" -> return ()
-        Just ":env" -> do
-            outputStrLn $ "env: " ++ show env
-            loop env
         Just input -> do
             res <- liftIO $ runExceptT $ interpret env input
             case res of
