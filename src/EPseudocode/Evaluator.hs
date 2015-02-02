@@ -4,6 +4,7 @@ where
 
 import Control.Monad.Except
 import Data.Foldable (foldlM)
+import Data.Maybe
 import Data.List ((\\))
 -- import Debug.Trace
 
@@ -148,9 +149,43 @@ applyToAnonList env (e:es) list newVal = do
         _ -> throwError "List can be indexed only with Integer evaluating expressions"
 
 
+applyToStructIndex :: Env -> Env -> Maybe String -> String -> IndexingListExpr -> Expr -> Maybe (Maybe Expr -> ErrorWithIO (Env, Expr)) -> ErrorWithIO (Env, Expr)
+applyToStructIndex env structEnv structName memberName indexingExpr assignedExpr retFunc =
+    case lookup memberName structEnv of
+        Just (List m) -> do
+            val <- applyToAnonList structEnv indexingExpr m $ Just assignedExpr
+            let modifiedStruct = Struct $ (memberName, val):structEnv
+
+            if isJust retFunc && isNothing structName
+                then fromJust retFunc $ Just modifiedStruct
+                else return ((fromJust structName, modifiedStruct):env, val)
+        Just (String m) -> do
+            val <- applyToAnonString structEnv indexingExpr m $ Just assignedExpr
+            let modifiedStruct = Struct $ (memberName, val):structEnv
+
+            if isJust retFunc && isNothing structName
+                then fromJust retFunc $ Just modifiedStruct
+                else return ((fromJust structName, modifiedStruct):env, val)
+        Just _ -> throwError "Only Lists and Strings can be indexed"
+        Nothing -> throwError $ "No such member " ++ memberName ++ " in struct" ++ (maybe ("") (\name -> " " ++ name) structName )
+
+
+applyToStructVar :: Env -> Env -> Maybe String -> String -> Expr -> Maybe (Maybe Expr -> ErrorWithIO (Env, Expr)) -> ErrorWithIO (Env, Expr)
+applyToStructVar env structEnv structName memberName assignedExpr retFunc =
+    case lookup memberName structEnv of
+        Just _ -> do
+            (_, val) <- eval env $ E assignedExpr
+            let modifiedStruct = Struct $ (memberName, val):structEnv
+
+            if isJust retFunc && isNothing structName
+                then fromJust retFunc $ Just modifiedStruct
+                else return ((fromJust structName, modifiedStruct):env, val)
+        Nothing -> throwError $ "No such member " ++ memberName ++ " in struct"
+
+
 eval :: Env -> Stmt -> ErrorWithIO (Env, Expr)
 eval env Break = return (env, Void)
-eval env (E Void) = return (env, Void) -- throwError "Cannot evaluate Void. Statement used in expression?"
+eval env (E Void) = return (env, Void)
 eval env (E a@(Int _)) = return (env, a)
 eval env (E a@(Float _)) = return (env, a)
 eval env (E a@(String _)) = return (env, a)
@@ -174,59 +209,32 @@ eval env (Assign index@(Index _ _) s) = do
     applyToNamedList env index $ Just val
 eval env (Assign (BinExpr MemberAccess x y) assignedExpr) =
     case x of
-        Var varName ->
-            case lookup varName env of
-                Just (Struct s) ->
+        Var structName ->
+            case lookup structName env of
+                Just (Struct sEnv) ->
                     case y of
-                        Index name indexingExpr ->
-                            case lookup name s of
-                                Just (List m) -> do
-                                    val <- applyToAnonList s indexingExpr m $ Just assignedExpr
-                                    let modifiedStruct = Struct $ (name, val):s
-                                    return ((varName, modifiedStruct):env, val)
-                                Just (String m) -> do
-                                    val <- applyToAnonString s indexingExpr m $ Just assignedExpr
-                                    let modifiedStruct = Struct $ (name, val):s
-                                    return ((varName, modifiedStruct):env, val)
-                                Just _ -> throwError "Only Lists and Strings can be indexed"
-                                Nothing -> throwError $ "No such member " ++ name ++ " in struct"
-                        Var name ->
-                            case lookup name s of
-                                Just _ -> do
-                                    (_, val) <- eval env $ E assignedExpr
-                                    let modifiedStruct = Struct $ (name, val):s
-                                    return ((varName, modifiedStruct):env, val)
-                                Nothing -> throwError $ "No such member " ++ name ++ " in struct"
-                        _ -> throwError "Cannot assign to temporary member in struct"
-                Nothing -> throwError $ "Struct " ++ varName ++ "not found"
-                _ -> throwError "Only structs can have their members accessed"
+                        Index memberName indexingExpr ->
+                            applyToStructIndex env sEnv (Just structName) memberName indexingExpr assignedExpr Nothing
+                        Var memberName ->
+                            applyToStructVar env sEnv (Just structName) memberName assignedExpr Nothing
+                        _ -> throwError tempMemberErr
+                Nothing -> throwError $ "Struct " ++ structName ++ "not found"
+                _ -> throwError invalidAccess
         index@Index{} -> do
             (_, lst) <- applyToNamedList env index Nothing
             case lst of
-                Struct s ->
+                Struct sEnv ->
                     case y of
-                        Index name indexingExpr ->
-                            case lookup name s of
-                                Just (List m) -> do
-                                    val <- applyToAnonList s indexingExpr m $ Just assignedExpr
-                                    let modifiedStruct = Struct $ (name, val):s
-                                    applyToNamedList env index $ Just modifiedStruct
-                                Just (String m) -> do
-                                    val <- applyToAnonString s indexingExpr m $ Just assignedExpr
-                                    let modifiedStruct = Struct $ (name, val):s
-                                    applyToNamedList env index $ Just modifiedStruct
-                                Just _ -> throwError "Only Lists and Strings can be indexed"
-                                Nothing -> throwError $ "No such member " ++ name ++ " in struct"
-                        Var name ->
-                            case lookup name s of
-                                Just _ -> do
-                                    (_, val) <- eval env $ E assignedExpr
-                                    let modifiedStruct = Struct $ (name, val):s
-                                    applyToNamedList env index $ Just modifiedStruct
-                                Nothing -> throwError $ "No such member " ++ name ++ " in struct"
-                        _ -> throwError "Cannot assign to temporary member in struct"
-                _ -> throwError "Only structs can have their members accessed"
+                        Index memberName indexingExpr ->
+                             applyToStructIndex env sEnv Nothing memberName indexingExpr assignedExpr $ Just (applyToNamedList env index)
+                        Var memberName ->
+                            applyToStructVar env sEnv Nothing memberName assignedExpr $ Just (applyToNamedList env index)
+                        _ -> throwError tempMemberErr
+                _ -> throwError invalidAccess
         _ -> throwError "You cannot assign to temporary objects"
+    where
+        invalidAccess = "Only structs can have their members accessed"
+        tempMemberErr = "Cannot assign to temporary member in struct"
 eval env (SimpleIf cond stmts) = do
     (newEnv, res) <- eval env (E cond)
     case res of
@@ -592,34 +600,37 @@ evalBinExpr env (BinExpr Eq a b) = do
 evalBinExpr env (BinExpr MemberAccess x y) =
     case x of
     -- TODO: here I can work with Indexes too, because I know the name
-        Var varName ->
-            case lookup varName env of
-                Just (Struct s) -> --TODO: here I might not find the struct
+        Var structName ->
+            case lookup structName env of
+                Just (Struct sEnv) -> --TODO: here I might not find the struct
                     case y of
-                        Index name indexingExpr ->
-                            case lookup name s of
+                        Index memberName indexingExpr ->
+                            case lookup memberName sEnv of
                                 Just (List m) -> do
-                                    v <- applyToAnonList s indexingExpr m Nothing
+                                    v <- applyToAnonList sEnv indexingExpr m Nothing
                                     return (env, v)
                                 Just (String m) -> do
-                                    v <- applyToAnonString s indexingExpr m Nothing
+                                    v <- applyToAnonString sEnv indexingExpr m Nothing
                                     return (env, v)
                                 Just _ -> throwError "Only Lists and Strings can be indexed"
-                                Nothing -> throwError $ "No such member " ++ name ++ " in struct"
-                        Var name ->
-                            case lookup name s of
+                                Nothing -> inexistentMember memberName
+                        Var memberName ->
+                            case lookup memberName sEnv of
                                 Just m -> do
-                                    (_, val) <- eval s $ E m -- evaluate the member m in the structure environment s
+                                    (_, val) <- eval sEnv $ E m -- evaluate the member m in the structure environment s
                                     return (env, val)
-                                Nothing -> throwError $ "No such member " ++ name ++ " in struct"
-                        FuncCall (Var name) args ->
-                            case lookup name s of
+                                Nothing -> inexistentMember memberName
+                        FuncCall (Var memberName) args ->
+                            case lookup memberName sEnv of
                                 Just f -> do
-                                    (modifiedStruct,v) <- applyFunc s f args
-                                    return ((varName,Struct modifiedStruct):env,v)
-                                Nothing -> throwError $ "No such member " ++ name ++ " in struct"
+                                    (modifiedStruct,v) <- applyFunc sEnv f args
+                                    return ((structName, Struct modifiedStruct):env, v)
+                                Nothing -> inexistentMember memberName
                         _ -> throwError "Struct members can only be variables, lists and functions"
+                    where
+                        inexistentMember mName = throwError $ "No such member " ++ mName ++ " in struct " ++ structName
                 _ -> throwError "Only structs have members available for access"
+
         _ -> do
             (_, val) <- eval env $ E x
             case val of
