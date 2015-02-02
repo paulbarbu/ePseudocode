@@ -173,8 +173,10 @@ applyToStructIndex env structEnv structName memberName indexingExpr assignedExpr
             else
                 return (env, val)
         Just _ -> throwError "Only Lists and Strings can be indexed"
-        Nothing -> throwError $ "No such member " ++ memberName ++ " in struct" ++ (maybe ("") (\name -> " " ++ name) structName )
+        Nothing -> inexistentMember memberName structName
 
+
+inexistentMember memberName structName = throwError $ "No such member " ++ memberName ++ " in struct" ++ (maybe ("") (\name -> " " ++ name) structName)
 
 applyToStructVar :: Env -> Env -> Maybe String -> String -> Maybe Expr -> Maybe (Maybe Expr -> ErrorWithIO (Env, Expr)) -> ErrorWithIO (Env, Expr)
 applyToStructVar env structEnv structName memberName assignedExpr retFunc =
@@ -190,7 +192,10 @@ applyToStructVar env structEnv structName memberName assignedExpr retFunc =
             else do
                 (_, val) <- eval structEnv $ E m
                 return (env, val)
-        Nothing -> throwError $ "No such member " ++ memberName ++ " in struct"
+        Nothing -> inexistentMember memberName structName
+
+
+invalidAccess = "Only structs can have their members accessed"
 
 
 eval :: Env -> Stmt -> ErrorWithIO (Env, Expr)
@@ -243,7 +248,6 @@ eval env (Assign (BinExpr MemberAccess x y) assignedExpr) =
                 _ -> throwError invalidAccess
         _ -> throwError "You cannot assign to temporary objects"
     where
-        invalidAccess = "Only structs can have their members accessed"
         tempMemberErr = "Cannot assign to temporary member in struct"
 eval env (SimpleIf cond stmts) = do
     (newEnv, res) <- eval env (E cond)
@@ -623,43 +627,44 @@ evalBinExpr env (BinExpr MemberAccess x y) =
                                 Just f -> do
                                     (modifiedStruct,v) <- applyFunc sEnv f args
                                     return ((structName, Struct modifiedStruct):env, v)
-                                Nothing -> inexistentMember memberName
-                        _ -> throwError "Struct members can only be variables, lists and functions"
-                    where
-                        inexistentMember mName = throwError $ "No such member " ++ mName ++ " in struct " ++ structName
-                _ -> throwError "Only structs have members available for access"
-
+                                Nothing -> inexistentMember memberName $ Just structName
+                        _ -> throwError invalidMember
+                _ -> throwError invalidAccess
+        index@Index{} -> do
+            (_, lst) <- applyToNamedList env index Nothing
+            case lst of
+                Struct sEnv ->
+                    case y of
+                        Index memberName indexingExpr ->
+                             applyToStructIndex env sEnv Nothing memberName indexingExpr Nothing Nothing
+                        Var memberName ->
+                            applyToStructVar env sEnv Nothing memberName Nothing Nothing
+                        FuncCall (Var memberName) args ->
+                            case lookup memberName sEnv of
+                                Just f -> do
+                                    (_, v) <- applyFunc sEnv f args
+                                    return (env, v)
+                                Nothing -> inexistentMember memberName Nothing
+                        _ -> throwError invalidMember
+                _ -> throwError invalidAccess
         _ -> do
             (_, val) <- eval env $ E x
             case val of
-                Struct s ->
+                Struct sEnv ->
                     case y of
-                        Index name indexingExpr ->
-                            case lookup name s of
-                                Just (List m) -> do
-                                    v <- applyToAnonList s indexingExpr m Nothing
-                                    return (env, v)
-                                Just (String m) -> do
-                                    v <- applyToAnonString s indexingExpr m Nothing
-                                    return (env, v)
-                                Just _ -> throwError "Only Lists and Strings can be indexed"
-                                Nothing -> throwError $ "No such member " ++ name ++ " in struct"
-                        Var name ->
-                            case lookup name s of
-                                Just m -> do
-                                    (_, newVal) <- eval s $ E m -- evaluate the member m in the structure environment s
-                                    return (env, newVal)
-                                Nothing -> throwError $ "No such member " ++ name ++ " in struct"
-                        FuncCall (Var name) args ->
-                            case lookup name s of
+                        Index memberName indexingExpr ->
+                             applyToStructIndex env sEnv Nothing memberName indexingExpr Nothing Nothing
+                        Var memberName ->
+                            applyToStructVar env sEnv Nothing memberName Nothing Nothing
+                        FuncCall (Var memberName) args ->
+                            case lookup memberName sEnv of
                                 Just f -> do
-                                    -- (modifiedStruct,v) <- applyFunc s f args
-                                    -- return ((structName,Struct modifiedStruct):env,v)
-                                    (_, v) <- applyFunc s f args
+                                    (_, v) <- applyFunc sEnv f args
                                     return (env, v)
-                                Nothing -> throwError $ "No such member " ++ name ++ " in struct"
-                        _ -> throwError "Struct members can only be variables, lists and functions"
-                _ -> throwError "Only structs have members available for access"
+                                Nothing -> inexistentMember memberName Nothing
+                        _ -> throwError invalidMember
+                _ -> throwError invalidAccess
+    where invalidMember = "Struct members can only be variables, lists and functions"
 
 evalBinExpr env (BinExpr op l r) = do
     (_, a) <- eval env $ E l

@@ -1708,7 +1708,7 @@ evaluatorTests = TestList [
 
  , "non-struct member access" ~: do
     r <- evalProgram "func main() a=2 scrie(a.x) sffunc" []
-    "Error: Only structs have members available for access" @=? r
+    "Error: Only structs can have their members accessed" @=? r
 
  , "string index struct member" ~: do
     r <- evalProgram "struct person name=\"foobarbaz\" sfstruct func main() person().name[1] sffunc" []
