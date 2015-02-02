@@ -156,7 +156,9 @@ applyToStructIndex env structEnv structName memberName indexingExpr assignedExpr
             val <- applyToAnonList structEnv indexingExpr m assignedExpr
             if isJust assignedExpr
             then do
-                let modifiedStruct = Struct $ (memberName, val):structEnv
+                let modifiedStruct' = (memberName, val):structEnv
+                let modifiedStruct = Struct $ updateStructFuncEnv modifiedStruct' modifiedStruct'
+
                 if isJust retFunc && isNothing structName
                     then fromJust retFunc $ Just modifiedStruct
                     else return ((fromJust structName, modifiedStruct):env, val)
@@ -165,7 +167,8 @@ applyToStructIndex env structEnv structName memberName indexingExpr assignedExpr
             val <- applyToAnonString structEnv indexingExpr m assignedExpr
             if isJust assignedExpr
             then do
-                let modifiedStruct = Struct $ (memberName, val):structEnv
+                let modifiedStruct' = (memberName, val):structEnv
+                let modifiedStruct = Struct $ updateStructFuncEnv modifiedStruct' modifiedStruct'
 
                 if isJust retFunc && isNothing structName
                     then fromJust retFunc $ Just modifiedStruct
@@ -184,7 +187,8 @@ applyToStructVar env structEnv structName memberName assignedExpr retFunc =
         Just m -> if isJust assignedExpr
             then do
                 (_, val) <- eval env . E  $ fromJust assignedExpr
-                let modifiedStruct = Struct $ (memberName, val):structEnv
+                let modifiedStruct' = (memberName, val):structEnv
+                let modifiedStruct = Struct $ updateStructFuncEnv modifiedStruct' modifiedStruct'
 
                 if isJust retFunc && isNothing structName
                     then fromJust retFunc $ Just modifiedStruct
@@ -626,7 +630,7 @@ evalBinExpr env (BinExpr MemberAccess x y) =
                             case lookup memberName sEnv of
                                 Just f -> do
                                     (modifiedStruct,v) <- applyFunc sEnv f args
-                                    return ((structName, Struct modifiedStruct):env, v)
+                                    return ((structName, Struct $ updateStructFuncEnv modifiedStruct modifiedStruct):env, v)
                                 Nothing -> inexistentMember memberName $ Just structName
                         _ -> throwError invalidMember
                 _ -> throwError invalidAccess
@@ -642,8 +646,11 @@ evalBinExpr env (BinExpr MemberAccess x y) =
                         FuncCall (Var memberName) args ->
                             case lookup memberName sEnv of
                                 Just f -> do
-                                    (_, v) <- applyFunc sEnv f args
-                                    return (env, v)
+                                    -- (_, v) <- applyFunc sEnv f args
+                                    -- return (env, v)
+                                    -- TODO: here I can propagate the change in the list
+                                    (modifiedStruct, _) <- applyFunc sEnv f args
+                                    applyToNamedList env index . Just . Struct $ updateStructFuncEnv modifiedStruct modifiedStruct
                                 Nothing -> inexistentMember memberName Nothing
                         _ -> throwError invalidMember
                 _ -> throwError invalidAccess
@@ -671,6 +678,11 @@ evalBinExpr env (BinExpr op l r) = do
     (_, b) <- eval env $ E r
     evalBinExpr env $ BinExpr op a b
 
+
+updateStructFuncEnv :: Env -> Env -> Env
+updateStructFuncEnv [(name, Func args body _)] newEnv = [(name, Func args body newEnv)]
+updateStructFuncEnv [e] _ = [e]
+updateStructFuncEnv (e:es) newEnv = (updateStructFuncEnv [e] newEnv) ++ (updateStructFuncEnv es newEnv)
 
 evalUnExpr :: Env-> Expr -> ErrorWithIO Expr
 evalUnExpr _ (UnExpr UnMinus (Int a)) = return . Int $ -1*a

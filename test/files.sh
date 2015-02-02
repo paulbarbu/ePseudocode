@@ -100,7 +100,7 @@ testClosure()
 
 testStructs()
 {
-out=$(cat <<'EOOUT'
+out1=$(cat <<'EOOUT'
 p.x = 0
 p.x = 3
 p.x = 1 p.y = 1
@@ -118,13 +118,22 @@ l[1].x = 3
 l[1].elems[1] = 2
 l[1].elems[1] = 3
 l[1].elems[2].x = 0
+l[1].elems[2].x = 5
 l[1].elems[2].x = 2 l[1].elems[2].y = 2
 translate was called
 l[1].elems[2].x = 3 l[1].elems[2].y = 1
 dp.dpoint.x = 0
 EOOUT
 )
-    assertEquals "$out" "$(interpreter test/epc/struct.epc)"
+
+out2=$(cat <<'EOOUT'
+x=123 y=0
+translate was called
+x=124 y=1
+EOOUT
+)
+    assertEquals "$out1" "$(interpreter test/epc/struct.epc)"
+    assertEquals "$out2" "$(interpreter examples/user_def_types.epc)"
 }
 
 # load shunit2
