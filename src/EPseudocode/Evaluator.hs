@@ -176,7 +176,7 @@ applyToStructIndex env structEnv structName memberName indexingExpr assignedExpr
         Nothing -> inexistentMember memberName structName
 
 
-inexistentMember memberName structName = throwError $ "No such member " ++ memberName ++ " in struct" ++ (maybe ("") (\name -> " " ++ name) structName)
+inexistentMember memberName structName = throwError $ "No such member " ++ memberName ++ " in struct" ++ maybe "" (\name -> " " ++ name) structName
 
 applyToStructVar :: Env -> Env -> Maybe String -> String -> Maybe Expr -> Maybe (Maybe Expr -> ErrorWithIO (Env, Expr)) -> ErrorWithIO (Env, Expr)
 applyToStructVar env structEnv structName memberName assignedExpr retFunc =
@@ -612,7 +612,7 @@ evalBinExpr env (BinExpr Eq a b) = do
 --TODO: a.x.y = 1
 --TODO: test with a.foo() = 3
 --TODO: test with a.foo = 3 where foo is a function
-evalBinExpr env (BinExpr MemberAccess x y) = do
+evalBinExpr env (BinExpr MemberAccess x y) =
     case x of
         Var structName ->
             case lookup structName env of
@@ -652,11 +652,11 @@ evalBinExpr env (BinExpr MemberAccess x y) = do
             case val of
                 Struct sEnv ->
                     case y of
-                        Index memberName indexingExpr -> do
+                        Index memberName indexingExpr ->
                             applyToStructIndex env sEnv Nothing memberName indexingExpr Nothing Nothing
-                        Var memberName -> do
+                        Var memberName ->
                             applyToStructVar env sEnv Nothing memberName Nothing Nothing
-                        FuncCall (Var memberName) args -> do
+                        FuncCall (Var memberName) args ->
                             case lookup memberName sEnv of
                                 Just f -> do
                                     (modifiedStruct, _) <- applyFunc sEnv f args
@@ -682,15 +682,14 @@ updateGeneralStruct initialEnv (Var name) newVal =
     case lookup name initialEnv of
         Just (Struct _) -> return ((name, Struct newVal):initialEnv, Struct newVal)
         _ -> throwError "Only structs can be modified"
-updateGeneralStruct initialEnv (BinExpr MemberAccess x y) newVal = do
+updateGeneralStruct initialEnv (BinExpr MemberAccess x y) newVal =
     case x of
-        index@Index{} -> do
-            applyToNamedList initialEnv index Nothing >>= \(_, xVal) ->
+        index@Index{} -> applyToNamedList initialEnv index Nothing >>= \(_, xVal) ->
                 case xVal of
                     Struct s -> updateGeneralStruct s y newVal >>= \(e, _) ->
                         applyToNamedList initialEnv index $ Just $ Struct e
                     _ -> throwError "Only structs can be modified"
-        Var name -> do
+        Var name ->
             case lookup name initialEnv of
                 Just (Struct s) -> updateGeneralStruct s y newVal >>= \(e, _) ->
                     return ((name, Struct e):initialEnv, Struct newVal)
@@ -701,7 +700,7 @@ updateGeneralStruct initialEnv _ newVal = return (initialEnv, Struct newVal)
 updateStructFuncEnv :: Env -> Env -> Env
 updateStructFuncEnv [(name, Func args body _)] newEnv = [(name, Func args body newEnv)]
 updateStructFuncEnv [e] _ = [e]
-updateStructFuncEnv (e:es) newEnv = (updateStructFuncEnv [e] newEnv) ++ (updateStructFuncEnv es newEnv)
+updateStructFuncEnv (e:es) newEnv = updateStructFuncEnv [e] newEnv ++ updateStructFuncEnv es newEnv
 
 evalUnExpr :: Env-> Expr -> ErrorWithIO Expr
 evalUnExpr _ (UnExpr UnMinus (Int a)) = return . Int $ -1*a

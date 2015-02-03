@@ -135,7 +135,7 @@ fread _ = throwError "fciteste takes a single argument, the result of deschide"
 
 
 sleep :: [[Expr]] -> ErrorWithIO Expr
-sleep [[Int t]] = (liftIO . threadDelay $ (fromIntegral t)*1000) >> return Void
+sleep [[Int t]] = (liftIO . threadDelay $ fromIntegral t * 1000) >> return Void
 sleep _ = throwError "sleep takes a single int argument"
 
 
