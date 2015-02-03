@@ -16,8 +16,7 @@ import EPseudocode.Evaluator
 
 builtinEnv :: Env
 builtinEnv = [(name, BuiltinIOFunc f) | (name, f) <- ioBuiltins] ++
-    [(name, BuiltinFunc f) | (name, f) <- builtins] ++
-    [(":stopiteration:", Bool False)]
+    [(name, BuiltinFunc f) | (name, f) <- builtins]
 
 
 ioBuiltins :: [(String, [[Expr]] -> ErrorWithIO Expr)]

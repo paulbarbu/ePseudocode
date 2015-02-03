@@ -13,11 +13,6 @@ import EPseudocode.Helpers
 import EPseudocode.Parser
 
 
-{-
- * TODO: clean the Env, it should not be cluttered when I reassign a variable in a loop
- * TODO: find a better way to implement :stopiteration: and :ret:
--}
-
 interpretProgram :: Env -> [Stmt] -> [String] -> ErrorWithIO ()
 interpretProgram env program argv = if mainHasArgs program
     then void $ interpret' env (program ++ [E (FuncCall (Var "main") [[List $ map String argv]])])
@@ -38,12 +33,7 @@ interpret env input = case eParse mainParser input of
 
 
 interpret' :: Env -> [Stmt] -> ErrorWithIO (Env, Expr)
-interpret' env stmts = foldlM runUntilBreak (env, undefined) stmts
-    where
-    runUntilBreak :: (Env, Expr) -> Stmt -> ErrorWithIO (Env, Expr)
-    runUntilBreak (e, _) stmt = case stmt of
-        Break -> return ((":stopiteration:", Bool True):env, Void)
-        _ -> if continueIteration e then eval e stmt else return (e, Void)
+interpret' env stmts = foldlM (\(e, _) stmt -> eval e stmt) (env, undefined) stmts
 
 
 applyToNamedList :: Env -> Expr -> Maybe Expr -> ErrorWithIO (Env, Expr)
@@ -200,7 +190,7 @@ invalidAccess = "Only structs can have their members accessed"
 
 
 eval :: Env -> Stmt -> ErrorWithIO (Env, Expr)
-eval env Break = return (env, Void)
+eval env Break = return ((":stopiteration:", Bool True):env, Void)
 eval env (E Void) = return (env, Void)
 eval env (E a@(Int _)) = return (env, a)
 eval env (E a@(Float _)) = return (env, a)
@@ -332,10 +322,21 @@ repeatWhile :: Env -> Expr -> [Stmt] -> ErrorWithIO (Env, Expr)
 repeatWhile env cond stmts = do
     (newEnv, res) <- eval env (E cond)
     case res of
-        Bool val -> if val && continueIteration env
-            then liftM fst (evalStmtBody newEnv stmts) >>= (\e -> repeatWhile e cond stmts)
-            else return ((":stopiteration:",Bool False):newEnv, Void)
+        Bool val -> if val
+            then do
+                (e, _) <- runLoop (filter (\(name, _) -> name /= ":stopiteration:") env) stmts--liftM fst (eval newEnv stmt) >>= (\e -> repeatWhile e cond stmts)
+                case lookup ":stopiteration:" e of
+                    Just (Bool True) -> return (filter (\(name, _) -> name /= ":stopiteration:") e, Void)
+                    _ -> repeatWhile e cond stmts
+            else return (newEnv, Void)
         _ -> throwError "A loop's condition should evaluate to Bool"
+    where
+        runLoop e [] = return (e, Void)
+        runLoop e (Break:_) = return ((":stopiteration:", Bool True):e, Void)
+        runLoop e (s:ss) = liftM fst (eval e s) >>= (\newEnv ->
+            case lookup ":stopiteration:" newEnv of
+                Just (Bool True) -> return (newEnv, Void)
+                _ -> runLoop newEnv ss)
 
 
 evalStmtBody :: Env -> [Stmt] -> ErrorWithIO (Env, Expr)
@@ -701,6 +702,7 @@ updateStructFuncEnv :: Env -> Env -> Env
 updateStructFuncEnv [(name, Func args body _)] newEnv = [(name, Func args body newEnv)]
 updateStructFuncEnv [e] _ = [e]
 updateStructFuncEnv (e:es) newEnv = updateStructFuncEnv [e] newEnv ++ updateStructFuncEnv es newEnv
+
 
 evalUnExpr :: Env-> Expr -> ErrorWithIO Expr
 evalUnExpr _ (UnExpr UnMinus (Int a)) = return . Int $ -1*a

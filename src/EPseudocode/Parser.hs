@@ -58,11 +58,11 @@ mainParser =
   try (
      do reserved tIf <?> tIf
         cond <- expr
-        reserved tThen <?> tThen
+        reserved tThen
         thenStmts <- many mainParser
-        reserved tElse <?> tElse
+        reserved tElse
         elseStmts <- many mainParser
-        reserved tEndIf <?> tEndIf
+        reserved tEndIf
         return $ CompleteIf cond thenStmts elseStmts
      )
   <|>
@@ -132,7 +132,7 @@ funcDef = do reserved tFunc
 
 funcCall :: Parser Expr
 funcCall = do name <- try indexAccess <|> try (liftM Var identifier)
-              liftM (FuncCall name) (many1 . parens $ commaSep (expr <|> funcDef)) <?> "arguments list" -- FIXME: translate
+              liftM (FuncCall name) (many1 . parens $ commaSep (expr <|> funcDef))
 
 
 assignment :: Parser Expr -> Parser Stmt
