@@ -1770,7 +1770,58 @@ evaluatorTests = TestList [
     r <- evalProgram "struct other x=42 sfstruct struct point func foo() ret other() sffunc sfstruct func main() a=point() a.foo().x sffunc" []
     "OK" @=? r
 
--- TODO: test what's below with .epc files
+ , "named string multiple indexing" ~: do
+    r <- evalFail "a=\"foo\" a[1][2]" "Multiple indexing can be applied only to Lists"
+    True @=? r
+
+ , "anon string multiple indexing" ~: do
+    r <- evalProgram "struct foo x = \"xyz\" sfstruct func main() a=foo() a.x[1][2] sffunc" []
+    "Error: Multiple indexing can be applied only to Lists" @=? r
+
+ , "no such member ... in struct ..." ~: do
+    r <- evalProgram "struct foo x = 1 sfstruct func main() a=foo() a.z sffunc" []
+    "Error: No such member z in struct a" @=? r
+
+ , "no such member ... (func) in struct ..." ~: do
+    r <- evalProgram "struct foo x = 1 sfstruct func main() a=foo() a.z() sffunc" []
+    "Error: No such member z in struct a" @=? r
+
+ , "no such member ... (index) in struct ..." ~: do
+    r <- evalProgram "struct foo x = 1 sfstruct func main() a=foo() a.z[1] sffunc" []
+    "Error: No such member z in struct" @=? r
+
+ , "struct member - constant" ~: do
+    r <- evalProgram "struct foo x = 1 sfstruct func main() a=foo() a.1 sffunc" []
+    "Error: Struct members can only be variables, lists and functions" @=? r
+
+ , "struct index member - constant" ~: do
+    r <- evalProgram "struct foo x = 1 sfstruct func main() a={foo()} a[0].1 sffunc" []
+    "Error: Struct members can only be variables, lists and functions" @=? r
+
+ , "struct index member - func" ~: do
+    r <- evalProgram "struct foo x = 1 sfstruct func main() a={foo()} a[0].xyz() sffunc" []
+    "Error: No such member xyz in struct" @=? r
+
+ , "struct index member - invalid access in list" ~: do
+    r <- evalProgram "struct foo x = 1 sfstruct func main() a={1, foo()} a[0].xyz() sffunc" []
+    "Error: Only structs can have their members accessed" @=? r
+
+ , "invalid nested struct access" ~: do
+    r <- evalProgram "struct bar x = 1 sfstruct struct foo x = bar() sfstruct func main() a=bar() a.x.1 sffunc" []
+    "Error: Only structs can have their members accessed" @=? r
+
+ , "no struct in assignment" ~: do
+    r <- evalFail "a=2 a.x=3" "Only structs can have their members accessed"
+    True @=? r
+
+ , "no struct in assignment, index" ~: do
+    r <- evalFail "a={2} a[0].x=3" "Only structs can have their members accessed"
+    True @=? r
+
+ , "struct used in assignment, not found" ~: do
+    r <- evalFail "xyz.x=3" "Struct xyz not found"
+    True @=? r
+
  , "struct member that modifies the struct" ~: do
      r <- evalProgram "struct point x=1 func foo() x=3 sffunc sfstruct func main() a=point() a.foo() sffunc" []
      "OK" @=? r
@@ -1778,4 +1829,9 @@ evaluatorTests = TestList [
  , "struct member modified inside a struct, inside a list" ~: do
      r <- evalProgram "struct point x=1 y=1 sfstruct func main() a={1, point(), 3} a[1].x = 3 sffunc" []
      "OK" @=? r
+
+ , "struct operations" ~: do
+    c <- readFile "test/epc/struct.epc"
+    r <- evalProgram c []
+    "OK" @=? r
  ]

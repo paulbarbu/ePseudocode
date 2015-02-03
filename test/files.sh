@@ -118,11 +118,11 @@ l[1].x = 3
 l[1].elems[1] = 2
 l[1].elems[1] = 3
 l[1].elems[2].x = 0
-l[1].elems[2].x = 5
 l[1].elems[2].x = 2 l[1].elems[2].y = 2
 translate was called
 l[1].elems[2].x = 3 l[1].elems[2].y = 1
 dp.dpoint.x = 0
+dp.x = 2 dp.y = 1
 EOOUT
 )
 
