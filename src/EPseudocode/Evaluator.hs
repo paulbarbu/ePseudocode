@@ -6,7 +6,7 @@ import Control.Monad.Except
 import Data.Foldable (foldlM)
 import Data.Maybe
 import Data.List ((\\))
--- import Debug.Trace
+import Debug.Trace
 
 import EPseudocode.Data
 import EPseudocode.Lexer
@@ -153,6 +153,7 @@ applyToStructIndex :: Env -> Env -> Maybe String -> String -> IndexingListExpr -
 applyToStructIndex env structEnv structName memberName indexingExpr assignedExpr retFunc =
     case lookup memberName structEnv of
         Just (List m) -> do
+            -- trace "applyToStructindex: List" (return (env, Void))
             val <- applyToAnonList structEnv indexingExpr m assignedExpr
             if isJust assignedExpr
             then do
@@ -164,6 +165,7 @@ applyToStructIndex env structEnv structName memberName indexingExpr assignedExpr
                     else return ((fromJust structName, modifiedStruct):env, val)
             else return (env, val)
         Just (String m) -> do
+            -- trace "applyToStructindex: String" (return (env, Void))
             val <- applyToAnonString structEnv indexingExpr m assignedExpr
             if isJust assignedExpr
             then do
@@ -615,18 +617,23 @@ evalBinExpr env (BinExpr Eq a b) = do
 --TODO: a.x.y = 1
 --TODO: test with a.foo() = 3
 --TODO: test with a.foo = 3 where foo is a function
-evalBinExpr env (BinExpr MemberAccess x y) =
+evalBinExpr env (BinExpr MemberAccess x y) = do
+    -- trace ("Member Access: " ++ show x ++ " : " ++ show y) (return Void)
     case x of
     -- TODO: here I can work with Indexes too, because I know the name
-        Var structName ->
+        Var structName -> do
+            -- trace "struct VAR" (return Void)
             case lookup structName env of
                 Just (Struct sEnv) -> --TODO: here I might not find the struct
                     case y of
-                        Index memberName indexingExpr ->
+                        Index memberName indexingExpr -> do
+                            -- trace "V: member INDEX" (return Void)
                             applyToStructIndex env sEnv Nothing memberName indexingExpr Nothing Nothing
-                        Var memberName ->
+                        Var memberName -> do
+                            -- trace "V: member VAR" (return Void)
                             applyToStructVar env sEnv (Just structName) memberName Nothing Nothing
-                        FuncCall (Var memberName) args ->
+                        FuncCall (Var memberName) args -> do
+                            -- trace "V: member FUNC" (return Void)
                             case lookup memberName sEnv of
                                 Just f -> do
                                     (modifiedStruct,v) <- applyFunc sEnv f args
@@ -635,15 +642,19 @@ evalBinExpr env (BinExpr MemberAccess x y) =
                         _ -> throwError invalidMember
                 _ -> throwError invalidAccess
         index@Index{} -> do
+            -- trace "struct INDEX" (return Void)
             (_, lst) <- applyToNamedList env index Nothing
             case lst of
                 Struct sEnv ->
                     case y of
-                        Index memberName indexingExpr ->
-                             applyToStructIndex env sEnv Nothing memberName indexingExpr Nothing Nothing
-                        Var memberName ->
+                        Index memberName indexingExpr -> do
+                            -- trace "I: member INDEX" (return (env,Void))
+                            applyToStructIndex env sEnv Nothing memberName indexingExpr Nothing Nothing
+                        Var memberName -> do
+                            -- trace "I: member VAR" (return (env,Void))
                             applyToStructVar env sEnv Nothing memberName Nothing Nothing
-                        FuncCall (Var memberName) args ->
+                        FuncCall (Var memberName) args -> do
+                            -- trace "I: member FUNC" (return (env,Void))
                             case lookup memberName sEnv of
                                 Just f -> do
                                     -- (_, v) <- applyFunc sEnv f args
@@ -655,19 +666,24 @@ evalBinExpr env (BinExpr MemberAccess x y) =
                         _ -> throwError invalidMember
                 _ -> throwError invalidAccess
         _ -> do
-            (_, val) <- eval env $ E x
+            -- trace "struct GENERAL" (return Void)
+            (e1, val) <- eval env $ E x
             case val of
                 Struct sEnv ->
                     case y of
-                        Index memberName indexingExpr ->
-                             applyToStructIndex env sEnv Nothing memberName indexingExpr Nothing Nothing
-                        Var memberName ->
+                        Index memberName indexingExpr -> do
+                            -- trace "G: member INDEX" (return (env,Void))
+                            applyToStructIndex env sEnv Nothing memberName indexingExpr Nothing Nothing
+                        Var memberName -> do
+                            -- trace "G: member VAR" (return (env,Void))
                             applyToStructVar env sEnv Nothing memberName Nothing Nothing
-                        FuncCall (Var memberName) args ->
+                        FuncCall (Var memberName) args -> do
+                            -- trace "G: member FUNC" (return (env,Void))
                             case lookup memberName sEnv of
                                 Just f -> do
-                                    (_, v) <- applyFunc sEnv f args
-                                    return (env, v)
+                                    (modifiedStruct, v) <- applyFunc sEnv f args
+                                    --return (env++e1++foo, v)
+                                    updateGeneralStruct env x $ updateStructFuncEnv modifiedStruct modifiedStruct
                                 Nothing -> inexistentMember memberName Nothing
                         _ -> throwError invalidMember
                 _ -> throwError invalidAccess
@@ -678,6 +694,24 @@ evalBinExpr env (BinExpr op l r) = do
     (_, b) <- eval env $ E r
     evalBinExpr env $ BinExpr op a b
 
+--TODO: cleanup
+updateGeneralStruct :: Env -> Expr -> Env -> ErrorWithIO (Env, Expr)
+updateGeneralStruct initialEnv index@Index{} newVal =
+    applyToNamedList initialEnv index Nothing >>= \(env, xVal) ->
+        case xVal of
+            Struct s -> applyToNamedList initialEnv index $ Just $ Struct newVal
+                -- >>= return (, s) RETURN THE MODIFIED STRUCT elems[1]
+            _ -> throwError "not a struct you want to modify2"
+updateGeneralStruct initialEnv (BinExpr MemberAccess x y) newVal = do
+    case x of
+        index@Index{} -> do
+            applyToNamedList initialEnv index Nothing >>= \(env, xVal) ->
+                case xVal of
+                    Struct s -> updateGeneralStruct s y newVal >>= \(e, nVal) ->
+                        applyToNamedList initialEnv index $ Just $ Struct e
+
+                    _ -> throwError "not a struct you want to modify"
+        _ -> throwError "x not INDEX"
 
 updateStructFuncEnv :: Env -> Env -> Env
 updateStructFuncEnv [(name, Func args body _)] newEnv = [(name, Func args body newEnv)]
