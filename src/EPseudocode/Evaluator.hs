@@ -277,7 +277,7 @@ eval env (E (FuncDef name args body)) = case lookup name env of
     Just _ -> throwError $ "The function name \"" ++ name ++ "\" shadows another name in the current scope"
 eval env (E (FuncCall nameExpr args)) = eval env (E nameExpr) >>= \(e, f) ->
     case f of
-        Func{} -> applyFunc e f args -- >>= return . (e,)
+        Func{} -> applyFunc e f args >>= \(_, v) -> return (e,v)
         BuiltinIOFunc primitive -> mapM (getEvaledExprList env) args >>=
             primitive >>= \val ->
             return (e, val)

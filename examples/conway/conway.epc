@@ -99,6 +99,7 @@ func evolve_map(m)
 
     pt i=0; i<MAX_H; i=i+1 executa
         pt j=0; j<MAX_W; j=j+1 executa
+
             n = get_num_live_neighbours(old_map, i, j)
 
             daca LIVE == old_map[i][j] atunci
@@ -128,9 +129,12 @@ func main(argv)
         ret 1
     sfdaca
 
+    ct = 0
     scrie(HIDE_CURSOR)
-    cattimp adevarat executa
+    cattimp ct < 100 executa
         print_map(map)
         map = evolve_map(map)
+        ct = ct + 1
     sfcattimp
+    scrie(SHOW_CURSOR)
 sffunc
