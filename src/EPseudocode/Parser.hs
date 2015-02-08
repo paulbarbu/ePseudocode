@@ -101,6 +101,9 @@ mainParser =
   do reserved tBreak <?> tBreak
      return Break
   <|>
+  do reserved tContinue <?> tContinue
+     return Continue
+  <|>
   (liftM E funcDef <?> "function definition")  -- FIXME: translate
   <|>
   -- assignment

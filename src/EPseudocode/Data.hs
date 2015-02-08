@@ -50,6 +50,7 @@ data Stmt = TypeDef String [Stmt] -- struct <name> body - body is limited only t
     | For (Maybe Stmt) (Maybe Expr) (Maybe Stmt) [Stmt] -- for initial, condition, iteration then statements (the initial and the iteration are limited to assignments)
     | Ret Expr -- return statement (only expression or function call/def)
     | Break
+    | Continue
     | E Expr
     deriving (Show)
 

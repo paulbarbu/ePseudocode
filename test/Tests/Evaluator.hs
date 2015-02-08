@@ -1894,4 +1894,20 @@ evaluatorTests = TestList [
  , "pow struct" ~: do
     r <- evalProgram "struct point x=1 y=1 sfstruct func main() a=point() ret 2**a sffunc" []
     "Error: Structs can only have their members accessed" @=? r
+
+ , "simple continue" ~: do
+    r <- evalTest "b=0 pt a=1; a<5; executa a=a+1 continua b=5 sfpt b"
+    "0" @=? r
+
+ , "just continue in for body" ~: do
+    r <- evalTest "pt b=0;b<5;b=b+1 executa continua a=100 sfpt b"
+    "5" @=? r
+
+ , "nested for with continue" ~: do
+    r <- evalTest "pt a=0;a<5;a=a+1 executa pt b=0;b<5;b=b+1 executa continua a=100 sfpt sfpt a+b"
+    "10" @=? r
+
+ , "continue in if, in for" ~: do
+    r <- evalTest "b=0 pt a=0;a<5;a=a+1 executa daca a < 2 atunci continua sfdaca b=b+1 sfpt b"
+    "3" @=? r
  ]

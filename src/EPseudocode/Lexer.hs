@@ -1,6 +1,7 @@
 module EPseudocode.Lexer (parens, braces, identifier, reservedOp, reserved, whiteSpace, integer, float, stringLiteral, commaSep,
   semi, brackets, dot,
-  tAnd, tOr, tTrue, tFalse, tReturn, tIf, tThen, tElse, tEndIf, tWhile, tEndWhile, tFor, tEndFor, tDo, tFunc, tEndFunc, tBreak, tStruct, tEndStruct)
+  tAnd, tOr, tTrue, tFalse, tReturn, tIf, tThen, tElse, tEndIf, tWhile, tEndWhile, tFor, tEndFor, tDo, tFunc, tEndFunc, tBreak,
+  tStruct, tEndStruct, tContinue)
 where
 
 import Text.ParserCombinators.Parsec
@@ -25,6 +26,7 @@ tDo = "executa"
 tFunc = "func"
 tEndFunc = "sffunc"
 tBreak = "stop"
+tContinue = "continua"
 tStruct = "struct"
 tEndStruct = "sfstruct"
 
@@ -40,7 +42,8 @@ epcTokens  = emptyDef {
   --, opStart = opLetter emptyDef
   , opLetter = oneOf "=*"
   --, reservedOpNames = ["!", "<", "=", ">", ">=", "<=", "==", "!=", "+", "-", "/", "%", "*", "**"]
-  , reservedNames = [tOr, tAnd, tTrue, tFalse, tReturn, tIf, tThen, tElse, tEndIf, tWhile, tDo, tEndWhile, tFor, tEndFor, tFunc, tEndFunc, tBreak, tStruct, tEndStruct]
+  , reservedNames = [tOr, tAnd, tTrue, tFalse, tReturn, tIf, tThen, tElse, tEndIf, tWhile, tDo,
+    tEndWhile, tFor, tEndFor, tFunc, tEndFunc, tBreak, tStruct, tEndStruct, tContinue]
 }
 
 

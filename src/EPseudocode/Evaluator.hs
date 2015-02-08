@@ -184,6 +184,7 @@ invalidAccess = "Only structs can have their members accessed"
 
 eval :: Env -> Stmt -> ErrorWithIO (Env, Expr)
 eval env Break = return ((":stopiteration:", Bool True):env, Void)
+eval env Continue = return ((":contiteration:", Bool True):env, Void)
 eval env (E Void) = return (env, Void)
 eval env (E a@(Int _)) = return (env, a)
 eval env (E a@(Float _)) = return (env, a)
@@ -245,19 +246,16 @@ eval env (CompleteIf cond trueStmts falseStmts) = do
     case res of
         Bool val -> evalStmtBody newEnv (if val then trueStmts else falseStmts)
         _ -> throwError "An If's condition should evaluate to Bool"
-eval env (While cond stmts) = repeatWhile env cond stmts
+eval env (While cond stmts) = repeatWhile env cond stmts Nothing
 eval env (For initial cond it stmts) =
     case initial of
-        Nothing -> repeatForBody env cond it stmts
-        Just a -> eval env a >>= (\(e, _) -> repeatForBody e cond it stmts)
+        Nothing -> repeatForBody env cond stmts
+        Just a -> eval env a >>= (\(e, _) -> repeatForBody e cond stmts)
     where
-        repeatForBody bodyEnv bodyCond _ bodyStmts = do
-            let stmts' = bodyStmts ++ (case it of
-                                    Nothing -> []
-                                    Just s -> [s])
+        repeatForBody bodyEnv bodyCond bodyStmts =
             case bodyCond of
-                Nothing -> repeatWhile bodyEnv (Bool True) stmts'
-                Just a -> repeatWhile bodyEnv a stmts'
+                Nothing -> repeatWhile bodyEnv (Bool True) bodyStmts it
+                Just a -> repeatWhile bodyEnv a bodyStmts it
 eval env (TypeDef name body) =
     case lookup name env of
         Just _ -> throwError $ "Cannot declare type " ++ name ++ " since it will shadow other names"
@@ -311,25 +309,30 @@ argsToEnv argNames args = if length argNames == length args
     else throwError $ "Trying to pass " ++ show (length args) ++ " args to a function that takes " ++ show (length argNames)
 
 
-repeatWhile :: Env -> Expr -> [Stmt] -> ErrorWithIO (Env, Expr)
-repeatWhile env cond stmts = do
+repeatWhile :: Env -> Expr -> [Stmt] -> Maybe Stmt -> ErrorWithIO (Env, Expr)
+repeatWhile env cond stmts it = do
     (newEnv, res) <- eval env (E cond)
     case res of
         Bool val -> if val
             then do
-                (e, _) <- runLoop (filter (\(name, _) -> name /= ":stopiteration:") env) stmts--liftM fst (eval newEnv stmt) >>= (\e -> repeatWhile e cond stmts)
+                (e, _) <- runLoop (filter (\(name, _) -> name /= ":stopiteration:" && name /= ":contiteration:") env) stmts
                 case lookup ":stopiteration:" e of
-                    Just (Bool True) -> return (filter (\(name, _) -> name /= ":stopiteration:") e, Void)
-                    _ -> repeatWhile e cond stmts
+                    Just (Bool True) -> return (filter (\(name, _) -> name /= ":stopiteration:" && name /= ":contiteration:") e, Void)
+                    _ -> case it of
+                            Nothing -> repeatWhile e cond stmts it
+                            Just s -> eval e s >>= \(itEnv, _) -> repeatWhile itEnv cond stmts it
             else return (newEnv, Void)
         _ -> throwError "A loop's condition should evaluate to Bool"
     where
         runLoop e [] = return (e, Void)
         runLoop e (Break:_) = return ((":stopiteration:", Bool True):e, Void)
+        runLoop e (Continue:_) = return ((":contiteration:", Bool True):e, Void)
         runLoop e (s:ss) = liftM fst (eval e s) >>= (\newEnv ->
             case lookup ":stopiteration:" newEnv of
                 Just (Bool True) -> return (newEnv, Void)
-                _ -> runLoop newEnv ss)
+                _ -> case lookup ":contiteration:" newEnv of
+                        Just (Bool True) -> return (newEnv, Void)
+                        _ -> runLoop newEnv ss)
 
 
 evalStmtBody :: Env -> [Stmt] -> ErrorWithIO (Env, Expr)
