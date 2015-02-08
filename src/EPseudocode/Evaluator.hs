@@ -1,5 +1,5 @@
 {-# LANGUAGE TupleSections #-}
-module EPseudocode.Evaluator (interpret, interpretProgram, eval, interpretStdLib)
+module EPseudocode.Evaluator (interpret, interpretProgram, eval)
 where
 
 import Control.Monad.Except
@@ -19,15 +19,8 @@ interpretProgram env program argv = if mainHasArgs program
     else void $ interpret' env (program ++ [E (FuncCall (Var "main") [])])
 
 
--- TODO: clean this up
-interpretStdLib :: Env -> String -> ErrorWithIO (Env, Expr)
-interpretStdLib env input = case eParse toplevelParser input of
-        Left err -> throwError err
-        Right prog -> interpret' env prog
-
-
-interpret :: Env -> String -> ErrorWithIO (Env, Expr)
-interpret env input = case eParse mainParser input of
+interpret :: Parser Stmt -> Env -> String -> ErrorWithIO (Env, Expr)
+interpret parser env input = case eParse parser input of
         Left err -> throwError err
         Right prog -> interpret' env prog
 
@@ -609,10 +602,6 @@ evalBinExpr env (BinExpr Eq a b) = do
     v <- eq env l r
     return (env, Bool v)
 
---TODO: a[1].foo()
---TODO: a.x.y = 1
---TODO: test with a.foo() = 3
---TODO: test with a.foo = 3 where foo is a function
 evalBinExpr env (BinExpr MemberAccess x y) =
     case x of
         Var structName ->
@@ -667,6 +656,9 @@ evalBinExpr env (BinExpr MemberAccess x y) =
                 _ -> throwError invalidAccess
     where invalidMember = "Struct members can only be variables, lists and functions"
 
+evalBinExpr _ (BinExpr _ (Struct _) _) = throwError "Structs can only have their members accessed"
+evalBinExpr _ (BinExpr _ _ (Struct _)) = throwError "Structs can only have their members accessed"
+
 evalBinExpr env (BinExpr op l r) = do
     (_, a) <- eval env $ E l
     (_, b) <- eval env $ E r
@@ -714,6 +706,7 @@ evalUnExpr _ (UnExpr Not (String _)) = throwError "String cannot be negated"
 evalUnExpr _ (UnExpr _ (Bool a)) = return . Bool $ not a
 evalUnExpr _ (UnExpr UnMinus (List a)) = return . List $ reverse a
 evalUnExpr _ (UnExpr Not (List _)) = throwError "List cannot be negated"
+evalUnExpr _ (UnExpr _ (Struct _)) = throwError "Invalid Struct unary expression"
 evalUnExpr env (UnExpr op a) =  do
     (_, val) <- eval env $ E a
     evalUnExpr env $ UnExpr op val
@@ -736,6 +729,8 @@ lt _ (String l) (String r) = return $ l < r
 lt _ (Bool _) (String _) = throwError "Cannot compare Bool and String"
 lt _ (String _) (Bool _) = throwError "Cannot compare String and Bool"
 lt _ (Bool _) (Bool _) = throwError "Cannot compare Bools" -- FIXME: translate
+lt _ (Struct _) _ = throwError "Structs are not comparable" -- FIXME: translate
+lt _ _ (Struct _) = throwError "Structs are not comparable" -- FIXME: translate
 lt env a b = do
      (_, l) <- eval env $ E a
      (_, r) <- eval env $ E b
@@ -760,6 +755,8 @@ le _ (String l) (String r) = return $ l <= r
 le _ (Bool _) (String _) = throwError "Cannot compare Bool and String"
 le _ (String _) (Bool _) = throwError "Cannot compare String and Bool"
 le _ (Bool _) (Bool _) = throwError "Cannot compare Bools" -- FIXME: translate
+le _ (Struct _) _ = throwError "Structs are not comparable" -- FIXME: translate
+le _ _ (Struct _) = throwError "Structs are not comparable" -- FIXME: translate
 le env a b = do
      (_, l) <- eval env $ E a
      (_, r) <- eval env $ E b
@@ -784,6 +781,8 @@ ge _ (String l) (String r) = return $ l >= r
 ge _ (Bool _) (String _) = throwError "Cannot compare Bool and String"
 ge _ (String _) (Bool _) = throwError "Cannot compare String and Bool"
 ge _ (Bool _) (Bool _) = throwError "Cannot compare Bools" -- FIXME: translate
+ge _ (Struct _) _ = throwError "Structs are not comparable" -- FIXME: translate
+ge _ _ (Struct _) = throwError "Structs are not comparable" -- FIXME: translate
 ge env a b = do
      (_, l) <- eval env $ E a
      (_, r) <- eval env $ E b
@@ -808,6 +807,8 @@ gt _ (String l) (String r) = return $ l > r
 gt _ (Bool _) (String _) = throwError "Cannot compare Bool and String"
 gt _ (String _) (Bool _) = throwError "Cannot compare String and Bool"
 gt _ (Bool _) (Bool _) = throwError "Cannot compare Bools" -- FIXME: translate
+gt _ (Struct _) _ = throwError "Structs are not comparable" -- FIXME: translate
+gt _ _ (Struct _) = throwError "Structs are not comparable" -- FIXME: translate
 gt env a b = do
      (_, l) <- eval env $ E a
      (_, r) <- eval env $ E b
@@ -832,6 +833,8 @@ neq _ (String l) (String r) = return $ l /= r
 neq _ (Bool _) (String _) = return True
 neq _ (String _) (Bool _) = return True
 neq _ (Bool l) (Bool r) = return $ l /= r
+neq _ (Struct _) _ = throwError "Structs are not comparable" -- FIXME: translate
+neq _ _ (Struct _) = throwError "Structs are not comparable" -- FIXME: translate
 neq env a b = do
      (_, l) <- eval env $ E a
      (_, r) <- eval env $ E b
@@ -856,6 +859,8 @@ eq _ (String l) (String r) = return $ l == r
 eq _ (Bool _) (String _) = return False
 eq _ (String _) (Bool _) = return False
 eq _ (Bool l) (Bool r) = return $ l == r
+eq _ (Struct _) _ = throwError "Structs are not comparable" -- FIXME: translate
+eq _ _ (Struct _) = throwError "Structs are not comparable" -- FIXME: translate
 eq env a b = do
      (_, l) <- eval env $ E a
      (_, r) <- eval env $ E b

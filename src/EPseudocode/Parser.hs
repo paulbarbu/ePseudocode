@@ -1,4 +1,4 @@
-module EPseudocode.Parser (eParse, runParser, mainParser, toplevelParser)
+module EPseudocode.Parser (eParse, runParser, mainParser, toplevelParser, Parser)
 where
 
 import Control.Applicative hiding ((<|>), many)

@@ -1,4 +1,4 @@
-module Tests.Evaluator (evaluatorTests)
+module Tests.Evaluator (evaluatorTests, evalProgram)
 where
 
 import Control.Monad.Except
@@ -15,14 +15,14 @@ import EPseudocode.Parser
 
 evalTest :: String -> IO String
 evalTest input = do
-    x <- runExceptT $ interpret builtinEnv input
+    x <- runExceptT $ interpret mainParser builtinEnv input
     case x of
         Left err -> return err
         Right res -> return . showExpr . snd $ res
 
 
 evalFail input needle = do
-    x <- runExceptT $ interpret builtinEnv input
+    x <- runExceptT $ interpret mainParser builtinEnv input
     case x of
         Left err -> if needle `isInfixOf` err then return True else
                         putStrLn ("\nEval failed (" ++ err ++
@@ -1834,4 +1834,64 @@ evaluatorTests = TestList [
     c <- readFile "test/epc/struct.epc"
     r <- evalProgram c []
     "OK" @=? r
+
+ , "struct <" ~: do
+    r <- evalProgram "struct point x=1 y=1 sfstruct func main() a=point() ret a < 2 sffunc" []
+    "Error: Structs are not comparable" @=? r
+
+ , "struct < - on the right side" ~: do
+    r <- evalProgram "struct point x=1 y=1 sfstruct func main() a=point() ret 2 < a sffunc" []
+    "Error: Structs are not comparable" @=? r
+
+ , "struct >" ~: do
+    r <- evalProgram "struct point x=1 y=1 sfstruct func main() a=point() ret a > 2 sffunc" []
+    "Error: Structs are not comparable" @=? r
+
+ , "struct > - on the right side" ~: do
+    r <- evalProgram "struct point x=1 y=1 sfstruct func main() a=point() ret 2 > a sffunc" []
+    "Error: Structs are not comparable" @=? r
+
+ , "struct <=" ~: do
+    r <- evalProgram "struct point x=1 y=1 sfstruct func main() a=point() ret a <= 2 sffunc" []
+    "Error: Structs are not comparable" @=? r
+
+ , "struct <= - on the right side" ~: do
+    r <- evalProgram "struct point x=1 y=1 sfstruct func main() a=point() ret 2 <= a sffunc" []
+    "Error: Structs are not comparable" @=? r
+
+ , "struct >=" ~: do
+    r <- evalProgram "struct point x=1 y=1 sfstruct func main() a=point() ret a >= 2 sffunc" []
+    "Error: Structs are not comparable" @=? r
+
+ , "struct >= - on the right side" ~: do
+    r <- evalProgram "struct point x=1 y=1 sfstruct func main() a=point() ret 2 >= a sffunc" []
+    "Error: Structs are not comparable" @=? r
+
+ , "struct ==" ~: do
+    r <- evalProgram "struct point x=1 y=1 sfstruct func main() a=point() ret a == 2 sffunc" []
+    "Error: Structs are not comparable" @=? r
+
+ , "struct == - on the right side" ~: do
+    r <- evalProgram "struct point x=1 y=1 sfstruct func main() a=point() ret 2 == a sffunc" []
+    "Error: Structs are not comparable" @=? r
+
+ , "struct !=" ~: do
+    r <- evalProgram "struct point x=1 y=1 sfstruct func main() a=point() ret a != 2 sffunc" []
+    "Error: Structs are not comparable" @=? r
+
+ , "struct != - on the right side" ~: do
+    r <- evalProgram "struct point x=1 y=1 sfstruct func main() a=point() ret 2 != a sffunc" []
+    "Error: Structs are not comparable" @=? r
+
+ , "struct unary expr" ~: do
+    r <- evalProgram "struct point x=1 y=1 sfstruct func main() a=point() ret !a sffunc" []
+    "Error: Invalid Struct unary expression" @=? r
+
+ , "struct pow" ~: do
+    r <- evalProgram "struct point x=1 y=1 sfstruct func main() a=point() ret a**2 sffunc" []
+    "Error: Structs can only have their members accessed" @=? r
+
+ , "pow struct" ~: do
+    r <- evalProgram "struct point x=1 y=1 sfstruct func main() a=point() ret 2**a sffunc" []
+    "Error: Structs can only have their members accessed" @=? r
  ]

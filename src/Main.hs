@@ -36,7 +36,7 @@ loop env = do
         Just ":quit" -> return ()
         Just ":q" -> return ()
         Just input -> do
-            res <- liftIO $ runExceptT $ interpret env input
+            res <- liftIO $ runExceptT $ interpret mainParser env input
             case res of
                  Left err -> outputStrLn err >> loop env
                  Right val -> do

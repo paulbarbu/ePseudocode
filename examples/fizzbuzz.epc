@@ -18,7 +18,7 @@ func main()
             scrie("buzz\n")
         altfel
             scrie(i,"\n")
-        sfdaca    sfdaca    sfdaca //TODO: maybe here I can put a single sfdaca
+        sfdaca    sfdaca    sfdaca
 
         i = i + 1
     sfcattimp

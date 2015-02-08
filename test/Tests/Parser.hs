@@ -417,4 +417,6 @@ parserTests = TestList [
  , "struct defined in list" ~: parseFailFile "func main() a={struct xyz sfstruct} sffunc" ""
 
  , "struct defined in func" ~: parseFailFile "func main() struct xyz sfstruct sffunc" ""
+
+ , "assign to struct func call" ~: parseFailRepl "a.foo() = 3" "unexpected '='"
  ]

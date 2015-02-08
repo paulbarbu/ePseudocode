@@ -7,6 +7,7 @@ import System.Directory
 import EPseudocode.Builtins
 import EPseudocode.Data
 import EPseudocode.Evaluator
+import EPseudocode.Parser
 
 
 getStdLibEnv :: ErrorWithIO Env
@@ -15,6 +16,6 @@ getStdLibEnv = do
     if fileExists
        then do
            contents <- liftIO $ readFile ".stdlib.epc"
-           (env, _) <- interpretStdLib builtinEnv contents
+           (env, _) <- interpret toplevelParser builtinEnv contents
            return env
        else throwError "File \".stdlib.epc\" doesn't exist"

@@ -14,8 +14,6 @@ struct point
     sffunc
 sfstruct
 
-//TODO: compare structs
-
 func main()
     p = point()
     p.x = 123

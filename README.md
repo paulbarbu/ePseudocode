@@ -12,16 +12,9 @@ compiler/parser since I didn't focus on translating strings from parsec)
 
 Description
 ===========
-TODO: lambdas (done), floating point, strings (done), lists (done), functions - capture environment(done), io, stdlib (math, string, list & vector operations), files
-TODO: turing complete
+
 TODO: debugger
-TODO: scientific notation
-TODO: unicode support
-TODO: list slicing
-TODO: Bitwise operators
-TODO: LC3 backend
-TODO: x86 backend
-TODO: FFI and C libraries (interop?)
+TODO: FFI
 TODO: syntax highlighting
 
 TODO: apply, curry
@@ -43,18 +36,6 @@ Not supported: variadic functions
 * Builtins: `lung` (length), `TODO` (to_upper), `TODO` (to_lower), `TODO`, (to_int('c'))
 * Hexadecimal and octal notation: "0xABC", "0o17"
 
-Scoping rules
-=============
- * There is a single "main" function in the global scope
- * Functions with the same name cannot be defined more than once in the same scope
- * Parameter names must be unique and they create a variable in the current function's scope
- * When a function call is made or a variable name encountered this must already exist
- (the function is searched in the list constructed in the 1st pass while the variable name should've
-  been declared - assigned to - previously in the current scope)
-
-Typing rules
-============
-* Function names cannot be used as variable names
 
 Examples
 ========
@@ -62,8 +43,6 @@ Examples
 TODO: fix these when the language is stable
 
 For more see the `examples` directory.
-
-TODO: raytracer: http://fabiensanglard.net/rayTracing_back_of_business_card/
 
 * List operations:
 ```
@@ -91,8 +70,8 @@ a = "foo\n\tbar"
 scrie(lung(a)) // outputs 8
 scrie(a[3]) //outputs a new line
 
-a[3] = 'o' //assign the character o //TODO: maybe I can somehow sugar it to: a[3] = "o"
-a[4] = 'b'
+a[3] = "o"
+a[4] = "b"
 scrie(a) //outputs fooobbar
 
 //concatenation (joining two list of characters to get a new one back)
