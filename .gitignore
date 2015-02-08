@@ -5,6 +5,7 @@ cabal-dev
 *.hi
 *.chi
 *.chs.h
+*.tix
 .virtualenv
 .hsenv
 .cabal-sandbox/
@@ -19,4 +20,3 @@ cabal.config
 # *.sublime-project
 #sftp configuration file
 sftp-config.json
-
