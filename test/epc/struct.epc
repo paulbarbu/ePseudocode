@@ -1,4 +1,4 @@
-struct point
+struct paulPoint
     x = 0
     y = 0
 
@@ -15,16 +15,16 @@ struct point
 sfstruct
 
 struct set
-    elems = {1, 2, point()}
+    elems = {1, 2, paulPoint()}
     str = "foobarbaz"
 sfstruct
 
 struct doublePoint
-    dpoint = point()
+    dpoint = paulPoint()
 sfstruct
 
 func main()
-    p = point()
+    p = paulPoint()
 
     scrie("p.x = ", p.x, "\n")
     p.x = 3
@@ -49,7 +49,7 @@ func main()
     s.elems = {}
     scrie("s.elems = ", s.elems, "\n")
 
-    l = {1, point(), 3}
+    l = {1, paulPoint(), 3}
 
     scrie("l[1].x = ", l[1].x, "\n")
     l[1].x = 3
