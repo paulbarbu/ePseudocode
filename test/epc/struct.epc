@@ -68,11 +68,6 @@ func main()
 
     dp = doublePoint()
     scrie("dp.dpoint.x = ", dp.dpoint.x, "\n")
-    // TODO: dp.dpoint.x = 3 should be supported
-    /*
-    scrie("l[1].elems[2].x = ", l[1].elems[2].x, "\n")
-    // l[1].elems[2].x = 5
-    */
     dp.dpoint.move(2, 1)
     scrie("dp.x = ", dp.dpoint.x, " dp.y = ", dp.dpoint.y, "\n")
 sffunc

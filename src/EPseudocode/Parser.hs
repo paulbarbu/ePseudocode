@@ -96,7 +96,7 @@ mainParser =
   <|>
   -- return
   do reserved tReturn <?> tReturn
-     liftM Ret funcExpr -- TODO: cannot return a function from the main function
+     liftM Ret funcExpr
   <|>
   do reserved tBreak <?> tBreak
      return Break
@@ -106,7 +106,7 @@ mainParser =
   -- assignment
   try (assignment funcExpr)
   <|>
-  liftM E expr -- TODO: is this the right thing? (because it allows stuff like: "func foo() 1 sffunc")
+  liftM E expr
 
 
 typeDef :: Parser Stmt
