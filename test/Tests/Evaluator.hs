@@ -12,6 +12,7 @@ import EPseudocode.Data
 import EPseudocode.Evaluator
 import EPseudocode.Lexer
 import EPseudocode.Parser
+import EPseudocode.Stdlib
 
 evalTest :: String -> IO String
 evalTest input = do
@@ -39,6 +40,20 @@ evalProgram input argv = case eParse toplevelParser input  of
         case res of
             Left err -> return $ "Error: " ++ err
             Right _ -> return "OK"
+
+
+evalStdLibProgram :: String -> String -> [String] -> IO String
+evalStdLibProgram fileName input argv = case eParse toplevelParser input  of
+    Left err -> return $ "failed: " ++ err
+    Right p -> do
+        stdLibEnv <- runExceptT $ getStdLibEnv fileName
+        case stdLibEnv of
+            Left err -> return $ "Error: " ++ err
+            Right stdlib -> do
+                res <- runExceptT $ interpretProgram (stdlib ++ builtinEnv) p argv
+                case res of
+                    Left err -> return $ "Error: " ++ err
+                    Right _ -> return "OK"
 
 
 evaluatorTests = TestList [
@@ -1913,6 +1928,87 @@ evaluatorTests = TestList [
 
  , "struct function passsed variable arg" ~: do
     r <- evalProgram "struct point func foo(a) ret a sffunc sfstruct func main() v = 1 p=point() ret p.foo(v) sffunc" []
+    "OK" @=? r
+
+ , "huffman" ~: do
+    c <- readFile "examples/huffman.epc"
+    r <- evalStdLibProgram ".stdlib.epc" c ["foo"]
+    "OK" @=? r
+
+ , "struct == struct" ~: do
+    r <- evalProgram "struct point x=1 sfstruct func main() ret point() == point() sffunc" []
+    "Error: Structs are not comparable" @=? r
+
+ , "struct != struct" ~: do
+    r <- evalProgram "struct point x=1 sfstruct func main() ret point() != point() sffunc" []
+    "Error: Structs are not comparable" @=? r
+
+ , "struct == float" ~: do
+    r <- evalProgram "struct point x=1 sfstruct func main() daca point() == 4.2 atunci ret 1 sfdaca sffunc" []
+    "OK" @=? r
+
+ , "struct != float" ~: do
+    r <- evalProgram "struct point x=1 sfstruct func main() daca point() != 4.2 atunci ret 1 sfdaca sffunc" []
+    "OK" @=? r
+
+ , "struct == int" ~: do
+    r <- evalProgram "struct point x=1 sfstruct func main() daca point() == 42 atunci ret 1 sfdaca sffunc" []
+    "OK" @=? r
+
+ , "struct != int" ~: do
+    r <- evalProgram "struct point x=1 sfstruct func main() daca point() != 42 atunci ret 1 sfdaca sffunc" []
+    "OK" @=? r
+
+ , "struct == str" ~: do
+    r <- evalProgram "struct point x=1 sfstruct func main() daca point() == \"abc\" atunci ret 1 sfdaca sffunc" []
+    "OK" @=? r
+
+ , "struct != str" ~: do
+    r <- evalProgram "struct point x=1 sfstruct func main() daca point() != \"abc\" atunci ret 1 sfdaca sffunc" []
+    "OK" @=? r
+
+ , "struct == bool" ~: do
+    r <- evalProgram "struct point x=1 sfstruct func main() daca point() == adevarat atunci ret 1 sfdaca sffunc" []
+    "OK" @=? r
+
+ , "struct != bool" ~: do
+    r <- evalProgram "struct point x=1 sfstruct func main() daca point() != fals atunci ret 1 sfdaca sffunc" []
+    "OK" @=? r
+
+ , "stdlib not found" ~: do
+    r <- evalStdLibProgram ".inexistent.epc" "func main() ret fals sffunc" []
+    "Error: File .inexistent.epc doesn't exist" @=? r
+
+ , "float == struct" ~: do
+    r <- evalProgram "struct point x=1 sfstruct func main() daca 4.2 == point() atunci ret 1 sfdaca sffunc" []
+    "OK" @=? r
+
+ , "float != float" ~: do
+    r <- evalProgram "struct point x=1 sfstruct func main() daca 4.2 != point() atunci ret 1 sfdaca sffunc" []
+    "OK" @=? r
+
+ , "int == struct" ~: do
+    r <- evalProgram "struct point x=1 sfstruct func main() daca 42 == point() atunci ret 1 sfdaca sffunc" []
+    "OK" @=? r
+
+ , "int != struct" ~: do
+    r <- evalProgram "struct point x=1 sfstruct func main() daca 42 != point() atunci ret 1 sfdaca sffunc" []
+    "OK" @=? r
+
+ , "str == struct" ~: do
+    r <- evalProgram "struct point x=1 sfstruct func main() daca \"abc\" == point() atunci ret 1 sfdaca sffunc" []
+    "OK" @=? r
+
+ , "str != struct" ~: do
+    r <- evalProgram "struct point x=1 sfstruct func main() daca \"abc\" != point() atunci ret 1 sfdaca sffunc" []
+    "OK" @=? r
+
+ , "bool == struct" ~: do
+    r <- evalProgram "struct point x=1 sfstruct func main() daca adevarat == point() atunci ret 1 sfdaca sffunc" []
+    "OK" @=? r
+
+ , "bool != struct" ~: do
+    r <- evalProgram "struct point x=1 sfstruct func main() daca fals != point() atunci ret 1 sfdaca sffunc" []
     "OK" @=? r
 
  ]

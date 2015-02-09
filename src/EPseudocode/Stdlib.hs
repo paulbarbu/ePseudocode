@@ -10,12 +10,12 @@ import EPseudocode.Evaluator
 import EPseudocode.Parser
 
 
-getStdLibEnv :: ErrorWithIO Env
-getStdLibEnv = do
-    fileExists <- liftIO $ doesFileExist ".stdlib.epc"
+getStdLibEnv :: String -> ErrorWithIO Env
+getStdLibEnv fileName = do
+    fileExists <- liftIO $ doesFileExist fileName
     if fileExists
        then do
-           contents <- liftIO $ readFile ".stdlib.epc"
+           contents <- liftIO $ readFile fileName
            (env, _) <- interpret toplevelParser builtinEnv contents
            return env
-       else throwError "File \".stdlib.epc\" doesn't exist"
+       else throwError $ "File " ++ fileName ++ " doesn't exist"

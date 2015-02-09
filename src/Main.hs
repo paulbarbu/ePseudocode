@@ -21,7 +21,7 @@ help = "ePseudocode, A small programming language (with pseudocode appearance) i
 
 runRepl :: IO ()
 runRepl = do
-    stdLibEnv <- runExceptT getStdLibEnv
+    stdLibEnv <- runExceptT $ getStdLibEnv ".stdlib.epc"
     case stdLibEnv of
         Left err -> putStrLn $ "Error: " ++ err
         Right stdlib -> runInputT defaultSettings $ loop (stdlib ++ builtinEnv)
@@ -47,7 +47,7 @@ loop env = do
 
 runFile :: String -> [String] -> IO ()
 runFile filePath argv = do
-    stdLibEnv <- runExceptT getStdLibEnv
+    stdLibEnv <- runExceptT $ getStdLibEnv ".stdlib.epc"
     case stdLibEnv of
         Left err -> putStrLn $ "Error: " ++ err
         Right stdlib -> do

@@ -329,7 +329,6 @@ repeatWhile env cond stmts it = do
         runLoop e [] = return (e, Void)
         runLoop e (Break:_) = return ((":stopiteration:", Bool True):e, Void)
         runLoop e (Continue:_) = return ((":contiteration:", Bool True):e, Void)
-        runLoop e (Ret expr:_) = eval e (E expr) >>= \(newEnv, v) -> return ((":ret:", v):newEnv, v)
         runLoop e (s:ss) = liftM fst (eval e s) >>= (\newEnv ->
             case lookup ":stopiteration:" newEnv of
                 Just (Bool True) -> return (newEnv, Void)
@@ -841,14 +840,14 @@ neq _ (String l) (String r) = return $ l /= r
 neq _ (Bool _) (String _) = return True
 neq _ (String _) (Bool _) = return True
 neq _ (Bool l) (Bool r) = return $ l /= r
-neq _ (Int _) (Struct _) = return $ True
-neq _ (Struct _) (Int _) = return $ True
-neq _ (Float _) (Struct _) = return $ True
-neq _ (Struct _) (Float _) = return $ True
-neq _ (Struct _) (String _) = return $ True
-neq _ (String _) (Struct _) = return $ True
-neq _ (Struct _) (Bool _) = return $ True
-neq _ (Bool _) (Struct _) = return $ True
+neq _ (Int _) (Struct _) = return True
+neq _ (Struct _) (Int _) = return True
+neq _ (Float _) (Struct _) = return True
+neq _ (Struct _) (Float _) = return True
+neq _ (Struct _) (String _) = return True
+neq _ (String _) (Struct _) = return True
+neq _ (Struct _) (Bool _) = return True
+neq _ (Bool _) (Struct _) = return True
 
 neq _ (Struct _) (Struct _) = throwError "Structs are not comparable" -- FIXME: translate
 neq env a b = do
@@ -876,14 +875,14 @@ eq _ (Bool _) (String _) = return False
 eq _ (String _) (Bool _) = return False
 eq _ (Bool l) (Bool r) = return $ l == r
 eq _ (Struct _) (Struct _) = throwError "Structs are not comparable" -- FIXME: translate
-eq _ (Int _) (Struct _) = return $ False
-eq _ (Struct _) (Int _) = return $ False
-eq _ (Float _) (Struct _) = return $ False
-eq _ (Struct _) (Float _) = return $ False
-eq _ (Struct _) (String _) = return $ False
-eq _ (String _) (Struct _) = return $ False
-eq _ (Struct _) (Bool _) = return $ False
-eq _ (Bool _) (Struct _) = return $ False
+eq _ (Int _) (Struct _) = return False
+eq _ (Struct _) (Int _) = return False
+eq _ (Float _) (Struct _) = return False
+eq _ (Struct _) (Float _) = return False
+eq _ (Struct _) (String _) = return False
+eq _ (String _) (Struct _) = return False
+eq _ (Struct _) (Bool _) = return False
+eq _ (Bool _) (Struct _) = return False
 
 eq env a b = do
      (_, l) <- eval env $ E a

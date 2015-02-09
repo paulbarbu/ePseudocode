@@ -139,13 +139,11 @@ EOOUT
 testHuffman()
 {
 out=$(cat <<'EOOUT'
-3:b -- 0
-2:a -- 01
-1:r -- 011
-1:u -- 111
+1:f -- 0
+2:o -- 1
 EOOUT
 )
-    assertEquals "$out" "$(interpreter examples/huffman.epc)"
+    assertEquals "$out" "$(interpreter examples/huffman.epc foo)"
 }
 
 # load shunit2

@@ -43,8 +43,8 @@ func inorder(root, l, r)
 sffunc
 
 
-func main()
-    text = "baarbbu"
+func main(argv)
+    text = argv[0]
 
     Q = {}
     freqs=freq(text)
