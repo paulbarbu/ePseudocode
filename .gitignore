@@ -12,6 +12,7 @@ cabal-dev
 cabal.sandbox.config
 cabal.config
 .hpc/
+testfile.txt
 
 # workspace files are user-specific
 *.sublime-workspace

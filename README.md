@@ -1,48 +1,36 @@
 ePseudocode
 ===========
-(work in progress)
 ePseudocode stands for "electronic [pseudocode](https://en.wikipedia.org/wiki/Pseudocode)".
 
 This is an interpreter for a language designed to be similar to the pseudocode that students write on paper.
 
 A word of warning though: All the keywords in the language itself are in Romanian, not in English, since ePseudocode
 was specifically designed for romanian students, but you're always welcome to fork the project and contribute.
-(Only the keywords are in Romanian, comments, docs and other stuff is in English, including errors issued by the
-compiler/parser since I didn't focus on translating strings from parsec)
+(Only the keywords are in Romanian, comments, docs and other stuff is written in English, including errors issued by the
+compiler/parser since I didn't focus on translating strings)
 
 Description
 ===========
 
-TODO: debugger
-TODO: FFI
-TODO: syntax highlighting
-
-TODO: apply, curry
-
-TODO: short-circuit the sau and si operators: "adevarat si ret 42"
-
-TODO: do not assign to function name inside function OR create separate variable
-
-Not supported: variadic functions
-
 * Case sensitive
 * Influenced by C (a feature because one of the reasons it exists is to provide a lower learning curve, next step being C)
-* If no `main` function is defined then all code in a file is executed as if it was in a `main` function
 * Variables are declared on the spot, valid names start with "_" or with letters and continue with leters and numbers
-* Operators: `=`, `+`, `-`, `*`, `/`, `%`, `==`, `!=`, `<` , `>`, `<=`, `>=`, `!`, `sau` (or), `si` (and), TODO
+* Operators: `=`, `+`, `-`, `*`, `/`, `%`, `==`, `!=`, `<` , `>`, `<=`, `>=`, `!`, `sau` (or), `si` (and), `**` (pow), `.` (member access)
 * Keywords (English translation in parens): `cattimp` (while), `executa` (do), `sfcattimp` (end while), `pt` (for), `sfpt` (end for),
     `func` (start function), `sffunc` (end function), `ret` (return), `daca` (if), `atunci` (then), `altfel` (else), `sfdaca` (end if),
-    `adevarat` (true), `fals` (false), `stop` (break)
-* Builtins: `lung` (length), `TODO` (to_upper), `TODO` (to_lower), `TODO`, (to_int('c'))
+    `adevarat` (true), `fals` (false), `stop` (break), `continua` (contiue), `struct` (structure declaration), `sfstruct` (end structure declaration)
+* Builtins: `lung` (length), `int` (convert string to int), `float` (conver string to float),
+    `floor`, `ceiling`, `sleep`, `apply`, `scrie` (printStr), `citeste`, (readStr), `deschide`
+     (fileOpen), `inchide` (fileClose), `fscrie` (filePrintStr), `fciteste` (fileRead),
+     `concat` (concatenate)
 * Hexadecimal and octal notation: "0xABC", "0o17"
 
+Not supported: variadic functions
 
 Examples
 ========
 
-TODO: fix these when the language is stable
-
-For more see the `examples` directory.
+For more complete samples see the `examples` directory.
 
 * List operations:
 ```
@@ -53,14 +41,11 @@ scrie(lung(l)) //outputs 4
 l = {1, 42, 3, 4}
 scrie(l[1]) // outputs 42
 
-//join two lists to get a new one:
-l = l + {11} //append 11 to l
-l += {12, 13} //apend 12 and 13 to l (`{1, 42, 3, 4, 11}`)
+//add elemendts to a list
+l = l + 11 + 12 + 13//append 11, 12, and 13 to l
 scrie(lung(l)) //outputs 7 (4 elements in the initial list + the appended 11 + the appended 12 and 13)
 
 {1,2,3} - (1+2) => {1,2}
-
-TODO: this is not valid: l += 1 //runtime error, cannot use '+' on list and string
 ```
 
 * String operations:
@@ -75,10 +60,10 @@ a[4] = "b"
 scrie(a) //outputs fooobbar
 
 //concatenation (joining two list of characters to get a new one back)
-scrie(a + "baz") // outputs foobaz
+scrie(a + "baz") // outputs fooobbarbaz
 
-scrie(2 + "baz") // runtime error
-scrie(2 + a) // runtime error
+scrie(2 + "baz") // "2baz"
+scrie(2 + a) // "2fooobbar"
 
 //string comparisons
 "abc" == "ABC" //false
@@ -90,7 +75,7 @@ scrie(2 + a) // runtime error
 Motivations
 ===========
 
-* the use of an end statement (`sfdaca`, `sfcattimp`, `sfpt`) is enforced in order to avoid confusion as to where a statement ends
+* the use of an end statement (`sfdaca`, `sfcattimp`, `sfpt`, `sfstruct`, `sffunc`) is enforced in order to avoid confusion as to where a statement ends
 This is because I've seen beginners struggle with the fact that sometimes C/C++ permits the programmer to omit the curly braces
 when a block contains a single statement.
 
