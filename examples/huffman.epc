@@ -1,0 +1,79 @@
+func freq(text)
+    freqs = Dict()
+
+    pt i=0; i<lung(text); i=i+1 executa
+        f = freqs.get(text[i], 0)
+        freqs.insert(text[i], f+1)
+    sfpt
+
+    ret freqs
+sffunc
+
+
+func minNode(Q)
+    min = Q[0]
+    pt i=1; i<lung(Q); i=i+1 executa
+        daca Q[i].key < min.key atunci
+            min = Q[i]
+        sfdaca
+    sfpt
+
+    ret min
+sffunc
+
+func removeNode(n, Q)
+    q = {}
+    pt i=0; i<lung(Q);i=i+1 executa
+        daca Q[i].key != n.key sau Q[i].data != n.data atunci
+            q = q+ Q[i]
+        sfdaca
+    sfpt
+
+    ret q
+sffunc
+
+func inorder(root, l, r)
+    daca root != 0 atunci
+        inorder(root.left, l+"0", r)
+        daca root.data != 0 atunci
+            scrie(root.key, ":", root.data, " -- ", l+r, "\n")
+        sfdaca
+        inorder(root.right, l, r+"1")
+    sfdaca
+sffunc
+
+
+func main()
+    text = "baarbbu"
+
+    Q = {}
+    freqs=freq(text)
+
+    utext = unique(text)
+    n = lung(utext)
+
+    pt i=0; i<n; i=i+1 executa
+        node = Node()
+        node.left = 0
+        node.right = 0
+        node.key = freqs.get(utext[i], -1)
+        node.data = utext[i]
+        Q = Q + node
+    sfpt
+
+    pt i=0; i<n-1; i=i+1 executa
+        z = Node()
+        x = minNode(Q)
+        z.left = x
+        Q = removeNode(x, Q)
+        y = minNode(Q)
+        z.right = y
+        Q = removeNode(y, Q)
+
+        z.key = x.key + y.key
+        Q = Q + z
+    sfpt
+
+    foo = minNode(Q)
+    inorder(foo, "", "")
+sffunc

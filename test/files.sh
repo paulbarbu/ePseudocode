@@ -136,5 +136,17 @@ EOOUT
     assertEquals "$out2" "$(interpreter examples/user_def_types.epc)"
 }
 
+testHuffman()
+{
+out=$(cat <<'EOOUT'
+3:b -- 0
+2:a -- 01
+1:r -- 011
+1:u -- 111
+EOOUT
+)
+    assertEquals "$out" "$(interpreter examples/huffman.epc)"
+}
+
 # load shunit2
 . test/shell/shunit2

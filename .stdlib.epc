@@ -31,3 +31,81 @@ struct point
         y = new_y
     sffunc
 sfstruct
+
+
+struct KeyVal
+    key = ""
+    val = ""
+sfstruct
+
+
+struct Dict
+    _d = {}
+
+    func insert(k, v)
+        kv = KeyVal()
+        kv.key = k
+        kv.val = v
+
+        _d = _d + kv
+    sffunc
+
+
+    func get(k, default)
+        daca lung(_d) == 0 atunci
+            ret default
+        sfdaca
+
+        pt i=lung(_d)-1; i>=0; i=i-1 executa
+            daca _d[i].key == k atunci
+                ret _d[i].val
+            sfdaca
+        sfpt
+
+        ret default
+    sffunc
+
+    func min()
+        m = _d[lung(_d)-1]
+
+        pt i=lung(_d)-1; i>=0; i=i-1 executa
+            daca get(_d[i].key, m.val) <  m.val atunci
+                m = _d[i]
+            sfdaca
+        sfpt
+
+        ret m
+    sffunc
+sfstruct
+
+
+struct Node
+    left = 0
+    right = 0
+    key = 0
+    data = 0
+sfstruct
+
+
+func indexOf(needle, haystack)
+    pt i=0; i<lung(haystack); i=i+1 executa
+        daca needle == haystack[i] atunci
+            ret i
+        sfdaca
+    sfpt
+
+    ret -1
+sffunc
+
+
+func unique(list)
+    u = {list[0]}
+
+    pt i=1; i<lung(list); i=i+1 executa
+        daca -1 == indexOf(list[i], u) atunci
+            u = u + list[i]
+        sfdaca
+    sfpt
+
+    ret u
+sffunc
