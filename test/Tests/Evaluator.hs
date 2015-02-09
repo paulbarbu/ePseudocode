@@ -595,12 +595,12 @@ evaluatorTests = TestList [
     "adevarat" @=? r
 
  , "str == int" ~: do
-    r <- evalFail "\"abc\" == 4" "Cannot compare String and Int"
-    True @=? r
+    r <- evalTest "\"abc\" == 4"
+    "fals" @=? r
 
  , "int == str" ~: do
-    r <- evalFail "4 == \"abc\"" "Cannot compare Int and String"
-    True @=? r
+    r <- evalTest "4 == \"abc\""
+    "fals" @=? r
 
  , "bool == int" ~: do
     r <- evalTest "fals == 4"
@@ -611,12 +611,12 @@ evaluatorTests = TestList [
     "fals" @=? r
 
  , "str == float" ~: do
-    r <- evalFail "\"abc\" == 4.2" "Cannot compare String and Float"
-    True @=? r
+    r <- evalTest "\"abc\" == 4.2"
+    "fals" @=? r
 
  , "float == str" ~: do
-    r <- evalFail "4.2 == \"abc\"" "Cannot compare Float and String"
-    True @=? r
+    r <- evalTest "4.2 == \"abc\""
+    "fals" @=? r
 
  , "bool == float" ~: do
     r <- evalTest "fals == 4.2"
@@ -655,12 +655,12 @@ evaluatorTests = TestList [
     "adevarat" @=? r
 
  , "str != int" ~: do
-    r <- evalFail "\"abc\" != 4" "Cannot compare String and Int"
-    True @=? r
+    r <- evalTest "\"abc\" != 4"
+    "adevarat" @=? r
 
  , "int != str" ~: do
-    r <- evalFail "4 != \"abc\"" "Cannot compare Int and String"
-    True @=? r
+    r <- evalTest "4 != \"abc\""
+    "adevarat" @=? r
 
  , "bool != int" ~: do
     r <- evalTest "fals != 4"
@@ -671,12 +671,12 @@ evaluatorTests = TestList [
     "adevarat" @=? r
 
  , "str != float" ~: do
-    r <- evalFail "\"abc\" != 4.2" "Cannot compare String and Float"
-    True @=? r
+    r <- evalTest "\"abc\" != 4.2"
+    "adevarat" @=? r
 
  , "float != str" ~: do
-    r <- evalFail "4.2 != \"abc\"" "Cannot compare Float and String"
-    True @=? r
+    r <- evalTest "4.2 != \"abc\""
+    "adevarat" @=? r
 
  , "bool != float" ~: do
     r <- evalTest "fals != 4.2"
@@ -1869,19 +1869,19 @@ evaluatorTests = TestList [
 
  , "struct ==" ~: do
     r <- evalProgram "struct point x=1 y=1 sfstruct func main() a=point() ret a == 2 sffunc" []
-    "Error: Structs are not comparable" @=? r
+    "OK" @=? r
 
  , "struct == - on the right side" ~: do
     r <- evalProgram "struct point x=1 y=1 sfstruct func main() a=point() ret 2 == a sffunc" []
-    "Error: Structs are not comparable" @=? r
+    "OK" @=? r
 
  , "struct !=" ~: do
     r <- evalProgram "struct point x=1 y=1 sfstruct func main() a=point() ret a != 2 sffunc" []
-    "Error: Structs are not comparable" @=? r
+    "OK" @=? r
 
  , "struct != - on the right side" ~: do
     r <- evalProgram "struct point x=1 y=1 sfstruct func main() a=point() ret 2 != a sffunc" []
-    "Error: Structs are not comparable" @=? r
+    "OK" @=? r
 
  , "struct unary expr" ~: do
     r <- evalProgram "struct point x=1 y=1 sfstruct func main() a=point() ret !a sffunc" []

@@ -828,21 +828,29 @@ neq :: Env -> Expr -> Expr -> ErrorWithIO Bool
 neq _ (Int l) (Int r) = return $ l /= r
 neq _ (Int l) (Float r) = return $ fromInteger l /= r
 neq _ (Float l) (Int r) = return $ l /= fromInteger r
-neq _ (String _) (Int _) = throwError "Cannot compare String and Int" -- FIXME: translate
-neq _ (Int _) (String _) = throwError "Cannot compare Int and String" -- FIXME: translate
+neq _ (String _) (Int _) = return True -- FIXME: translate
+neq _ (Int _) (String _) = return True -- FIXME: translate
 neq _ (Bool _) (Int _) = return True
 neq _ (Int _) (Bool _) = return True
 neq _ (Float l) (Float r) = return $ l /= r
-neq _ (String _) (Float _) = throwError "Cannot compare String and Float" -- FIXME: translate
-neq _ (Float _) (String _) = throwError "Cannot compare Float and String" -- FIXME: translate
+neq _ (String _) (Float _) = return True
+neq _ (Float _) (String _) = return True
 neq _ (Bool _) (Float _) = return True
 neq _ (Float _) (Bool _) = return True
 neq _ (String l) (String r) = return $ l /= r
 neq _ (Bool _) (String _) = return True
 neq _ (String _) (Bool _) = return True
 neq _ (Bool l) (Bool r) = return $ l /= r
-neq _ (Struct _) _ = throwError "Structs are not comparable" -- FIXME: translate
-neq _ _ (Struct _) = throwError "Structs are not comparable" -- FIXME: translate
+neq _ (Int _) (Struct _) = return $ True
+neq _ (Struct _) (Int _) = return $ True
+neq _ (Float _) (Struct _) = return $ True
+neq _ (Struct _) (Float _) = return $ True
+neq _ (Struct _) (String _) = return $ True
+neq _ (String _) (Struct _) = return $ True
+neq _ (Struct _) (Bool _) = return $ True
+neq _ (Bool _) (Struct _) = return $ True
+
+neq _ (Struct _) (Struct _) = throwError "Structs are not comparable" -- FIXME: translate
 neq env a b = do
      (_, l) <- eval env $ E a
      (_, r) <- eval env $ E b
@@ -854,21 +862,29 @@ eq :: Env -> Expr -> Expr -> ErrorWithIO Bool
 eq _ (Int l) (Int r) = return $ l == r
 eq _ (Int l) (Float r) = return $ fromInteger l == r
 eq _ (Float l) (Int r) = return $ l == fromInteger r
-eq _ (String _) (Int _) = throwError "Cannot compare String and Int" -- FIXME: translate
-eq _ (Int _) (String _) = throwError "Cannot compare Int and String" -- FIXME: translate
+eq _ (String _) (Int _) = return False
+eq _ (Int _) (String _) = return False
 eq _ (Bool _) (Int _) = return False
 eq _ (Int _) (Bool _) = return False
 eq _ (Float l) (Float r) = return $ l == r
-eq _ (String _) (Float _) = throwError "Cannot compare String and Float" -- FIXME: translate
-eq _ (Float _) (String _) = throwError "Cannot compare Float and String" -- FIXME: translate
+eq _ (String _) (Float _) = return False
+eq _ (Float _) (String _) = return False
 eq _ (Bool _) (Float _) = return False
 eq _ (Float _) (Bool _) = return False
 eq _ (String l) (String r) = return $ l == r
 eq _ (Bool _) (String _) = return False
 eq _ (String _) (Bool _) = return False
 eq _ (Bool l) (Bool r) = return $ l == r
-eq _ (Struct _) _ = throwError "Structs are not comparable" -- FIXME: translate
-eq _ _ (Struct _) = throwError "Structs are not comparable" -- FIXME: translate
+eq _ (Struct _) (Struct _) = throwError "Structs are not comparable" -- FIXME: translate
+eq _ (Int _) (Struct _) = return $ False
+eq _ (Struct _) (Int _) = return $ False
+eq _ (Float _) (Struct _) = return $ False
+eq _ (Struct _) (Float _) = return $ False
+eq _ (Struct _) (String _) = return $ False
+eq _ (String _) (Struct _) = return $ False
+eq _ (Struct _) (Bool _) = return $ False
+eq _ (Bool _) (Struct _) = return $ False
+
 eq env a b = do
      (_, l) <- eval env $ E a
      (_, r) <- eval env $ E b
