@@ -1910,4 +1910,9 @@ evaluatorTests = TestList [
  , "continue in if, in for" ~: do
     r <- evalTest "b=0 pt a=0;a<5;a=a+1 executa daca a < 2 atunci continua sfdaca b=b+1 sfpt b"
     "3" @=? r
+
+ , "struct function passsed variable arg" ~: do
+    r <- evalProgram "struct point func foo(a) ret a sffunc sfstruct func main() v = 1 p=point() ret p.foo(v) sffunc" []
+    "OK" @=? r
+
  ]

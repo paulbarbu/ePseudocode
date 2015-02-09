@@ -200,7 +200,7 @@ eval env (E (Var name)) = maybe (throwError $ "Unbound variable name " ++ name)
 eval env (E index@(Index _ _)) = applyToNamedList env index Nothing
 eval env (E unExpr@(UnExpr _ _)) = evalUnExpr env unExpr >>= eval env . E
 eval env (E binExpr@BinExpr{}) = evalBinExpr env binExpr >>= \(e,v)-> eval e $ E v
-eval env (Ret expr) = eval env (E expr) >>= \(e, val) -> return ((":ret:", val):e, val) -- I can do this since Ret may appear only inside functions and the environment is not propagated outside the functions
+eval env (Ret expr) = eval env (E expr) >>= \(e, val) -> return ((":ret:", val):e, val)
 eval env (Assign (Var name) s) = do
     (newEnv, val) <- eval env $ E s
     return ((name,val) : newEnv, val)
@@ -294,13 +294,13 @@ applyFunc env (Func argNames body closure) (arg:args) =
 
 
 evalFuncBody :: Env -> [Stmt] -> ErrorWithIO (Env, Expr)
-evalFuncBody env (Ret expr:_) = eval env (E expr)
+--evalFuncBody env (Ret expr:_) = eval env (E expr)
 evalFuncBody env [stmt] = eval env stmt >>= \(e, val) -> case lookup ":ret:" e of
     Nothing -> return (e, val)
-    Just v -> return (e, v)
+    Just v -> return (filter (\(name, _) -> name /= ":ret:") e, v)
 evalFuncBody env (stmt:stmts) = eval env stmt >>= \(e, _) -> case lookup ":ret:" e of
     Nothing -> evalFuncBody e stmts
-    Just v -> return (e, v)
+    Just v -> return (filter (\(name, _) -> name /= ":ret:") e, v)
 
 
 argsToEnv :: [String] -> [Expr] -> ErrorWithIO Env
@@ -318,21 +318,26 @@ repeatWhile env cond stmts it = do
                 (e, _) <- runLoop (filter (\(name, _) -> name /= ":stopiteration:" && name /= ":contiteration:") env) stmts
                 case lookup ":stopiteration:" e of
                     Just (Bool True) -> return (filter (\(name, _) -> name /= ":stopiteration:" && name /= ":contiteration:") e, Void)
-                    _ -> case it of
-                            Nothing -> repeatWhile e cond stmts it
-                            Just s -> eval e s >>= \(itEnv, _) -> repeatWhile itEnv cond stmts it
+                    _ -> case lookup ":ret:" e of
+                            Just v -> return (filter (\(name, _) -> name /= ":stopiteration:" && name /= ":contiteration:") e, v)
+                            Nothing -> case it of
+                                Nothing -> repeatWhile e cond stmts it
+                                Just s -> eval e s >>= \(itEnv, _) -> repeatWhile itEnv cond stmts it
             else return (newEnv, Void)
         _ -> throwError "A loop's condition should evaluate to Bool"
     where
         runLoop e [] = return (e, Void)
         runLoop e (Break:_) = return ((":stopiteration:", Bool True):e, Void)
         runLoop e (Continue:_) = return ((":contiteration:", Bool True):e, Void)
+        runLoop e (Ret expr:_) = eval e (E expr) >>= \(newEnv, v) -> return ((":ret:", v):newEnv, v)
         runLoop e (s:ss) = liftM fst (eval e s) >>= (\newEnv ->
             case lookup ":stopiteration:" newEnv of
                 Just (Bool True) -> return (newEnv, Void)
-                _ -> case lookup ":contiteration:" newEnv of
-                        Just (Bool True) -> return (newEnv, Void)
-                        _ -> runLoop newEnv ss)
+                _ -> case lookup ":ret:" newEnv of
+                        Just v -> return (newEnv, v)
+                        Nothing -> case lookup ":contiteration:" newEnv of
+                            Just (Bool True) -> return (newEnv, Void)
+                            _ -> runLoop newEnv ss)
 
 
 evalStmtBody :: Env -> [Stmt] -> ErrorWithIO (Env, Expr)
@@ -618,7 +623,7 @@ evalBinExpr env (BinExpr MemberAccess x y) =
                         FuncCall (Var memberName) args ->
                             case lookup memberName sEnv of
                                 Just f -> do
-                                    (modifiedStruct,v) <- applyFunc sEnv f args
+                                    (modifiedStruct,v) <- applyFunc (env++sEnv) f args
                                     return ((structName, Struct $ updateStructFuncEnv modifiedStruct modifiedStruct):env, v)
                                 Nothing -> inexistentMember memberName $ Just structName
                         _ -> throwError invalidMember
@@ -635,7 +640,7 @@ evalBinExpr env (BinExpr MemberAccess x y) =
                         FuncCall (Var memberName) args ->
                             case lookup memberName sEnv of
                                 Just f -> do
-                                    (modifiedStruct, _) <- applyFunc sEnv f args
+                                    (modifiedStruct, _) <- applyFunc (env++sEnv) f args
                                     applyToNamedList env index . Just . Struct $ updateStructFuncEnv modifiedStruct modifiedStruct
                                 Nothing -> inexistentMember memberName Nothing
                         _ -> throwError invalidMember
@@ -652,7 +657,7 @@ evalBinExpr env (BinExpr MemberAccess x y) =
                         FuncCall (Var memberName) args ->
                             case lookup memberName sEnv of
                                 Just f -> do
-                                    (modifiedStruct, _) <- applyFunc sEnv f args
+                                    (modifiedStruct, _) <- applyFunc (env++sEnv) f args
                                     updateGeneralStruct env x $ updateStructFuncEnv modifiedStruct modifiedStruct
                                 Nothing -> inexistentMember memberName Nothing
                         _ -> throwError invalidMember
