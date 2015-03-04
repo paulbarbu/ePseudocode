@@ -5,7 +5,7 @@ CLEAR = "\x1b[2J"
 ENDC = "\x1b[0m"
 
 LIVE = "o"
-DEAD = " "
+DEAD = "."
 
 MAX_H = 20
 MAX_W = 40
